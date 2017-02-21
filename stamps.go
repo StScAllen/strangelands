@@ -9,13 +9,14 @@ var PALLETE string = "▓ ▒ ░ ■ ║ ╣ ║ ╝ ╚ ╩ ╠ ╬ ═ ╦ �
 var PALLETE2 string ="↨ ↔ ▀ █ ▐ ▲ ► ▼ ◄ « ˄ « ˄ ∞ ⌂ ☼ ♥ ♪ ♫ ± Σ Φ ∩ †"		
 
 var well = [][]string{
-							{" ", "-", " "},
-							{"(", "O", ")"},
-							{" ", "-", " "},
+							{"┌", "─", "┐"},
+							{"│", "O", "│"},
+							{"└", "─", "┘"},
 						   }
 
 var open_crypt = [][]string{
 							{"╔", "╦", "╗"},
+							{"║", " ", "║"},
 							{"║", " ", "║"},
 							{"╚", "\\", "╝"},
 						   }	
@@ -23,6 +24,7 @@ var open_crypt = [][]string{
 var closed_crypt = [][]string{
 							{"╔", "╦", "╗"},
 							{"║", " ", "║"},
+							{"║", " ", "║"},							
 							{"╚", "═", "╝"},
 						   }	
 						   
@@ -69,7 +71,7 @@ func (bg * BattleGrid) setRandomStamp(maxx int, maxy int, gidx int){
 		stamp = well
 	}
 	
-	stamp = tree
+	stamp = open_crypt
 
 	xs := die.rollxdx(1, (maxx-len(stamp))-1)
 	ys := die.rollxdx(1, (maxy-len(stamp[0]))-1)	

@@ -30,7 +30,7 @@ func adventure(){
 		} else {
 			descrip = "(Move ++) (Attack) (Defend) (Get) (Search) (Cast) (Wait)\n(Inventory) (Status) (End Turn) (Help) (Exit) \n\nAction: "	
 		}
-		fmt.Println(descrip)
+		fmt.Printf(descrip)
 		fmt.Scanln(&rsp, &rsp2)
 		
 		if strings.Contains(rsp, "move") && len(rsp2) > 0 {
