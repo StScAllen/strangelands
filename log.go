@@ -6,8 +6,8 @@ import "fmt"
 import "os"
 
 type Log struct {
-	errorCount, warnCount, infoCount int
-	errors, warns, infos string
+	errorCount, warnCount, infoCount, aiCount int
+	errors, warns, infos, ais string
 }
 
 func openLog() (Log){
@@ -16,26 +16,34 @@ func openLog() (Log){
 	log.errorCount = 0
 	log.warnCount = 0
 	log.infoCount = 0
+	log.aiCount = 0
+	
 	log.errors = ""
 	log.warns = ""
 	log.infos = ""
+	log.ais = ""
 	
 	return log
 }
 
-func (log * Log) addError(msg String){
+func (log * Log) addError(msg string){
 	log.errorCount += 1
 	log.errors += msg + "\n"
 }
 
-func (log * Log) addWarn(msg String){
+func (log * Log) addWarn(msg string){
 	log.warnCount += 1
 	log.warns += msg + "\n"
 }
 
-func (log * Log) addInfo(msg String){
+func (log * Log) addInfo(msg string){
 	log.infoCount += 1
 	log.infos += msg + "\n"
+}
+
+func (log * Log) addAi(msg string){
+	log.aiCount += 1
+	log.ais += msg + "\n"
 }
 
 func (log * Log) writeToFile(){
@@ -47,8 +55,13 @@ func (log * Log) writeToFile(){
 
 	var saveString string 
 	
+	saveString += "--Info--\n"
 	saveString += log.infos
+	saveString += "--Warnings--\n"
 	saveString += log.warns
+	saveString += "--AI--\n"	
+	saveString += log.ais
+	saveString += "--Errors--\n"	
 	saveString += log.errors
 	
 	if (err == nil){
@@ -59,7 +72,12 @@ func (log * Log) writeToFile(){
 
 func (log * Log) displayLog() {
 	clearConsole()
+	fmt.Println("--Info--")
 	fmt.Println(log.infos)
+	fmt.Println("--Warnings--")
 	fmt.Println(log.warns)
+	fmt.Println("--AI--")
+	fmt.Println(log.ais)
+	fmt.Println("--Errors--")	
 	fmt.Println(log.errors)
 }

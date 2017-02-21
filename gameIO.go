@@ -82,7 +82,7 @@ func loadGame() (Character){
 
 		fmt.Printf("\n%s", data)
 		fmt.Println("Game Loaded! ")
-		
+		log.addInfo("Character loaded.\n")
 	}
 	
 	return char

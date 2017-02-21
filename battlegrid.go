@@ -40,7 +40,7 @@ var selectedGate Gate
 			
 var weather = []string{"Sunny", "Foggy", "Rain", "Snow"}
 var times = []string{"Day", "Night", "Dusk", "Dawn"}			
-			
+						
 type Gate struct {
 	gridid1 int
 	gridid2 int
@@ -57,7 +57,8 @@ type Grid struct {
 				
 type BattleGrid struct {
 	allGrids [20]Grid
-	gates [100]Gate 
+	gates [100]Gate
+	gridPattern [8][10]int
 	numGrids int
 	monster Monster
 	locationName string
@@ -542,7 +543,7 @@ func (bg *BattleGrid) addGates(){
 
 	var tGate Gate 
 	var die Die
-	
+		
 	// gate 1
 	tGate.gridid1 = 0
 	tGate.g1x = bg.allGrids[0].maxY
@@ -622,11 +623,77 @@ func createSquareGrid(height int, width int) (Grid){
 	return retGrid
 }
 
+func (grid *BattleGrid)  placeMonster() {
+
+	var dice Die
+	monsterNotPlaced := true
+	grid.monsterGridId = dice.rollxdx(1, grid.numGrids-1)
+	
+	entityGrid  := grid.getEntityGrid(grid.monsterGridId)
+	
+	for ; monsterNotPlaced == true; {
+	
+		grid.monsterXLoc = dice.rollxdx(1, 30)
+		grid.monsterYLoc = dice.rollxdx(1, 14)
+	
+		if (entityGrid.grid[grid.monsterYLoc][grid.monsterXLoc] == " "){
+			monsterNotPlaced = false;
+			log.addInfo("Monster Placed")
+
+		} else {
+			log.addInfo("Cannot place monster at " + entityGrid.grid[grid.monsterYLoc][grid.monsterXLoc])
+		}
+			
+	}
+}
+
+/* func getBranches(roll int) (count int){
+	var die1 Die
+	
+	var roll = die.rollxdx(1, 10)
+
+	if (roll < 5){
+		return 1
+	} else if (roll < 9){
+		return 2
+	} else {
+		return 3
+	}
+}
+
+func (bg * BattleGrid) createGridPattern(){
+	
+	var gridPattern [20][20]int
+	var die Die
+	var cX, cY int
+	
+	cX = 0
+	cY = 0
+	
+	for gridsCreated := 0; gridsCreated < bg.numGrids; i++ {
+		branches := getBranches(die.rollxdx(1,10))
+		
+		if (gridsCreated + branches) > bg.numGrids {
+			branches = bg.numGrids - gridsCreated
+		}
+		
+		if (branches > 0){
+			int roll = die.rollxdx(1,4)
+			
+			
+		
+		
+		}
+		
+	}
+
+
+} */
+
 func buildBattleGrid(id int) (BattleGrid){
 
 	var grid BattleGrid
 	var monster Monster
-	var die Die
 	
 	fmt.Printf("Building Grid: %v   \n ", id);
 		
@@ -639,6 +706,7 @@ func buildBattleGrid(id int) (BattleGrid){
 
 	if id == 1 {	// cemetary
 		grid.numGrids = 4
+		//grid.createGridPattern()	// for random, done after number of grids is assigned!
 		
 		for k := 0; k < grid.numGrids; k++ {
 			g1 := createSquareGrid(16,32)
@@ -662,12 +730,9 @@ func buildBattleGrid(id int) (BattleGrid){
 		grid.appXLoc = 2
 		grid.appYLoc = 1
 		grid.appGridId = 0
-		
-		grid.monsterXLoc = die.rollxdx(1, 14)
-		grid.monsterYLoc = die.rollxdx(1, 30)
-		grid.monsterGridId = die.rollxdx(1, grid.numGrids-1)
-		
+				
 		grid.addGates()
+		grid.placeMonster()
 		
 	} else {
 /* 		grid.grid = SMALL_GRID

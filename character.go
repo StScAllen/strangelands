@@ -8,6 +8,9 @@ var character Character
 var apprentice Character
 var gameDay int
 
+var log Log	
+
+
 func clearConsole(){
 	cmd := exec.Command("cmd", "/c", "cls")
 	cmd.Stdout = os.Stdout
@@ -63,6 +66,7 @@ func init(){
 func main() {
 	rsp := ""
 	rsp = showTopMenu()
+	log = openLog()
 	
 	if (rsp == "1") {	// new game, make a character
 		rsp = "n"
@@ -98,5 +102,8 @@ func main() {
 			adventure()
 		}
 	}
+	clearConsole()	
+	log.displayLog()
+	log.writeToFile()
 }
 

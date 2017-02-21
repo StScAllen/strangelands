@@ -67,8 +67,12 @@ func (bg *BattleGrid) isMonsterVisible() (bool) {
 }
 
 func (bg *BattleGrid) doMonsterActivity() (int){
-	var die Die
-
+	var die Die	
+	
+	oldX := bg.monsterXLoc
+	oldY := bg.monsterYLoc
+	oldG := bg.monsterGridId
+	
 	bg.monster.moves = bg.monster.getMonsterMoves()
 	die.rollxdx(1,4)
 	for ; bg.monster.moves > 0; {
@@ -96,8 +100,9 @@ func (bg *BattleGrid) doMonsterActivity() (int){
 			}
 		}
 	}
-
-	fmt.Printf("End monster move: %v : %v : %v", bg.monsterXLoc, bg.monsterYLoc, bg.monsterGridId)
+	
+	log.addAi(fmt.Sprintf("%s move: From: %v : %v (%v) To: %v : %v (%v)", bg.monster.name, oldX, oldY, oldG, bg.monsterXLoc, bg.monsterYLoc, bg.monsterGridId))
+	fmt.Printf("End %s move: %v : %v : %v", bg.monster.name, bg.monsterXLoc, bg.monsterYLoc, bg.monsterGridId)
 	rsp := ""
 	fmt.Scanln(&rsp)
 	
