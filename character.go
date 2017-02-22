@@ -9,7 +9,7 @@ var apprentice Character
 var gameDay int
 
 var log Log	
-
+const VERSION = ".03a"
 
 func clearConsole(){
 	cmd := exec.Command("cmd", "/c", "cls")
@@ -44,7 +44,7 @@ func showTopMenu() (string){
 
 	clearConsole()
 	
-	fmt.Println("Blather   (v" + VERSION + ")")
+	fmt.Println("Strange Lands   (v" + VERSION + ")")
 	fmt.Println("------------")
 	fmt.Println("1. New Game")
 	fmt.Println("2. Load Game")

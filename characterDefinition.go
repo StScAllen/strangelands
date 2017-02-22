@@ -4,8 +4,6 @@ package main
 import "fmt"
 import "strings"
 
-const VERSION = ".02a"
-
 var skills = []string {"Puzzles", "Alchemy", "Haggle", "Instruction", "Spellcraft", "Research", "Politicking"}
 var weaponSkills = []string {"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
 					  					  
@@ -39,7 +37,8 @@ const NUM_SKILLS = 9
 type Character struct {
 	agi, str, per, intl, cha, gui int
 	name string
-	hp, maxhp int
+	hp, maxhp int	
+	soul, maxsoul int	// soul is both a spiritual hp and a tool to craft/power artefacts
 	weight, maxweight int
 	gold int
 	lvl int
@@ -95,8 +94,8 @@ func (c *Character) purchaseStats() {
 		fmt.Printf("2. Strength:   %v  (Damage, encumberance, health)\n", c.str)
 		fmt.Printf("3. Agility:    %v  (Movement, attacking, defense)\n", c.agi)
 		fmt.Printf("4. Intellect:  %v  (Spells, skillcraft)\n", c.intl)		
-		fmt.Printf("5. Charm:      %v  (Bartering, apprentice building)\n",  c.cha)
-		fmt.Printf("6. Guile:      %v  (Experience, skillcraft)\n",  c.gui)		
+		fmt.Printf("5. Charm:      %v  (Bartering, apprentice building, soul)\n",  c.cha)
+		fmt.Printf("6. Guile:      %v  (Experience, skillcraft, soul)\n",  c.gui)		
 		fmt.Println("")
 		fmt.Println("7. Reset")		
 		fmt.Println("8. Finished")			
@@ -169,13 +168,13 @@ func createCharacter() (Character) {
 	
 	character.lvl = 1
 	
-	diff := 72 - character.getTotalStats()
-	
-	character.gold = 20 + diff
+	character.gold = 32
 	
 	character.hp = character.str
 	character.maxhp = character.hp
-	character.hp -= 1
+
+	character.soul = character.gui + character.cha
+	character.maxsoul = character.soul
 	
 	character.maxweight = character.str + 1
 	character.weight = 0
@@ -195,6 +194,7 @@ func (character *Character) printCharacter(pause int) {
 
 	fmt.Println()
 	fmt.Printf("Hp: %v / %v  ", character.hp, character.maxhp)
+	fmt.Printf("Soul: %v / %v  ", character.soul, character.maxsoul)
 	fmt.Printf("Encumb: %v / %v  st", character.weight, character.maxweight)
 
 	fmt.Println()	

@@ -36,7 +36,7 @@ const CHAR_TURN = 0
 const APP_TURN = 1
 const MONST_TURN = 2				
 
-var selectedGate Gate
+var selectedGate Gate	
 			
 var weather = []string{"Sunny", "Foggy", "Rain", "Snow"}
 var times = []string{"Day", "Night", "Dusk", "Dawn"}			
@@ -84,7 +84,7 @@ func (gd * Grid) addCemetaryDecorations(){
 		if (die.rollxdx(1, 5) > 2){
 			gd.grid[x][y] = " "
 		} else {
-			gd.grid[x][y] = "."
+			gd.grid[x][y] = "∩"
 		}
 	
 	}
@@ -140,6 +140,40 @@ func (bg *BattleGrid) getEntityGrid(id int) (Grid){
 	return nilGrid
 }
 
+func (bg * BattleGrid) getXYFromCardinal(locX, locY, cardinal int) (x, y int) {
+	
+	var x,y int
+
+	switch cardinal {	// switch always breaks unless you use fallthrough
+	
+	case NORTH: 	
+		y = locY - 1	
+	case NORTHEAST: 	
+		y = locY - 1
+		x = locX + 1
+	case EAST: 	
+		x = locX + 1
+	case SOUTHEAST: 
+		y = locY + 1
+		x = locX + 1
+	case SOUTH: 	
+		y = locY + 1		
+	case SOUTHWEST: 	
+		y = locY + 1
+		x = locX - 1	
+	case WEST: 	
+		x = locX - 1		
+	case NORTHWEST: 	
+		x = locX - 1		
+		y = locY - 1
+	case STAY:
+		x = locX
+		y = locY
+	}
+
+	return x,y
+}
+
 func (grid *BattleGrid) moveCharacter(cardinal int) {
 	var newX, newY int
 	
@@ -150,32 +184,8 @@ func (grid *BattleGrid) moveCharacter(cardinal int) {
 		newX = grid.appXLoc
 		newY = grid.appYLoc	
 	}
-	
-	switch cardinal {
 		
-	case NORTH: 	
-		newY -= 1	
-	case NORTHEAST: 	
-		newY -= 1
-		newX += 1
-	case EAST: 	
-		newX += 1
-	case SOUTHEAST: 
-		newY += 1
-		newX += 1
-	case SOUTH: 	
-		newY += 1		
-	case SOUTHWEST: 	
-		newY += 1
-		newX -= 1	
-	case WEST: 	
-		newX -= 1		
-	case NORTHWEST: 	
-		newX -= 1		
-		newY -= 1
-	case STAY:
-		// no adjustments
-	}
+	newX, newY = getXYFromCardinal(newX, newY, cardinal)
 	
 	if (grid.turn == CHAR_TURN){
 		grid.charXLoc = newX
@@ -194,32 +204,7 @@ func (grid *BattleGrid) moveMonster(cardinal int) {
 	newX = grid.monsterXLoc
 	newY = grid.monsterYLoc
 	
-	switch cardinal {	// switch always breaks unless you use fallthrough
-	
-	case NORTH: 	
-		newY = locY - 1	
-	case NORTHEAST: 	
-		newY = locY - 1
-		newX = locX + 1
-	case EAST: 	
-		newX = locX + 1
-	case SOUTHEAST: 
-		newY = locY + 1
-		newX = locX + 1
-	case SOUTH: 	
-		newY = locY + 1		
-	case SOUTHWEST: 	
-		newY = locY + 1
-		newX = locX - 1	
-	case WEST: 	
-		newX = locX - 1		
-	case NORTHWEST: 	
-		newX = locX - 1		
-		newY = locY - 1
-	case STAY:
-		newX = locX
-		newY = locY
-	}
+	newX, newY = getXYFromCardinal(newX, newY, cardinal)
 	
 	grid.monsterXLoc = newX
 	grid.monsterYLoc = newY
@@ -258,38 +243,7 @@ func (grid *BattleGrid) directionValid(locX int, locY int, cardinal int, gridId 
 	newX = locX
 	newY = locY
 	
-	switch cardinal {	
-	
-	case NORTH: 	
-		newY = locY - 1	
-		newX = locX
-	case NORTHEAST: 	
-		newY = locY - 1
-		newX = locX + 1
-	case EAST: 	
-		newX = locX + 1
-		newY = locY
-	case SOUTHEAST: 
-		newY = locY + 1
-		newX = locX + 1
-	case SOUTH: 	
-		newY = locY + 1		
-		newX = locX
-	case SOUTHWEST: 	
-		newY = locY + 1
-		newX = locX - 1	
-	case WEST: 	
-		newX = locX - 1
-		newY = locY
-	case NORTHWEST: 	
-		newX = locX - 1		
-		newY = locY - 1
-	case STAY:
-		newX = locX
-		newY = locY
-	default:
-		return false
-	}
+	newX, newY = grid.getXYFromCardinal(newX, newY, cardinal)
 	
 	if newX < 0 || newY < 0 {
 		return false;
@@ -312,11 +266,7 @@ func (grid *BattleGrid) directionValid(locX int, locY int, cardinal int, gridId 
 		}
 	}
 	
-	if tgrid.grid[newY][newX] == EMPTY_TILE {
-		return true
-	}
-	
-	if tgrid.grid[newY][newX] == GATE1 || tgrid.grid[newY][newX] == GATE2 {
+	if grid.isPassable(tgrid.grid[newY][newX]) {
 		return true
 	}
 	

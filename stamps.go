@@ -6,7 +6,7 @@ package main
 //import "strings"
 
 var PALLETE string = "▓ ▒ ░ ■ ║ ╣ ║ ╝ ╚ ╩ ╠ ╬ ═ ╦ ╔ ╗ │ └ ┘ ┌ ┐ ─ ┴ ├ ┤ ┬ ┼ ╞ ╫ ┴ ╨ ╥ ╖ ╒ ╓"
-var PALLETE2 string ="↨ ↔ ▀ █ ▐ ▲ ► ▼ ◄ « ˄ « ˄ ∞ ⌂ ☼ ♥ ♪ ♫ ± Σ Φ ∩ †"		
+var PALLETE2 string ="↨ ↔ ▀ █ ▐ ▲ ► ▼ ◄ « ˄ « ˄ ∞ ⌂ ☼ ♥ ♪ ♫ ± Σ Φ ∩ † "		
 
 var well = [][]string{
 							{"┌", "─", "┐"},
@@ -49,7 +49,7 @@ var house = [][]string 	{
 						
 var tree = [][]string 	{
 							{"\\", "|",  "/"},
-							{"-", ".", "-"},
+							{"-", "·", "-"},
 							{"/", "|", "\\"},	
 						}
 						
@@ -80,7 +80,8 @@ var pond3 = [][]string 	{
 							{" ", "░", "░", "░", "░", "░", "░", "░", "░", "░", " "},							
 							{" ", " ", "░", "░", "░", "░", "░", "░", "░", " ", " "},
 							{" ", " ", " ", " ", "░", "░", "░", " ", " ", " ", " "},							
-						}						
+						}	
+						
 func (bg * BattleGrid) addStreamVertical(xloc int, gidx int){
 	
 	var die Die 
