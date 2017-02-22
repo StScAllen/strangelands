@@ -62,6 +62,25 @@ var pond1 = [][]string 	{
 							{" ", " ", "░", "░", "░", " ", " "},							
 						}												
 
+var pond2 = [][]string 	{
+							{" ", " ", " ", "░", " ", " ", " "},
+							{" ", " ", "░", "░", "░", " ", " "},	
+							{" ", "░", "░", "░", "░", "░", " "},
+							{" ", " ", "░", "░", "░", " ", " "},
+							{" ", " ", " ", "░", " ", " ", " "},
+							
+						}						
+
+var pond3 = [][]string 	{
+							{" ", " ", " ", " ", "░", "░", "░", " ", " ", " ", " "},
+							{" ", " ", "░", "░", "░", "░", "░", "░", "░", " ", " "},	
+							{" ", "░", "░", "░", "░", "░", "░", "░", "░", "░", " "},
+							{"░", "░", "░", "░", "░", "░", "░", "░", "░", "░", "░"},
+							{"░", "░", "░", "░", "░", "░", "░", "░", "░", "░", "░"},
+							{" ", "░", "░", "░", "░", "░", "░", "░", "░", "░", " "},							
+							{" ", " ", "░", "░", "░", "░", "░", "░", "░", " ", " "},
+							{" ", " ", " ", " ", "░", "░", "░", " ", " ", " ", " "},							
+						}						
 func (bg * BattleGrid) addStreamVertical(xloc int, gidx int){
 	
 	var die Die 
@@ -120,7 +139,7 @@ func (bg * BattleGrid) setRandomStamp(maxx int, maxy int, gidx int){
 	
 	var die Die 
 	var skip bool	
-	roll := die.rollxdx(1, 20)
+	roll := die.rollxdx(1, 8)
 	
 	var stamp [][]string
 	
@@ -139,12 +158,12 @@ func (bg * BattleGrid) setRandomStamp(maxx int, maxy int, gidx int){
 		stamp = well			
 	} else {
 //		bg.addStreamVertical(die.rollxdx(4, 28), gidx)
-		bg.addStreamHorizontal(die.rollxdx(4, 13), gidx)
+		bg.addStreamHorizontal(die.rollxdx(4, 12), gidx)
 
 		skip = true
 	}
 		
-//	stamp = pond1
+	stamp = pond3
 
 	if (skip == false){
 		xs := die.rollxdx(2, (maxx-len(stamp))-1)
