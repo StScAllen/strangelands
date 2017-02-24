@@ -91,6 +91,37 @@ func (gd * Grid) addCemetaryDecorations(){
 	
 }
 
+func (bg *BattleGrid) isMonsterVisible() (bool) {
+
+	var sameCharGrid bool = false
+	var sameAppGrid bool = false
+	
+	if (bg.monsterGridId != bg.charGridId && bg.monsterGridId != bg.appGridId){
+		return false
+	}
+	
+	
+	if (bg.monsterGridId == bg.charGridId){
+		sameCharGrid = true
+	}
+	if (bg.monsterGridId == bg.appGridId){
+		sameAppGrid = true
+	}
+
+	if (sameCharGrid){
+		if (bg.inViewRange(bg.monsterXLoc, bg.monsterYLoc, bg.charXLoc, bg.charYLoc, character.per)){
+			return true
+		}
+	}
+	if (sameAppGrid){
+		if bg.inViewRange(bg.monsterXLoc, bg.monsterYLoc, bg.appXLoc, bg.appYLoc, apprentice.per) {
+			return true
+		}
+	}	
+
+	return false
+}
+
 func (bg *BattleGrid) isGate(turn int) (bool){
 
 	var xloc, yloc, gridId int
@@ -140,9 +171,9 @@ func (bg *BattleGrid) getEntityGrid(id int) (Grid){
 	return nilGrid
 }
 
-func (bg * BattleGrid) getXYFromCardinal(locX, locY, cardinal int) (x, y int) {
-	
-	var x,y int
+func getXYFromCardinal(locX, locY, cardinal int) (x, y int) {
+
+	x,y = locX,locY
 
 	switch cardinal {	// switch always breaks unless you use fallthrough
 	
@@ -198,8 +229,6 @@ func (grid *BattleGrid) moveCharacter(cardinal int) {
 
 func (grid *BattleGrid) moveMonster(cardinal int) {
 	var newX, newY int
-	var locX = grid.monsterXLoc
-	var locY = grid.monsterYLoc
 	
 	newX = grid.monsterXLoc
 	newY = grid.monsterYLoc
@@ -208,6 +237,11 @@ func (grid *BattleGrid) moveMonster(cardinal int) {
 	
 	grid.monsterXLoc = newX
 	grid.monsterYLoc = newY
+}
+
+func (grid *BattleGrid) moveMonsterXY(x, y int) {	
+	grid.monsterXLoc = x
+	grid.monsterYLoc = y
 }
 
 func (bg *BattleGrid) getMoveOptions(gridId int, xloc int, yloc int) (int, []int){
@@ -243,7 +277,7 @@ func (grid *BattleGrid) directionValid(locX int, locY int, cardinal int, gridId 
 	newX = locX
 	newY = locY
 	
-	newX, newY = grid.getXYFromCardinal(newX, newY, cardinal)
+	newX, newY = getXYFromCardinal(newX, newY, cardinal)
 	
 	if newX < 0 || newY < 0 {
 		return false;
@@ -267,6 +301,24 @@ func (grid *BattleGrid) directionValid(locX int, locY int, cardinal int, gridId 
 	}
 	
 	if grid.isPassable(tgrid.grid[newY][newX]) {
+		return true
+	}
+	
+	return false
+}
+
+func (grid *BattleGrid) isTileOpen(tx, ty, gridId, turn int) (bool) {
+	var tgrid Grid = grid.getEntityGrid(gridId)
+
+	if (gridId == grid.charGridId && tx == grid.charXLoc && ty == grid.charYLoc){
+		return false
+	} else if (grid.hasApprentice && gridId == grid.appGridId && tx == grid.appXLoc && ty == grid.appYLoc){
+		return false
+	} else if (gridId == grid.monsterGridId && tx == grid.monsterXLoc && ty == grid.monsterYLoc && turn != MONST_TURN){
+		return false
+	}
+	
+	if grid.isPassable(tgrid.grid[ty][tx]) {
 		return true
 	}
 	
