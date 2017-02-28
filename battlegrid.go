@@ -432,6 +432,9 @@ func (bg *BattleGrid) drawGrid() {
 				row += "a"
 				continue					
 			} else if ((bg.monsterGridId == grid.id) && (i == bg.monsterYLoc) && (t == bg.monsterXLoc)){
+				if (!bg.isPassable(grid.grid[i][t])){
+					log.addAi("Monster is stuck! (" + grid.grid[i][t] + ")" )
+				}
 				if (bg.isMonsterVisible()){
 					row += "M"
 				} else {

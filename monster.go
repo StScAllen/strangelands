@@ -79,7 +79,14 @@ func getStepFromTile(tile Tile) (AIStep){
 
 func (bg *BattleGrid) isStepValid(step AIStep) (bool) {
 
+	if bg.monster.plan.nextStep >= bg.monster.plan.stepCount {
+		fmt.Println(step)
+		fmt.Println("Pathing:  Destination reached?")
+		return false
+	}
+
 	if (step.id == STEP_MOVE){
+		fmt.Println(step)
 		if (bg.isTileOpen(step.x, step.y, bg.monsterGridId, MONST_TURN)){
 			return true
 		} else {
@@ -94,7 +101,7 @@ func (bg * BattleGrid) createMonsterPlan()(AIPlan){
 	// lets just create a simple plan to test pathfinding for now
 	var plan AIPlan
 	//var die Die
-	var tiles [100]Tile
+	var tiles [MAX_PF_TILES]Tile
 	var count int
 	// lets try to go to loc 4, 4
 	

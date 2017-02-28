@@ -3,6 +3,10 @@
 package main
 import "fmt"
 
+/*
+	Test code to remove for deployment
+*/
+
 func (bg * BattleGrid) drawTestGrid(steps [100]AIStep){
 	clearConsole()
 	var grid Grid 
