@@ -61,6 +61,8 @@ func (pfGrid * PathfindingGrid) getTileById(sid int) (int, Tile){
 		}
 	}
 	
+	showPause(fmt.Sprintf("Cannot find tile in lookup: %v", sid))
+	
 	return -1, fTile
 }
 
@@ -116,7 +118,7 @@ func (bg *BattleGrid) isPassable(tile string) (bool){
 		} 
 	}
 	
-	fmt.Println("Tile not passable: " + tile)
+	//fmt.Println("Tile not passable: " + tile)
 	return false
 }
 
@@ -132,11 +134,11 @@ func (bg *BattleGrid) getAvailableTiles(tx, ty, pid int, playGrid Grid) (tiles [
 	count = 0
 	
 	for dir := 0; dir < 8; dir++ {	// loop through cardinals
-		fmt.Println("Original XY: ", tx, ty, dir)
+		//fmt.Println("Original XY: ", tx, ty, dir)
 		x, y := getXYFromCardinal(tx, ty, dir)
-		fmt.Println("After XY: ", x, y, " - ", playGrid.maxY, playGrid.maxX)
+		//fmt.Println("After XY: ", x, y, " - ", playGrid.maxY, playGrid.maxX)
 		if (x >= 0 && y >= 0 && x <= playGrid.maxY && y <= playGrid.maxX){
-			fmt.Println(fmt.Sprintf("range- from: %v, %v  to: %v, %v ", len(pathGrid.tiles), len(pathGrid.tiles[0]), y, x))
+			//fmt.Println(fmt.Sprintf("range- from: %v, %v  to: %v, %v ", len(pathGrid.tiles), len(pathGrid.tiles[0]), y, x))
 			tile := pathGrid.tiles[y][x]
 			if (tile.closed == false && bg.directionValid(tx, ty, dir, playGrid.id)) {
 				//showPause(fmt.Sprintf("range off: tmptiles- %v, %v ", len(tmpTiles), count))			
@@ -153,9 +155,9 @@ func (bg *BattleGrid) getAvailableTiles(tx, ty, pid int, playGrid Grid) (tiles [
 		for k := 0; k < count; k++ {
 			tiles[k] = tmpTiles[k]
 			tiles[k].parentId = pid
-			pathGrid.tiles[tiles[k].y][tiles[k].x].parentId = pid
+			//pathGrid.tiles[tiles[k].y][tiles[k].x].parentId = pid
 		}
-		fmt.Println(tiles)
+		//fmt.Println(tiles)
 	} else {
 		tiles = make([]Tile, 1)
 	}
@@ -244,7 +246,7 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 	
 	showPause(fmt.Sprintf("Finding path from %v, %v to %v, %v on grid %v", sx, sy, ex, ey, gid))
 	
-	openList := make([]Tile, 1)
+	openList := make([]Tile, 0)
 	closedList := make([]Tile, 0)
 	
 	playGrid := bg.getEntityGrid(gid)	
@@ -276,16 +278,16 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 		
 		// get adjacent tiles
 		availTiles, tCount := bg.getAvailableTiles(q.x, q.y, q.id, playGrid)		
-		//fmt.Println("*** Caught: ")
-		//fmt.Println(availTiles)
-		//showPause("")
+		// fmt.Println("*** Caught: ")
+		// fmt.Println(availTiles)
+		// showPause("")
 		for k := 0; k < tCount; k++ {
 			kTile := availTiles[k]
 			if (kTile.x == ex && kTile.y == ey){
 				// destination tile, end search
 				pathGrid.tiles[kTile.y][kTile.x].parentId = q.id
 				fmt.Println(kTile)
-				showPause("")
+				showPause("End tile reached")
 				endFlag = 1
 				break
 			} 
@@ -294,11 +296,33 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 			// hVal is calculated when the grid is built
 			pathGrid.tiles[kTile.y][kTile.x].fVal = pathGrid.tiles[kTile.y][kTile.x].gVal + pathGrid.tiles[kTile.y][kTile.x].hVal
 		
+//			fmt.Println("pathGrid: %v, %v, %v   kTile: %v, %v, %v", pathGrid.tiles[kTile.y][kTile.x].gVal, pathGrid.tiles[kTile.y][kTile.x].hVal, pathGrid.tiles[kTile.y][kTile.x].fVal, kTile.gVal, kTile.hVal, kTile.fVal)
 		
 			// Check for existing tile in openList
+			skip := false
+			for i := range openList {
+				iTile := openList[i]
+				if (iTile.id == kTile.id){
+					if (iTile.fVal < pathGrid.tiles[kTile.y][kTile.x].fVal){
+						skip = true
+						break
+					} 
+				} 
+			}
+			
 			// check for existing tile in closeList
-		
-			openList = append(openList, kTile)
+			for i := range closedList {
+				iTile := closedList[i]
+				if (iTile.id == kTile.id){
+					skip = true
+					break
+				}
+			}			
+			
+			if !skip {
+				pathGrid.tiles[kTile.y][kTile.x].parentId = q.id
+				openList = append(openList, pathGrid.tiles[kTile.y][kTile.x])
+			}
 		}
 		
 		closedList = append(closedList, q)
@@ -310,26 +334,38 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 	
 	if (endFlag == 1){
 		endTile := pathGrid.tiles[ey][ex]
-		fmt.Println("End Step:")		
-		fmt.Println(endTile)
+		// fmt.Println("End Step:")		
+		// fmt.Println(endTile)
 		pathCount = 1
 		path[0] = endTile
 		_, stepTile := pathGrid.getTileById(endTile.parentId)
-		fmt.Println("First Step:")
-		fmt.Println(stepTile)
-		showPause("**************************** COMPLETE PATH FOUND!")
-		for stepTile.x != ex && stepTile.y != ey {
-			id := stepTile.parentId
-			_, stepTile = pathGrid.getTileById(id)
-			path[pathCount] = stepTile
-			fmt.Println(pathCount)
-			fmt.Println(path[pathCount])
-			showPause("")
+		// fmt.Println("First Step:")
+		// fmt.Println(stepTile)
+		// fmt.Println(fmt.Sprintf("End coords: %v, %v", sx, sy)) // start position because we are moving backwards
+		newX, newY := stepTile.x, stepTile.y
+		id := stepTile.parentId
+		path[1] = stepTile
+		pathCount++
+
+		for true {
+			_, checkTile := pathGrid.getTileById(id)
+			path[pathCount] = checkTile
+			// fmt.Println(pathCount)
+			// fmt.Println(path[pathCount])
+			// showPause("")
 			pathCount++
+			newX = checkTile.x
+			newY = checkTile.y
+			id = checkTile.parentId
+			if newX == sx && newY == sy {
+				break
+			}
 		}
 	} else {
 		showPause("**************************** No Path Found!")
 	}
+	
+	showPause("**************************** COMPLETE PATH FOUND!")
 	
 	return pathCount, path
 }

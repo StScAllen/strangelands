@@ -71,6 +71,9 @@ type BattleGrid struct {
 	weather int
 	turn int	// char=0, app=1, monst=2
 	hasApprentice bool
+	monsterSpotted bool
+	characterSpotted bool
+	apprenticeSpotted bool
 }
 
 func (gd * Grid) addCemetaryDecorations(){
@@ -91,6 +94,44 @@ func (gd * Grid) addCemetaryDecorations(){
 	
 }
 
+func (bg *BattleGrid) isCharacterVisible() (bool) {
+
+	if (bg.monsterGridId != bg.charGridId){
+		return false
+	}
+
+	if (bg.inViewRange(bg.charXLoc, bg.charYLoc, bg.monsterXLoc, bg.monsterYLoc, bg.monster.getMonsterVision())){
+		if (!bg.characterSpotted){
+			log.addAi("Character Spotted!")
+		}
+		bg.characterSpotted = true
+		return true
+	}
+
+	return false
+}
+
+func (bg *BattleGrid) isApprenticeVisible() (bool) {
+	
+	if (bg.hasApprentice == false){
+		return false
+	}
+	
+	if (bg.monsterGridId != bg.appGridId){
+		return false
+	}
+
+	if (bg.inViewRange(bg.appXLoc, bg.appYLoc, bg.monsterXLoc, bg.monsterYLoc, bg.monster.getMonsterVision())){
+		if (!bg.characterSpotted){
+			log.addAi("Apprentice Spotted!")
+		}
+		bg.characterSpotted = true
+		return true
+	}
+
+	return false
+}
+
 func (bg *BattleGrid) isMonsterVisible() (bool) {
 
 	var sameCharGrid bool = false
@@ -99,7 +140,6 @@ func (bg *BattleGrid) isMonsterVisible() (bool) {
 	if (bg.monsterGridId != bg.charGridId && bg.monsterGridId != bg.appGridId){
 		return false
 	}
-	
 	
 	if (bg.monsterGridId == bg.charGridId){
 		sameCharGrid = true
@@ -110,6 +150,10 @@ func (bg *BattleGrid) isMonsterVisible() (bool) {
 
 	if (sameCharGrid){
 		if (bg.inViewRange(bg.monsterXLoc, bg.monsterYLoc, bg.charXLoc, bg.charYLoc, character.per)){
+			if (!bg.monsterSpotted){
+				log.addAi("Monster Spotted!")
+			}
+			bg.monsterSpotted = true
 			return true
 		}
 	}
@@ -120,6 +164,12 @@ func (bg *BattleGrid) isMonsterVisible() (bool) {
 	}	
 
 	return false
+}
+
+func (bg * BattleGrid) updateVisibility(){
+	bg.isMonsterVisible()
+	bg.isCharacterVisible()
+	bg.isApprenticeVisible()
 }
 
 func (bg *BattleGrid) isGate(turn int) (bool){
@@ -632,7 +682,7 @@ func (grid *BattleGrid)  placeMonster() {
 
 	var dice Die
 	monsterNotPlaced := true
-	grid.monsterGridId = dice.rollxdx(1, grid.numGrids-1)
+	grid.monsterGridId = 0 // dice.rollxdx(1, grid.numGrids-1)
 	
 	entityGrid  := grid.getEntityGrid(grid.monsterGridId)
 	
@@ -735,9 +785,14 @@ func buildBattleGrid(id int) (BattleGrid){
 		grid.appXLoc = 2
 		grid.appYLoc = 1
 		grid.appGridId = 0
-				
+		
+		grid.characterSpotted = false
+		grid.monsterSpotted = false
+		grid.apprenticeSpotted = false
+		
 		grid.addGates()
 		grid.placeMonster()
+		
 		
 	} else {
 /* 		grid.grid = SMALL_GRID

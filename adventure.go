@@ -81,7 +81,9 @@ func adventure(){
 						fmt.Println("Path is blocked in this direction!")
 						fmt.Scanln(&rsp3)
 					}					
-				}		
+				}
+
+				bg.updateVisibility()				
 			}
 		} else if strings.Contains(rsp, "end") && strings.Contains(rsp2, "turn"){
 			if currTurns > 0 {
