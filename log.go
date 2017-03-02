@@ -80,4 +80,5 @@ func (log * Log) displayLog() {
 	fmt.Println(log.ais)
 	fmt.Println("--Errors--")	
 	fmt.Println(log.errors)
+	showPause("")
 }

@@ -17,6 +17,18 @@ func clearConsole(){
 	cmd.Run()
 }
 
+func showPause(messge string){
+	fmt.Println(messge)
+	rsp := ""
+	fmt.Scanln(&rsp)	
+}
+
+func finalExit(){
+	clearConsole()	
+	log.displayLog()
+	log.writeToFile()
+}
+
 func showGameMenu() (string){
 
 	clearConsole()
@@ -60,13 +72,13 @@ func showTopMenu() (string){
 
 func init(){
 	gameDay = 1
-
 }
 
 func main() {
-	rsp := ""
-	rsp = showTopMenu()
+	rsp := showTopMenu()
 	log = openLog()
+	
+	defer finalExit()
 	
 	if (rsp == "1") {	// new game, make a character
 		rsp = "n"
@@ -102,8 +114,6 @@ func main() {
 			adventure()
 		}
 	}
-	clearConsole()	
-	log.displayLog()
-	log.writeToFile()
+
 }
 

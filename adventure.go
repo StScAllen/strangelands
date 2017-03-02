@@ -44,6 +44,8 @@ func adventure(){
 					if bg.directionValid(bg.charXLoc, bg.charYLoc, direct, bg.charGridId) {
 						bg.moveCharacter(direct)
 						currTurns -= 1
+						bg.monster.plan.interrupt = 1
+						bg.monster.plan.charMoved = true
 						
 						if bg.isGate(CHAR_TURN){
 							if (selectedGate.gridid1 == bg.charGridId){
@@ -65,6 +67,8 @@ func adventure(){
 					if bg.directionValid(bg.appXLoc, bg.appYLoc, direct, bg.appGridId) {
 						bg.moveCharacter(direct)
 						currTurns -= 1
+						bg.monster.plan.interrupt = 1
+						bg.monster.plan.appMoved = true
 						
 						if bg.isGate(APP_TURN){
 							if (selectedGate.gridid1 == bg.appGridId){
@@ -83,8 +87,11 @@ func adventure(){
 					}					
 				}
 
-				bg.updateVisibility()				
+				bg.updateActorVisibility()				
 			}
+		} else if strings.Contains(rsp, "wait"){	
+			showPause("You cower in the darkness...")
+			currTurns -= 1
 		} else if strings.Contains(rsp, "end") && strings.Contains(rsp2, "turn"){
 			if currTurns > 0 {
 				fmt.Println("You still have turns remaining... the darkness patiently waits.")
@@ -109,6 +116,7 @@ func adventure(){
 						currTurns = character.getCharacterMoves()	
 						maxTurns = character.getCharacterMoves()
 						bg.turn = CHAR_TURN
+						bg.monster.plan.interrupt = 0	// clear any interrupts
 					} else if (rslt == 1){
 						// character has died!
 						// if character dies, and they have an apprentice, the apprentice becomes the new character
@@ -122,6 +130,8 @@ func adventure(){
 			} else {
 				apprentice.printCharacter(1)
 			}
+		} else if strings.Contains(rsp, "view") && strings.Contains(rsp2, "-log"){
+			log.displayLog()
 		}
 	}
 }

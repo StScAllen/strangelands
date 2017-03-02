@@ -22,6 +22,7 @@ type AIStep struct {
 	action string
 	id int
 	x, y int
+	target int
 }
 
 type AIPlan struct {
@@ -29,6 +30,12 @@ type AIPlan struct {
 	stepCount int
 	maneuver string
 	nextStep int
+	target int	// turn id MONST_TURN/CHAR_TURN/APP_TURN constants
+	interrupt int	//flags set by character or scene actions that will cause monster to recalculate its plan
+	charMoved bool
+	appMoved bool
+	charDied bool
+	appDied bool
 }
 
 func (mon * Monster) getMonsterMoves() (int) {
@@ -96,81 +103,14 @@ func (bg *BattleGrid) isStepValid(step AIStep) (bool) {
 		} else {
 			return false
 		}
+	} else if (step.id == STEP_ATTACK){
+		return true
+		
+	} else if (step.id == STEP_WAIT){
+		return true
 	}
 
 	return false
-}
-
-func (bg * BattleGrid) createMonsterPlan()(AIPlan){
-	var plan AIPlan
-	var tiles [MAX_PF_TILES]Tile
-	var count int
-	var die Die
-	
-//	monsterSeen := bg.isMonsterVisible()
-//	apprenticeSeen := bg.isApprenticeVisible()
-	characterSeen := bg.isCharacterVisible()
-	
-	monsterMoves := bg.monster.getMonsterMoves()
-	
-	
-	if characterSeen {
-		log.addAi("Character Visible: Trying to get path...")
-		count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, bg.charXLoc, bg.charYLoc, bg.monsterGridId)	
-	
-		if (count < monsterMoves) {
-			// monster has enough moves to move to character and attack at least once
-		}
-	} else {
-		// patrol to random corner
-		rslt := die.rollxdx(1, 4)
-		
-		if rslt == 1 {  //tl
-			if (bg.isTileOpen(2, 2, bg.monsterGridId, MONST_TURN)) {
-			
-			} else if (bg.isTileOpen(3, 3, bg.monsterGridId, MONST_TURN)){
-			
-			}
-		} else if rslt == 2 { //tr
-			if (bg.isTileOpen(30, 2, bg.monsterGridId, MONST_TURN)) {
-			
-			} else if (bg.isTileOpen(30, 3, bg.monsterGridId, MONST_TURN)){
-			
-			}
-		} else if rslt == 3 {	//bl
-			if (bg.isTileOpen(2, 14, bg.monsterGridId, MONST_TURN)) {
-			
-			} else if (bg.isTileOpen(3, 14, bg.monsterGridId, MONST_TURN)){
-			
-			}
-		} else if rslt == 4 {
-			if (bg.isTileOpen(29, 14, bg.monsterGridId, MONST_TURN)) {
-			
-			} else if (bg.isTileOpen(30, 14, bg.monsterGridId, MONST_TURN)){
-			
-			}
-		}
-		
-	}
-	
-	fmt.Println("Path found, building plan- ", " Steps:  ", count)
-
-	//plan.steps = make([]AIStep, 100)
-	plan.stepCount = count
-	plan.nextStep = 0
-	countUp := 0
-	if (count > 0){
-		for k:= count-1; k >= 0; k-- {
-			plan.steps[countUp] = getStepFromTile(tiles[k])
-			countUp++
-		}
-	}
-	
-	// showPause("")
-	bg.drawTestGrid(plan.steps)
-	showPause("")
-	
-	return plan
 }
 
 func (bg *BattleGrid) doMonsterActivity() (int){
@@ -187,6 +127,23 @@ func (bg *BattleGrid) doMonsterActivity() (int){
 		bg.monster.plan = bg.createMonsterPlan()
 	}
 	
+	// handle ai interrupts
+	if bg.monster.plan.interrupt != 0 {
+		if bg.monster.plan.maneuver == "Attack" {
+			if bg.monster.plan.target == CHAR_TURN {
+				if bg.monster.plan.charMoved {
+					log.addAi("Plan interrupted by character move.")
+					bg.monster.plan = bg.createMonsterPlan()
+				}
+			} else if bg.monster.plan.target == APP_TURN {
+				if bg.monster.plan.appMoved {
+					log.addAi("Plan interrupted by apprentice move.")
+					bg.monster.plan = bg.createMonsterPlan()
+				}			
+			}
+		}
+	}
+	
 	for ; bg.monster.moves > 0; {		
 		// get the next step from the monster plan
 		step := bg.monster.plan.steps[bg.monster.plan.nextStep]
@@ -196,6 +153,10 @@ func (bg *BattleGrid) doMonsterActivity() (int){
 		
 			if (step.id == STEP_MOVE){
 				bg.moveMonsterXY(step.x, step.y)
+			} else if (step.id == STEP_ATTACK){
+				log.addAi("Monster attacks!")
+			} else if (step.id == STEP_WAIT){
+				log.addAi("Monster waits")
 			}
 			
 			if (bg.isMonsterVisible()){
@@ -214,7 +175,7 @@ func (bg *BattleGrid) doMonsterActivity() (int){
 			bg.monster.plan = bg.createMonsterPlan()
 		}
 				
-		bg.updateVisibility()	
+		bg.updateActorVisibility()	
 	}
 	
 	log.addAi(fmt.Sprintf("%s move: From: %v : %v (%v) To: %v : %v (%v)", bg.monster.name, oldX, oldY, oldG, bg.monsterXLoc, bg.monsterYLoc, bg.monsterGridId))

@@ -27,10 +27,10 @@ const NIGHT = 1
 const DUSK = 2
 const DAWN = 3	
 
-const SUNNY = 0
-const FOGGY = 1
-const RAIN = 2	
-const SNOW = 3		
+const CLEAR = 0		// no penalties
+const FOGGY = 1		// vision reduced by 1
+const RAIN = 2		// movement reduced by 1
+const SNOW = 3		// movement & vision reduced by 1
 				
 const CHAR_TURN = 0
 const APP_TURN = 1
@@ -77,7 +77,6 @@ type BattleGrid struct {
 }
 
 func (gd * Grid) addCemetaryDecorations(){
-
 	var die Die
 	
 	for i:= 0; i < die.rollxdx(4, 14); i++{
@@ -89,9 +88,38 @@ func (gd * Grid) addCemetaryDecorations(){
 		} else {
 			gd.grid[x][y] = "∩"
 		}
-	
+	}
+}
+
+func (bg * BattleGrid) isActorAdjacent(whoFlag, targetFlag int) (bool) {
+
+	if whoFlag == MONST_TURN {
+		if targetFlag == CHAR_TURN {
+			if (iAbsDiff(bg.monsterXLoc, bg.charXLoc) < 2 && iAbsDiff(bg.monsterYLoc, bg.charYLoc) < 2) {
+				// character is adjacent to monster
+				return true
+			} 
+		} else if targetFlag == APP_TURN {
+			if (iAbsDiff(bg.monsterXLoc, bg.appXLoc) < 2 && iAbsDiff(bg.monsterYLoc, bg.appYLoc) < 2) {
+				// character is adjacent to monster
+				return true
+			} 		
+		}
+	} else if whoFlag == CHAR_TURN {
+		if targetFlag == MONST_TURN {
+			if (iAbsDiff(bg.monsterXLoc, bg.charXLoc) < 2 && iAbsDiff(bg.monsterYLoc, bg.charYLoc) < 2) {
+				// monster is adjacent to character
+				return true
+			} 
+		} else if targetFlag == APP_TURN {
+			if (iAbsDiff(bg.charXLoc, bg.appXLoc) < 2 && iAbsDiff(bg.charYLoc, bg.appYLoc) < 2) {
+				// apprentice is adjacent to character
+				return true
+			} 		
+		}		
 	}
 	
+	return false
 }
 
 func (bg *BattleGrid) isCharacterVisible() (bool) {
@@ -166,7 +194,136 @@ func (bg *BattleGrid) isMonsterVisible() (bool) {
 	return false
 }
 
-func (bg * BattleGrid) updateVisibility(){
+func (bg * BattleGrid) isTileObscured(x, y, gridid int) (bool){	
+	if (gridid != bg.charGridId && gridid != bg.appGridId){
+		return true
+	}
+	
+	//check := fmt.Sprintf("is tile obscured? %v, %v", x, y, gridid)
+	//fmt.Println(check)
+	//log.addInfo(check)
+	
+	checkGrid := bg.getEntityGrid(gridid)
+	hidden := false
+	
+	if (y == 0 || y == 15){
+		return false
+	}
+	if (x == 0 || x == 31){
+		return false
+	}
+	
+	if (gridid == bg.charGridId){
+		// get direction perspective of character to tile
+		xdiff := x - bg.charXLoc
+		ydiff := y - bg.charYLoc
+		
+		if xdiff > 0 {
+			if ydiff > 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y-1][x-1])){
+					hidden = true
+				}				
+			} else if ydiff < 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y+1][x-1])){
+					hidden = true
+				}			
+			} else {
+				if (!bg.isSeeThrough(checkGrid.grid[y][x-1])){
+					hidden = true
+				}
+			}	
+		} else if xdiff < 0 {
+			if ydiff > 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y-1][x+1])){
+					hidden = true
+				}				
+			} else if ydiff < 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y+1][x+1])){
+					hidden = true
+				}			
+			} else {
+				if (!bg.isSeeThrough(checkGrid.grid[y][x+1])){
+					hidden = true
+				}
+			}	
+		} else {
+			if ydiff > 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y-1][x])){
+					hidden = true
+				}				
+			} else if ydiff < 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y+1][x])){
+					hidden = true
+				}			
+			} 			
+		}	
+	}
+	
+	if (bg.hasApprentice && gridid == bg.appGridId){
+		xdiff := bg.appXLoc - x
+		ydiff := bg.appYLoc - y
+		
+		if xdiff > 0 {
+			if ydiff > 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y-1][x-1])){
+					hidden = true
+				} else {
+					hidden = false
+				}				
+			} else if ydiff < 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y+1][x-1])){
+					hidden = true
+				} else {
+					hidden = false
+				}				
+			} else {
+				if (!bg.isSeeThrough(checkGrid.grid[y][x-1])){
+					hidden = true
+				} else {
+					hidden = false
+				}	
+			}	
+		} else if xdiff < 0 {
+			if ydiff > 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y-1][x+1])){
+					hidden = true
+				} else {
+					hidden = false
+				}					
+			} else if ydiff < 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y+1][x+1])){
+					hidden = true
+				} else {
+					hidden = false
+				}	 		
+			} else {
+				if (!bg.isSeeThrough(checkGrid.grid[y][x+1])){
+					hidden = true
+				} else {
+					hidden = false
+				}	
+			}	
+		} else {
+			if ydiff > 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y-1][x])){
+					hidden = true
+				} else {
+					hidden = false
+				}					
+			} else if ydiff < 0 {
+				if (!bg.isSeeThrough(checkGrid.grid[y+1][x])){
+					hidden = true
+				} else {
+					hidden = false
+				}				
+			} 			
+		}	
+	}
+	
+	return hidden
+}
+
+func (bg * BattleGrid) updateActorVisibility(){
 	bg.isMonsterVisible()
 	bg.isCharacterVisible()
 	bg.isApprenticeVisible()
@@ -422,6 +579,14 @@ func (grid *BattleGrid) inViewRange(x int, y int, charX int, charY int, charPer 
 		vRange = 5
 	}
 	
+	if (grid.time == DUSK || grid.time == DAWN){
+		vRange += 1
+	}
+	
+	if (grid.weather == FOGGY || grid.weather == SNOW){
+		vRange -= 1
+	}
+	
 	distX := 0
 	distY := 0
 	if x > charX { 
@@ -488,16 +653,21 @@ func (bg *BattleGrid) drawGrid() {
 				if (bg.isMonsterVisible()){
 					row += "M"
 				} else {
-					row += FOG_TILE
+					row += HIDDEN_TILE
 				}
 
 				continue
 			}
 		
 			if bg.inViewRange(t, i, bg.charXLoc, bg.charYLoc, character.per) || (bg.hasApprentice && bg.inViewRange(t, i, bg.appXLoc, bg.appYLoc, apprentice.per)){
-				row += grid.grid[i][t]
+				if bg.isTileObscured(t, i, grid.id){
+					row += HIDDEN_TILE
+				} else {
+					row += grid.grid[i][t]				
+				}
+
 			} else {
-				row += FOG_TILE
+				row += HIDDEN_TILE
 			}
 		}
 		
@@ -753,8 +923,8 @@ func buildBattleGrid(id int) (BattleGrid){
 	fmt.Printf("Building Grid: %v   \n ", id);
 		
 	grid.currGrid = 0	// default
-	grid.time = DAY		// default
-	grid.weather = SUNNY // default
+	grid.time = DUSK		// default
+	grid.weather = CLEAR  // default
 	grid.turn = CHAR_TURN	// default
 	grid.numGrids = 4	// default
 	grid.hasApprentice = false

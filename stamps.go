@@ -140,33 +140,31 @@ func (bg * BattleGrid) setRandomStamp(maxx int, maxy int, gidx int){
 	
 	var die Die 
 	var skip bool	
-	//roll := die.rollxdx(1, 8)
+	
+	roll := die.rollxdx(1, 8)
 	
 	var stamp [][]string
 	
 	skip = false
-	// if (roll == 1){
-		// stamp = open_crypt
-	// } else if (roll == 2){
-		// stamp = closed_crypt
-	// } else if (roll == 3){
-		// stamp = wagon
-	// } else if (roll == 4){
-		// stamp = tree	
-	// } else if (roll == 5){
-		// stamp = pond1	
-	// } else if (roll == 6){
-		// stamp = well	
-	// } else if (roll == 7){
-		// bg.addStreamVertical(die.rollxdx(4, 28), gidx)	
-		// skip = true
-	// } else {
-		// bg.addStreamHorizontal(die.rollxdx(4, 12), gidx)
-		// skip = true
-	// }
-		
-	bg.addStreamVertical(14, gidx)	
-	skip = true	
+	if (roll == 1){
+		stamp = open_crypt
+	} else if (roll == 2){
+		stamp = closed_crypt
+	} else if (roll == 3){
+		stamp = wagon
+	} else if (roll == 4){
+		stamp = tree	
+	} else if (roll == 5){
+		stamp = pond1	
+	} else if (roll == 6){
+		stamp = well	
+	} else if (roll == 7){
+		bg.addStreamVertical(die.rollxdx(4, 28), gidx)	
+		skip = true
+	} else {
+		bg.addStreamHorizontal(die.rollxdx(4, 12), gidx)
+		skip = true
+	}
 		
 //	stamp = pond3
 
