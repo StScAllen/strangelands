@@ -14,7 +14,7 @@ func (bg * BattleGrid) getDirectAttackBehavior(target int) (int, [MAX_PF_TILES]T
 	var count int
 	
 	log.addAi("Adding a direct attack behavior")
-	showPause("Adding a direct attack behavior")
+	//showPause("Adding a direct attack behavior")
 	
 	monsterMoves := bg.monster.getMonsterMoves()
 	count = monsterMoves
@@ -44,7 +44,7 @@ func (bg * BattleGrid) getMoveAttackBehavior(target int) (int, [MAX_PF_TILES]Til
 	var targetX, targetY int
 	
 	log.addAi("Adding a move attack behavior")
-	showPause("Adding a move attack behavior")
+	//showPause("Adding a move attack behavior")
 	monsterMoves := bg.monster.getMonsterMoves()
 	
 	if (target == CHAR_TURN){
@@ -100,7 +100,7 @@ func (bg * BattleGrid) getPatrolBehavior() (int, [MAX_PF_TILES]Tile, []AIStep){
 	var tiles [MAX_PF_TILES]Tile
 	
 	log.addAi("Adding a patroling behavior")
-	showPause("Adding a patroling behavior")
+	//showPause("Adding a patroling behavior")
 	
 	monsterMoves := bg.monster.getMonsterMoves()
 	

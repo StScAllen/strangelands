@@ -5,26 +5,26 @@ package main
 //import "fmt"		
 //import "strings"
 
-var PALLETE string = "▓ ▒ ░ ■ ║ ╣ ║ ╝ ╚ ╩ ╠ ╬ ═ ╦ ╔ ╗ │ └ ┘ ┌ ┐ ─ ┴ ├ ┤ ┬ ┼ ╞ ╫ ┴ ╨ ╥ ╖ ╒ ╓"
+var PALLETE string = "▓ ▒ ░ ■ ║ ╣ ║ ╝ ╚ ╩ ╠ ╬ ═ ╦ ╔ ╗ │ └ ┘ ┌ ┐ ─ ┴ ├ ┤ ┬ ┼ ╞ ╫ ┴ ╨ ╥ ╖ ╒ ╓ ╙ ╜"
 var PALLETE2 string ="↨ ↔ ▀ █ ▐ ▲ ► ▼ ◄ « ˄ « ˄ ∞ ⌂ ☼ ♥ ♪ ♫ ± Σ Φ ∩ † "		
 
-var well = [][]string{
+var well = [][]string	{
 							{"┌", "─", "┐"},
 							{"│", "O", "│"},
 							{"└", "─", "┘"},
-						   }
+						}
 
 var open_crypt = [][]string{
 							{"╔", "╦", "╗"},
-							{"║", " ", "║"},
-							{"║", " ", "║"},
+							{"║", "┼", "║"},
+							{"║", "│", "║"},
 							{"╚", "\\", "╝"},
 						   }	
 						 
 var closed_crypt = [][]string{
 							{"╔", "╦", "╗"},
-							{"║", " ", "║"},
-							{"║", " ", "║"},							
+							{"║", "┼", "║"},
+							{"║", "│", "║"},							
 							{"╚", "═", "╝"},
 						   }	
 						   
@@ -141,7 +141,7 @@ func (bg * BattleGrid) setRandomStamp(maxx int, maxy int, gidx int){
 	var die Die 
 	var skip bool	
 	
-	roll := die.rollxdx(1, 8)
+	roll := die.rollxdx(1, 9)
 	
 	var stamp [][]string
 	
@@ -159,6 +159,8 @@ func (bg * BattleGrid) setRandomStamp(maxx int, maxy int, gidx int){
 	} else if (roll == 6){
 		stamp = well	
 	} else if (roll == 7){
+		stamp = house			
+	} else if (roll == 8){
 		bg.addStreamVertical(die.rollxdx(4, 28), gidx)	
 		skip = true
 	} else {

@@ -36,12 +36,12 @@ func showGameMenu() (string){
 	fmt.Println("Main Menu")
 	fmt.Printf("Day: %v \n", gameDay)
 	fmt.Println("------------")
-	fmt.Println("1. Visit Town")
+	fmt.Println("1. Visit Village")
 	fmt.Println("2. Rest at Keep")
-	fmt.Println("3. Status")
+	fmt.Println("3. Scavenge Countryside")
 	fmt.Println("4. Missions")
 	fmt.Println("")
-	fmt.Println("5. Bestiary")
+	fmt.Println("5. Minutiae")
 	fmt.Println("6. Quit")
 	fmt.Println("")
 	fmt.Println("Select an Option:  ")
@@ -100,8 +100,8 @@ func main() {
 	clearConsole()
 
 	rsp = ""
-
-	for rsp != "6" {
+	gameFlag := true
+	for gameFlag {
 		rsp = showGameMenu()
 		
 		if (rsp == "1") {
@@ -111,7 +111,14 @@ func main() {
 			character.save()
 		} else if (rsp == "3") {
 			chooseAdventure()
+			adventure()			
+		} else if (rsp == "4") {
+			chooseAdventure()
 			adventure()
+		} else if (rsp == "5") {
+			openMinutiae()
+		} else if (rsp == "6") {
+			gameFlag = false
 		}
 	}
 

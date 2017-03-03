@@ -74,6 +74,30 @@ func createMonster(id int) (Monster){
 	return monster
 }
 
+func (grid *BattleGrid)  placeMonster() {
+
+	var dice Die
+	monsterNotPlaced := true
+	grid.monsterGridId = 0 // dice.rollxdx(1, grid.numGrids-1)
+	
+	entityGrid  := grid.getEntityGrid(grid.monsterGridId)
+	
+	for ; monsterNotPlaced == true; {
+	
+		grid.monsterXLoc = dice.rollxdx(1, 30)
+		grid.monsterYLoc = dice.rollxdx(1, 14)
+	
+		if (entityGrid.grid[grid.monsterYLoc][grid.monsterXLoc] == " "){
+			monsterNotPlaced = false;
+			log.addInfo("Monster Placed")
+
+		} else {
+			log.addInfo("Cannot place monster at " + entityGrid.grid[grid.monsterYLoc][grid.monsterXLoc])
+		}
+			
+	}
+}
+
 func getStepFromTile(tile Tile) (AIStep){
 
 	var step AIStep

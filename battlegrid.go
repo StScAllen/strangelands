@@ -17,7 +17,8 @@ const STAY = -1
 					
 const EMPTY_TILE = " "					
 const HIDDEN_TILE = "▒"
-const FOG_TILE = "░"				
+const FOG_TILE = "░"		
+const WATER_TILE = "░"		
 				
 const GATE1 = "/"				
 const GATE2 = "\\"
@@ -848,72 +849,7 @@ func createSquareGrid(height int, width int) (Grid){
 	return retGrid
 }
 
-func (grid *BattleGrid)  placeMonster() {
 
-	var dice Die
-	monsterNotPlaced := true
-	grid.monsterGridId = 0 // dice.rollxdx(1, grid.numGrids-1)
-	
-	entityGrid  := grid.getEntityGrid(grid.monsterGridId)
-	
-	for ; monsterNotPlaced == true; {
-	
-		grid.monsterXLoc = dice.rollxdx(1, 30)
-		grid.monsterYLoc = dice.rollxdx(1, 14)
-	
-		if (entityGrid.grid[grid.monsterYLoc][grid.monsterXLoc] == " "){
-			monsterNotPlaced = false;
-			log.addInfo("Monster Placed")
-
-		} else {
-			log.addInfo("Cannot place monster at " + entityGrid.grid[grid.monsterYLoc][grid.monsterXLoc])
-		}
-			
-	}
-}
-
-/* func getBranches(roll int) (count int){
-	var die1 Die
-	
-	var roll = die.rollxdx(1, 10)
-
-	if (roll < 5){
-		return 1
-	} else if (roll < 9){
-		return 2
-	} else {
-		return 3
-	}
-}
-
-func (bg * BattleGrid) createGridPattern(){
-	
-	var gridPattern [20][20]int
-	var die Die
-	var cX, cY int
-	
-	cX = 0
-	cY = 0
-	
-	for gridsCreated := 0; gridsCreated < bg.numGrids; i++ {
-		branches := getBranches(die.rollxdx(1,10))
-		
-		if (gridsCreated + branches) > bg.numGrids {
-			branches = bg.numGrids - gridsCreated
-		}
-		
-		if (branches > 0){
-			int roll = die.rollxdx(1,4)
-			
-			
-		
-		
-		}
-		
-	}
-
-
-} */
 
 func buildBattleGrid(id int) (BattleGrid){
 
@@ -923,7 +859,7 @@ func buildBattleGrid(id int) (BattleGrid){
 	fmt.Printf("Building Grid: %v   \n ", id);
 		
 	grid.currGrid = 0	// default
-	grid.time = DUSK		// default
+	grid.time = DAY		// default
 	grid.weather = CLEAR  // default
 	grid.turn = CHAR_TURN	// default
 	grid.numGrids = 4	// default
@@ -931,7 +867,7 @@ func buildBattleGrid(id int) (BattleGrid){
 
 	if id == 1 {	// cemetary
 		grid.numGrids = 4
-		//grid.createGridPattern()	// for random, done after number of grids is assigned!
+	// for random, done after number of grids is assigned!
 		
 		for k := 0; k < grid.numGrids; k++ {
 			g1 := createSquareGrid(16,32)
@@ -941,6 +877,8 @@ func buildBattleGrid(id int) (BattleGrid){
 			grid.allGrids[k] = g1
 			grid.setRandomStamp(g1.maxX, g1.maxY, k)
 		}
+		
+		grid.createGridPattern()
 		
 		grid.currGrid = 0
 		monster = createMonster(1)
