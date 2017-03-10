@@ -3,7 +3,7 @@
 package main
 
 type Keep struct {
-	name string
+	name             string
 	acres, usedacres int
 }
 
@@ -31,7 +31,7 @@ type Keep struct {
 // POTIONS are called UNCTURES
 // HAND OF GLORY - make some creatures flee (5 fingers, 5 uses)
 // Cross of St Martin - Stun some creatures for a turn
-// 
+//
 
 // SPELLS are called LAMENTATIONS
 // "Only the majesty of grief and sorrow separates us from the dark.  The dead never grieve, and the dark knows little of sorrow."

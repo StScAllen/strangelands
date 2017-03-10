@@ -4,9 +4,9 @@ package main
 import "fmt"
 import "strings"
 
-var skills = []string {"Puzzles", "Alchemy", "Haggle", "Instruction", "Spellcraft", "Research", "Politicking"}
-var weaponSkills = []string {"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
-					  					  
+var skills = []string{"Puzzles", "Alchemy", "Haggle", "Instruction", "Spellcraft", "Research", "Politicking", "Chirurgery"}
+var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
+
 const NUM_SKILLS = 9
 
 // new char attributes - Perception (view distance, searching)
@@ -14,7 +14,7 @@ const NUM_SKILLS = 9
 //					   - Strength
 // 					   - Intellect
 //					   - Charm
-//					   - Guile	 
+//					   - Guile
 
 /* type Character2 struct {
 	str, dex, con, intl, wis, cha int
@@ -35,56 +35,57 @@ const NUM_SKILLS = 9
 } */
 
 type Character struct {
-	agi, str, per, intl, cha, gui int
-	name string
-	hp, maxhp int	
-	soul, maxsoul int	// soul is both a spiritual hp and a tool to craft/power artefacts
-	weight, maxweight int
-	gold int
-	lvl int
-	exp int
-	turns int
-	spellbook Spellbook
+	agi, str, per, intl, cha, gui 	int
+	name                          	string
+	hp, maxhp                     	int
+	soul, maxsoul                 	int // soul is both a spiritual hp and a tool to craft/power artefacts
+	weight, maxweight             	int
+	gold                          	int
+	lvl                           	int
+	exp                           	int
+	turns                         	int
+	handSlots						[2]Item
+	spellbook                     	Spellbook
 }
 
 // can have special items to increase moves
-func (char * Character) getCharacterMoves() (int) {
+func (char *Character) getCharacterMoves() int {
 	return char.agi
 }
 
-func getName() (string) {
+func getName() string {
 
 	clearConsole()
 	var flag bool = true
 	rsp := ""
-	
+
 	for flag {
 		fmt.Println("--- Choose a Character Name ---")
 		fmt.Println("A name is nothing more than a tool. Don't forget that.")
 		fmt.Println("")
 		fmt.Println("Enter a name: ")
-		
+
 		fmt.Scanln(&rsp)
 
-		if (len(strings.Trim(rsp, " ")) > 0){
+		if len(strings.Trim(rsp, " ")) > 0 {
 			rsp2 := ""
 			fmt.Println("")
 			fmt.Println("(Y/N) Do you wish to use " + rsp + "?")
 			fmt.Scanln(&rsp2)
 
-			if (rsp2 == "y" || rsp2 == "Y"){
+			if rsp2 == "y" || rsp2 == "Y" {
 				flag = false
 			}
 		}
 	}
-	
-	return rsp	  
+
+	return rsp
 }
 
-func (c *Character) purchaseStats() {	
+func (c *Character) purchaseStats() {
 	var flag bool = true
 	var points int = 8
-	
+
 	for flag {
 		clearConsole()
 		fmt.Println("--- Purchase Attributes ---")
@@ -93,22 +94,22 @@ func (c *Character) purchaseStats() {
 		fmt.Printf("1. Perception: %v  (Vision, awareness, aim)\n", c.per)
 		fmt.Printf("2. Strength:   %v  (Damage, encumberance, health)\n", c.str)
 		fmt.Printf("3. Agility:    %v  (Movement, attacking, defense)\n", c.agi)
-		fmt.Printf("4. Intellect:  %v  (Spells, skillcraft)\n", c.intl)		
-		fmt.Printf("5. Charm:      %v  (Bartering, apprentice building, soul)\n",  c.cha)
-		fmt.Printf("6. Guile:      %v  (Experience, skillcraft, soul)\n",  c.gui)		
+		fmt.Printf("4. Intellect:  %v  (Spells, skillcraft)\n", c.intl)
+		fmt.Printf("5. Charm:      %v  (Bartering, apprentice building, soul)\n", c.cha)
+		fmt.Printf("6. Guile:      %v  (Experience, skillcraft, soul)\n", c.gui)
 		fmt.Println("")
-		fmt.Println("7. Minutiae (Help)")		
-		fmt.Println("8. Reset")		
-		fmt.Println("9. Finished")			
-		fmt.Println("--------------------")		
+		fmt.Println("7. Minutiae (Help)")
+		fmt.Println("8. Reset")
+		fmt.Println("9. Finished")
+		fmt.Println("--------------------")
 		fmt.Printf("Points remaining: %v \n", points)
-		fmt.Println("Choose an attribute to add a point: ")		
+		fmt.Println("Choose an attribute to add a point: ")
 		rsp := ""
 		fmt.Scanln(&rsp)
-		
-		if (rsp == "9"){
+
+		if rsp == "9" {
 			flag = false
-		} else if (rsp == "8"){
+		} else if rsp == "8" {
 			c.per = 3
 			c.str = 3
 			c.intl = 3
@@ -116,82 +117,103 @@ func (c *Character) purchaseStats() {
 			c.cha = 3
 			c.gui = 3
 			points = 8
-		} else if (rsp == "7"){
+		} else if rsp == "7" {
 			showAttributesMinutiae()
-			
-		} else {		
+
+		} else {
 			if points < 1 {
 				rsp2 := ""
 				fmt.Println("No points remain. Press enter to continue.")
 				fmt.Scanln(&rsp2)
 			} else {
-			
-				switch(rsp) {				
-					case "1": 	
-						c.per += 1
-						points -= 1
-					case "2": 	
-						c.str += 1
-						points -= 1
-					case "3": 	
-						c.agi += 1
-						points -= 1
-					case "4": 	
-						c.intl += 1
-						points -= 1
-					case "5": 	
-						c.cha += 1
-						points -= 1
-					case "6": 	
-						c.gui += 1
-						points -= 1											
+
+				switch rsp {
+				case "1":
+					c.per += 1
+					points -= 1
+				case "2":
+					c.str += 1
+					points -= 1
+				case "3":
+					c.agi += 1
+					points -= 1
+				case "4":
+					c.intl += 1
+					points -= 1
+				case "5":
+					c.cha += 1
+					points -= 1
+				case "6":
+					c.gui += 1
+					points -= 1
 				}
-			
-			}		
+
+			}
 		}
 	}
 }
 
-func (c *Character) getTotalStats() (int){	
+func (c *Character) getTotalStats() int {
 	return c.str + c.agi + c.intl + c.gui + c.cha + c.per
 }
 
-
-func createCharacter() (Character) {
+func createCharacter() Character {
 	var character Character
-	
+
 	character.name = getName()
 	character.str = 3
 	character.agi = 3
-	character.intl = 3	
+	character.intl = 3
 	character.gui = 3
 	character.cha = 3
 	character.per = 3
-	
+
 	character.purchaseStats()
-	
+
 	character.lvl = 1
-	
+
 	character.gold = 32
-	
+
 	character.hp = character.str
 	character.maxhp = character.hp
 
 	character.soul = character.gui + character.cha
 	character.maxsoul = character.soul
-	
+
 	character.maxweight = character.str + 1
 	character.weight = 0
-	
+
 	character.exp = 0
 
 	return character
 }
 
-func (character *Character) printCharacter(pause int) {
-	
+func (char * Character) showStatus(){
 	clearConsole()
 	
+	fmt.Println("[Health Status]             ")	
+	fmt.Println("            ####      ▲       ")
+	fmt.Println("            ####     ◄ ►        ")	
+	fmt.Println("             ##       ▼       ")
+	fmt.Println("         ##########         ")
+	fmt.Println("        ############         ")
+	fmt.Println("        ## ###### ##         ")
+	fmt.Println("        ## ###### ##        ")
+	fmt.Println("        #  ######         ")
+	fmt.Println("           ##  ##            ")
+	fmt.Println("           ##  ##            ")
+	fmt.Println("           ##  ##            ")
+	fmt.Println("          ###  ###           ")	
+	
+	rsp := ""
+	fmt.Println("\nPress enter to continue.")
+	fmt.Scanln(&rsp)
+}
+
+func (character *Character) printCharacter(pause int) {
+
+	clearConsole()
+
 	fmt.Printf("Name: %s    ", character.name)
 	fmt.Printf("Level: %v    ", character.lvl)
 	fmt.Printf("Exp: %v    ", character.exp)
@@ -201,19 +223,19 @@ func (character *Character) printCharacter(pause int) {
 	fmt.Printf("Soul: %v / %v  ", character.soul, character.maxsoul)
 	fmt.Printf("Encumb: %v / %v  st", character.weight, character.maxweight)
 
-	fmt.Println()	
-	fmt.Printf("Per: %v \n", character.per)	
+	fmt.Println()
+	fmt.Printf("Per: %v \n", character.per)
 	fmt.Printf("Str: %v \n", character.str)
 	fmt.Printf("Agi: %v \n", character.agi)
 	fmt.Printf("Int: %v \n", character.intl)
 	fmt.Printf("Cha: %v \n", character.cha)
-	fmt.Printf("Gui: %v \n", character.gui)	
-	
+	fmt.Printf("Gui: %v \n", character.gui)
+
 	fmt.Println()
-	
+
 	fmt.Printf("\nGold: %v", character.gold)
-	
-	if (pause > 0) {
+
+	if pause > 0 {
 		rsp := "n"
 		fmt.Println("\nPress enter to continue.")
 		fmt.Scanln(&rsp)
