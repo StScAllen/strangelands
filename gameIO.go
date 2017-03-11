@@ -39,6 +39,8 @@ func (c *Character) save() {
 
 	saveString += fmt.Sprintf("%v,", c.gold)
 
+	// save keep...
+
 	if err == nil {
 		defer file.Close()
 
@@ -47,8 +49,11 @@ func (c *Character) save() {
 	}
 }
 
-func loadGame() Character {
+func loadGame() (Character, Keep) {
 	var char Character
+	var keep Keep
+
+	char.setClearInventory()
 
 	data, err := ioutil.ReadFile("save.txt")
 	if err == nil {
@@ -83,12 +88,18 @@ func loadGame() Character {
 
 		}
 
+		// load keep
+		keep.name = "Campground"
+		keep.acres = 0
+		keep.usedacres = 0
+		keep.description = keepDescriptions[0]
+
 		fmt.Println("-----")
 
 		fmt.Printf("\n%s", data)
 		fmt.Println("Game Loaded! ")
-		log.addInfo("Character loaded.\n")
+		log.addInfo("Game loaded.\n")
 	}
 
-	return char
+	return char, keep
 }

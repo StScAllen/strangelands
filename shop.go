@@ -9,52 +9,78 @@ var shopWeapons []Item
 
 func genWeaponsOfWeek() {
 	var die Die
-	
+
 	shopWeapons = make([]Item, 0)
-	
-	for k:= 0; k < die.rollxdx(5, 12); k++ {
+
+	for k := 0; k < die.rollxdx(5, 12); k++ {
 		shopWeapons = append(shopWeapons, getRandomWeapon())
 	}
 }
 
+func updateShops() {
+	genWeaponsOfWeek()
+}
+
+func packSpace(num int, digits int) string {
+	ret := fmt.Sprintf("%v", num)
+
+	for len(ret) < digits {
+		ret += " "
+	}
+
+	return ret
+}
+
+func packSpaceString(str string, digits int) string {
+	for len(str) < digits {
+		str += " "
+	}
+
+	return str
+}
+
 func buyWeaponScreen() {
-	
+
 	clearConsole()
 
-	fmt.Println("Weapon Shop      Gold:  " + fmt.Sprintf("%v", character.gold)  )
+	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
+
+	fmt.Println("Weapon Shop      Gold:  " + charString)
 	fmt.Println("-----------------------------------------------------------------")
 	fmt.Println("")
-	
-	fmt.Println("Title            Dmg   \tAcc\tDef\tCost\tQuality\t\tMaterial")
-		
+
+	fmt.Println("Title            Dmg   \tAcc  Def  Wgt\tCost\tQuality\t\tMaterial")
+
 	for i := 0; i < len(shopWeapons); i++ {
-		fmt.Println(fmt.Sprintf("%v. %s \t %v-%v   \t%v\t%v   \t%v \t%s\t\t%s",
-			i, shopWeapons[i].name, shopWeapons[i].dmgMin, shopWeapons[i].dmgMax, shopWeapons[i].accuracy, shopWeapons[i].defense,
-			shopWeapons[i].value, shopWeapons[i].quality, shopWeapons[i].material))
+		fmt.Println(fmt.Sprintf("%v. %s \t %v-%v   \t%s %s %s  \t%v \t%s\t\t%s",
+			i, shopWeapons[i].name, shopWeapons[i].dmgMin, shopWeapons[i].dmgMax, packSpace(shopWeapons[i].accuracy, 4), packSpace(shopWeapons[i].defense, 4), packSpace(shopWeapons[i].weight, 4), shopWeapons[i].value, shopWeapons[i].quality, shopWeapons[i].material))
 	}
 
 	fmt.Println("")
-	fmt.Println("[X. Back]   [N. More]")
+	fmt.Println("[x. Back]   [n. More]")
 	fmt.Println("")
 	fmt.Println("Select an Option:  ")
 
 	rsp := ""
 	fmt.Scanln(&rsp)
-	
-	if len(rsp) > 0 {
+
+	if len(rsp) > 0 && rsp != "x" && rsp != "n" {
 		num, err := strconv.Atoi(rsp)
 		fmt.Println(fmt.Sprintf("Buy %s? %v", shopWeapons[num].name, err))
 		fmt.Scanln(&rsp)
-		
+
 		if rsp == "y" {
 			if character.gold < shopWeapons[num].value {
 				showPause("Not enough gold!")
 				buyWeaponScreen()
 			} else {
-				character.gold -= shopWeapons[num].value
 				item := shopWeapons[num]
-				showPause(fmt.Sprintf("Purchased %s!", item.name))
-				shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
+				if character.giveCharacterItem(item) {
+					character.gold -= item.value
+					shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
+				} else {
+					showPause("Character weight exceeded! Purchase not made!")
+				}
 				buyWeaponScreen()
 			}
 		}

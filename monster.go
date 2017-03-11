@@ -11,13 +11,13 @@ const STEP_WAIT = 1
 const STEP_ATTACK = 2
 
 type Monster struct {
-	hp, maxhp                     	int
-	moves                         	int
-	name                          	string
-	agi, str, per, intl, cha, gui 	int
-	plan                          	AIPlan
-	disturbance1			  	  	string
-	disturbance2			  	  	string
+	hp, maxhp                     int
+	moves                         int
+	name                          string
+	agi, str, per, intl, cha, gui int
+	plan                          AIPlan
+	disturbance1                  string
+	disturbance2                  string
 }
 
 type AIStep struct {
@@ -50,7 +50,7 @@ func (mon *Monster) getMonsterVision() int {
 
 func (mon *Monster) getMonsterStealthModifier() int {
 	stealth := 0
-	
+
 	if mon.agi < 3 {
 		stealth -= 2
 	} else if mon.agi < 5 {
@@ -62,8 +62,8 @@ func (mon *Monster) getMonsterStealthModifier() int {
 	} else {
 		stealth += 2
 	}
-		
-	return stealth;
+
+	return stealth
 }
 
 func createMonster(id int) Monster {
@@ -77,7 +77,7 @@ func createMonster(id int) Monster {
 		monster.cha = 5
 		monster.gui = 4
 		monster.intl = 5
-		
+
 		monster.disturbance1 = "You see a faint glow to the %v"
 		monster.disturbance2 = "A sense of despair washes over you. Something is not right here."
 	}
@@ -101,7 +101,7 @@ func (grid *BattleGrid) placeMonster() {
 
 	var dice Die
 	monsterNotPlaced := true
-	grid.monsterGridId = 0 // dice.rollxdx(1, grid.numGrids-1)
+	grid.monsterGridId = dice.rollxdx(1, grid.numGrids-1)
 
 	entityGrid := grid.getEntityGrid(grid.monsterGridId)
 

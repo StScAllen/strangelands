@@ -6,7 +6,8 @@ import "os/exec"
 
 var character Character
 var apprentice Character
-var gameDay int
+var keep Keep
+var gameDay, dayCounter int
 
 var log Log
 
@@ -31,6 +32,22 @@ func finalExit() {
 	log.writeToFile()
 }
 
+func endDay() {
+	character.hp += 1
+
+	if character.hp > character.maxhp {
+		character.hp = character.maxhp
+	}
+
+	gameDay++
+	dayCounter++
+
+	if dayCounter == 6 {
+		dayCounter = 0
+		updateShops()
+	}
+}
+
 func showGameMenu() string {
 
 	clearConsole()
@@ -39,7 +56,7 @@ func showGameMenu() string {
 	fmt.Printf("Day: %v \n", gameDay)
 	fmt.Println("------------")
 	fmt.Println("1. Visit Village")
-	fmt.Println("2. Rest at Keep")
+	fmt.Println("2. Return to Keep")
 	fmt.Println("3. Scavenge Countryside")
 	fmt.Println("4. Missions")
 	fmt.Println("")
@@ -69,6 +86,10 @@ func showTopMenu() string {
 	rsp := ""
 	fmt.Scanln(&rsp)
 
+	if rsp == "" {
+		rsp = showTopMenu()
+	}
+
 	return rsp
 }
 
@@ -88,6 +109,7 @@ func main() {
 		rsp = "n"
 		for rsp != "y" && rsp != "Y" {
 			character = createCharacter()
+			keep = createKeep()
 			character.printCharacter(0)
 
 			fmt.Print("\nUse this character? ")
@@ -95,8 +117,9 @@ func main() {
 			clearConsole()
 		}
 	} else if rsp == "2" {
-		character = loadGame()
+		character, keep = loadGame()
 		character.printCharacter(1)
+		character.gold = 800
 	} else if rsp == "3" {
 		return
 	}
@@ -111,7 +134,7 @@ func main() {
 		if rsp == "1" {
 			goShop()
 		} else if rsp == "2" {
-			character.hp = character.maxhp
+			keep.goKeep()
 			character.save()
 		} else if rsp == "3" {
 			chooseAdventure()

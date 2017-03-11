@@ -2,9 +2,17 @@
 
 package main
 
+import "fmt"
+
+var keepDescriptions = []string{
+	"It's cold and dark here. Shadows from my waning fire dance across the vacant \nexpanse.",
+	"It's empty and barren, but it's mine.",
+}
+
 type Keep struct {
 	name             string
 	acres, usedacres int
+	description      string
 }
 
 // uses political favors to gain acres
@@ -39,3 +47,45 @@ type Keep struct {
 // very difficult to learn new spells and the effects are usually muted
 
 // Wander Action - create a random set of grids with ingredients/objects/npcs - potential apprentices, maybe a mugger
+
+func (keep *Keep) goKeep() {
+	rsp := ""
+
+	for rsp != "7" {
+		clearConsole()
+		fmt.Println("╔ Keep ╗")
+		fmt.Println(keep.description)
+		fmt.Printf("Day: %v \n", gameDay)
+		fmt.Printf("Acres: %v / %v \n", keep.usedacres, keep.acres)
+		fmt.Println("------------")
+		fmt.Println("1. Rest (End Day)")
+		fmt.Println("2. Manage Keep")
+		fmt.Println("3. Apprentices")
+		fmt.Println("4. Inventory")
+		fmt.Println("5. Status")
+		fmt.Println("")
+		fmt.Println("6. Minutiae")
+		fmt.Println("7. Exit")
+		fmt.Println("")
+		fmt.Printf("Select an Option:  ")
+
+		fmt.Scanln(&rsp)
+
+		if rsp == "1" {
+			endDay()
+		} else if rsp == "5" {
+			character.showStatus()
+			character.printCharacter(1)
+		}
+	}
+}
+
+func createKeep() Keep {
+	var keep Keep
+
+	keep.acres = 0
+	keep.usedacres = 0
+	keep.name = "Campground"
+	keep.description = keepDescriptions[0]
+	return keep
+}

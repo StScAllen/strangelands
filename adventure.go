@@ -132,13 +132,18 @@ func adventure() {
 				apprentice.showStatus()
 				apprentice.printCharacter(1)
 			}
-		} else if strings.Contains(rsp, "view"){
-			if strings.Contains(rsp2, "-log")  {
+		} else if strings.Contains(rsp, "view") {
+			if strings.Contains(rsp2, "-log") {
 				log.displayLog()
-			} else if strings.Contains(rsp2, "-pattern")  {
+			} else if strings.Contains(rsp2, "-pattern") {
 				bg.drawGridPattern(bg.gridPattern)
 			}
-
+		} else if strings.Contains(rsp, "inventory") {
+			if bg.turn == CHAR_TURN {
+				character.showInventory()
+			} else {
+				apprentice.showInventory()
+			}
 		}
 	}
 }

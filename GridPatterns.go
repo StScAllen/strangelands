@@ -151,7 +151,7 @@ func (bg *BattleGrid) findGateLoc(pattern [8][8]int, gate Gate) (x1, y1, x2, y2 
 	}
 
 	searchFlag := true
-	
+
 	for searchFlag {
 		if cardFlag == NORTH {
 			x := die.rollxdx(2, 30)
@@ -181,7 +181,7 @@ func (bg *BattleGrid) findGateLoc(pattern [8][8]int, gate Gate) (x1, y1, x2, y2 
 		} else if cardFlag == WEST {
 			y := die.rollxdx(2, 14)
 			fmt.Println("Newgate is ", gate.gridid1, " ", gate.gridid2, " Y: ", y)
-			
+
 			if primId == gate.gridid1 {
 				if bg.allGrids[gate.gridid1].grid[y][31] == "│" {
 					if bg.allGrids[gate.gridid2].grid[y][0] == "│" {
@@ -284,7 +284,7 @@ func (bg *BattleGrid) createGridPattern() {
 				gridsPlaced = append(gridsPlaced, nextGrid)
 				fmt.Println("Placed grid ", nextGrid)
 				nextGrid += 1
-				if (nextGrid >= numGrids){
+				if nextGrid >= numGrids {
 					break
 				}
 			} else {
@@ -293,12 +293,11 @@ func (bg *BattleGrid) createGridPattern() {
 			}
 		}
 	}
-	
-	
+
 	rsp := ""
 	fmt.Scanln(&rsp)
 	bg.drawGridPattern(gridPattern)
 	bg.createGatesForGrid(gridPattern)
-	
+
 	bg.gridPattern = gridPattern
 }

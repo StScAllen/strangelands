@@ -8,6 +8,8 @@ var skills = []string{"Puzzles", "Alchemy", "Haggle", "Instruction", "Spellcraft
 var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
 
 const NUM_SKILLS = 9
+const LEFT = 0
+const RIGHT = 1
 
 // new char attributes - Perception (view distance, searching)
 //					   - Agility (actions per turn)
@@ -35,22 +37,97 @@ const NUM_SKILLS = 9
 } */
 
 type Character struct {
-	agi, str, per, intl, cha, gui 	int
-	name                          	string
-	hp, maxhp                     	int
-	soul, maxsoul                 	int // soul is both a spiritual hp and a tool to craft/power artefacts
-	weight, maxweight             	int
-	gold                          	int
-	lvl                           	int
-	exp                           	int
-	turns                         	int
-	handSlots						[2]Item
-	spellbook                     	Spellbook
+	agi, str, per, intl, cha, gui int
+	name                          string // max name length for FORMATTING reasons is 23 characters!
+	hp, maxhp                     int
+	soul, maxsoul                 int // soul is both a spiritual hp and a tool to craft/power artefacts
+	weight, maxweight             int
+	gold                          int
+	lvl                           int
+	exp                           int
+	turns                         int
+	handSlots                     [2]Item
+	armorSlots                    [8]Item
+	inventory                     []Item
+	spellbook                     Spellbook
 }
 
 // can have special items to increase moves
 func (char *Character) getCharacterMoves() int {
 	return char.agi
+}
+
+func (char *Character) recalcCharacterWeight() {
+	weight := 0
+
+	weight += char.handSlots[0].weight
+	weight += char.handSlots[1].weight
+
+	for k := 0; k < len(char.armorSlots); k++ {
+		weight += char.armorSlots[k].weight
+	}
+
+	for k := 0; k < len(character.inventory); k++ {
+		weight += char.inventory[k].weight
+	}
+
+	char.weight = weight
+}
+
+func (char *Character) setClearInventory() {
+
+	char.handSlots[0] = getEmptyItem()
+	char.handSlots[1] = getEmptyItem()
+
+	for k := 0; k < len(char.armorSlots); k++ {
+		char.armorSlots[k] = getEmptyItem()
+	}
+
+}
+
+func (char *Character) giveCharacterItem(item Item) bool {
+	equipped := false
+
+	char.recalcCharacterWeight()
+
+	// do an encumberance check
+	if char.weight+item.weight > char.maxweight {
+		return false
+	}
+
+	if item.equip != EQUIP_NONE {
+		if item.equip < EQUIP_HAND {
+			if char.armorSlots[item.equip].id == -1 {
+				char.armorSlots[item.equip] = item
+				equipped = true
+			}
+		} else if item.equip == EQUIP_HAND {
+			if item.hands == 1 {
+				if char.handSlots[LEFT].id == -1 {
+					char.handSlots[LEFT] = item
+					equipped = true
+				} else if char.handSlots[RIGHT].id == -1 {
+					char.handSlots[RIGHT] = item
+					equipped = true
+				}
+			} else if item.hands == 2 {
+				if char.handSlots[LEFT].id == -1 && char.handSlots[RIGHT].id == -1 {
+					char.handSlots[RIGHT] = item
+					char.handSlots[LEFT] = item
+					equipped = true
+				}
+			}
+		}
+	}
+
+	if !equipped {
+		char.inventory = append(char.inventory, item)
+		equipped = true
+	}
+
+	char.recalcCharacterWeight()
+
+	return equipped
 }
 
 func getName() string {
@@ -160,6 +237,8 @@ func (c *Character) getTotalStats() int {
 func createCharacter() Character {
 	var character Character
 
+	character.setClearInventory()
+
 	character.name = getName()
 	character.str = 3
 	character.agi = 3
@@ -180,20 +259,23 @@ func createCharacter() Character {
 	character.soul = character.gui + character.cha
 	character.maxsoul = character.soul
 
-	character.maxweight = character.str + 1
+	character.maxweight = character.str * 10
 	character.weight = 0
+
+	character.handSlots[0] = getEmptyItem()
+	character.handSlots[1] = getEmptyItem()
 
 	character.exp = 0
 
 	return character
 }
 
-func (char * Character) showStatus(){
+func (char *Character) showStatus() {
 	clearConsole()
-	
-	fmt.Println("[Health Status]             ")	
+
+	fmt.Println("[Health Status]             ")
 	fmt.Println("            ####      ▲       ")
-	fmt.Println("            ####     ◄ ►        ")	
+	fmt.Println("            ####     ◄ ►        ")
 	fmt.Println("             ##       ▼       ")
 	fmt.Println("         ##########         ")
 	fmt.Println("        ############         ")
@@ -203,8 +285,8 @@ func (char * Character) showStatus(){
 	fmt.Println("           ##  ##            ")
 	fmt.Println("           ##  ##            ")
 	fmt.Println("           ##  ##            ")
-	fmt.Println("          ###  ###           ")	
-	
+	fmt.Println("          ###  ###           ")
+
 	rsp := ""
 	fmt.Println("\nPress enter to continue.")
 	fmt.Scanln(&rsp)
@@ -240,4 +322,50 @@ func (character *Character) printCharacter(pause int) {
 		fmt.Println("\nPress enter to continue.")
 		fmt.Scanln(&rsp)
 	}
+}
+
+func (character *Character) showInventory() {
+	clearConsole()
+
+	seg1 := ""
+	seg2 := ""
+
+	fmt.Printf("Encumb: %v / %v  (stone) \n", character.weight, character.maxweight)
+
+	fmt.Println("")
+	fmt.Println("--Hands--")
+	seg1 = packSpaceString(fmt.Sprintf("Left Hand: %s", character.handSlots[LEFT].name), 34)
+	seg2 = packSpaceString(fmt.Sprintf("Right Hand: %s", character.handSlots[RIGHT].name), 34)
+	fmt.Println(seg1, seg2)
+
+	fmt.Println("")
+	fmt.Println("--Armor--")
+	seg1 = packSpaceString(fmt.Sprintf("Head: %s", character.armorSlots[EQUIP_HEAD].name), 34)
+	seg2 = packSpaceString(fmt.Sprintf("Neck: %s", character.armorSlots[EQUIP_NECK].name), 34)
+	fmt.Println(seg1, seg2)
+	seg1 = packSpaceString(fmt.Sprintf("Chest: %s", character.armorSlots[EQUIP_CHEST].name), 34)
+	seg2 = packSpaceString(fmt.Sprintf("Arms: %s", character.armorSlots[EQUIP_ARMS].name), 34)
+	fmt.Println(seg1, seg2)
+	seg1 = packSpaceString(fmt.Sprintf("Legs: %s", character.armorSlots[EQUIP_LEG].name), 34)
+	seg2 = packSpaceString(fmt.Sprintf("Feet: %s", character.armorSlots[EQUIP_FEET].name), 34)
+	fmt.Println(seg1, seg2)
+	seg1 = packSpaceString(fmt.Sprintf("Cloak: %s", character.armorSlots[EQUIP_CLOAK].name), 34)
+	seg2 = packSpaceString(fmt.Sprintf("Ring: %s", character.armorSlots[EQUIP_RING].name), 34)
+	fmt.Println(seg1, seg2)
+
+	fmt.Println("")
+	fmt.Println("--Bags--")
+	count := 0
+	for k := 0; k < len(character.inventory); k++ {
+		fmt.Printf("%s", packSpaceString(character.inventory[k].name, 23))
+		count++
+		if count == 3 {
+			count = 0
+			fmt.Printf("\n")
+		}
+	}
+
+	fmt.Println("\nPress enter to continue.")
+	rsp := ""
+	fmt.Scanln(&rsp)
 }

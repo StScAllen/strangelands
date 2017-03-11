@@ -11,7 +11,6 @@ type Spellbook struct {
 	prepared      [10]int
 }
 
-
 // Spell Ideas (Lamentations)
 // ==================================
 // Heal - heals a moderate amount of hits, or a wound
@@ -24,5 +23,5 @@ type Spellbook struct {
 // Soul Inhale - Sucks soul points from Monster
 
 // These need some atmosphere if I am going to use them:
-// Blood Seek - Attack bonus 
-// Leather skin - Armor bonus? 
+// Blood Seek - Attack bonus
+// Leather skin - Armor bonus?
