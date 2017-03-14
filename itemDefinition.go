@@ -61,6 +61,15 @@ var armors = []Armor{ // name, shields, defense, weight, value, slot
 	{"Soft Leather Jerkin", 2, 4, 3, 8, EQUIP_CHEST},
 	{"Hard Leather Jerkin", 3, 5, 4, 11, EQUIP_CHEST},
 	{"Studded Leather Jerkin", 3, 6, 5, 11, EQUIP_CHEST},
+	{"Padded Sleeves", 1, 1, 1, 2, EQUIP_ARMS},
+	{"Leather Sleeves", 2, 1, 1, 2, EQUIP_ARMS},
+	{"Chain Sleeves", 4, 2, 1, 2, EQUIP_ARMS},
+	{"Padded Coif", 1, 1, 1, 2, EQUIP_HEAD},
+	{"Leather Coif", 2, 1, 1, 2, EQUIP_HEAD},
+	{"Chain Coif", 4, 2, 1, 2, EQUIP_HEAD},
+	{"Padded Greeves", 1, 1, 1, 2, EQUIP_LEG},
+	{"Leather Greeves", 2, 1, 1, 2, EQUIP_LEG},
+	{"Chain Greeves", 4, 2, 1, 2, EQUIP_LEG},
 }
 
 type Item struct { // regular items
@@ -101,6 +110,7 @@ type Weapon struct {
 	atkTurns int
 }
 
+// name, shields, defense, weight, value, equip
 type Armor struct {
 	name    string
 	shields int
@@ -162,6 +172,55 @@ func genGameWeapon(weapon Weapon, qual string, mat string) Item {
 		item.value *= materialBonuses[mIdx][5]
 	}
 
+	if (item.weight < 1){
+		item.weight = 1
+	}
+	
+	itemInstanceId += 1
+	return item
+}
+
+func genGameArmor(armor Armor, qual string) Item {
+	var item Item
+
+	item.id = itemInstanceId
+	item.name = armor.name
+	item.typeCode = ITEM_TYPE_ARMOR
+	item.uses = 1
+	item.maxuses = 1
+	item.durability = armor.shields
+	item.maxDurability = armor.shields
+	item.equip = armor.equip
+	item.hands = 1
+	item.weight = armor.weight
+	item.material = ""
+	item.quality = qual
+	item.value = armor.value
+	item.magical = 0
+	item.dmgMin = 1
+	item.dmgMax = 1
+	item.wRange = 0
+	item.accuracy = 0
+	item.defense = armor.defense
+	item.shields = 0
+
+	// apply quality modifiers
+	qIdx := getQualityIndex(qual)
+	if qIdx > -1 {
+		// name, shields, defense, weight, value, equip		(armor)
+		//dmg, acc, def, wgt, armdef, shields, durabMultiplier, costMultip, atkTurnsMod (qual)
+		item.weight += qualBonuses[qIdx][3]
+		item.defense += qualBonuses[qIdx][4]
+		item.shields += qualBonuses[qIdx][5]
+		item.durability *= qualBonuses[qIdx][6]
+		item.maxDurability *= qualBonuses[qIdx][6]
+		item.value *= qualBonuses[qIdx][7]
+	}
+	
+	if (item.weight < 1){
+		item.weight = 1
+	}
+
 	itemInstanceId += 1
 	return item
 }
@@ -174,6 +233,15 @@ func getRandomWeapon() Item {
 	var qual = qualities[die.rollxdx(0, len(qualities)-1)]
 
 	return genGameWeapon(weapon, qual, mat)
+}
+
+func getRandomArmor() Item {
+	var die Die
+
+	var armor = armors[die.rollxdx(0, len(armors)-1)]
+	var qual = qualities[die.rollxdx(0, len(qualities)-1)]
+
+	return genGameArmor(armor, qual)
 }
 
 func getQualityIndex(quality string) int {

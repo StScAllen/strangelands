@@ -4,6 +4,31 @@ package main
 
 import "fmt"
 
+
+func showDialogBox(diag []string) {
+	clearConsole()
+	
+	for k := 0; k < len(diag); k++{
+		fmt.Println(diag[k])
+	}
+	
+	rsp := ""
+	fmt.Printf("Press any key to continue.")
+	fmt.Scanln(&rsp)
+}
+
+func drawWorldMap(){
+	clearConsole()
+	
+	for k := 0; k < len(worldmap2); k++{
+		fmt.Println(worldmap2[k])
+	}
+	
+	rsp := ""
+	fmt.Printf("Press any key to continue.")
+	fmt.Scanln(&rsp)
+}
+
 /*
 	Test code to remove for deployment
 */

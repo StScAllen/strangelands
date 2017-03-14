@@ -59,9 +59,10 @@ func showGameMenu() string {
 	fmt.Println("2. Return to Keep")
 	fmt.Println("3. Scavenge Countryside")
 	fmt.Println("4. Missions")
+	fmt.Println("5. World Map")	
 	fmt.Println("")
-	fmt.Println("5. Minutiae")
-	fmt.Println("6. Quit")
+	fmt.Println("6. Minutiae")
+	fmt.Println("7. Quit")
 	fmt.Println("")
 	fmt.Println("Select an Option:  ")
 
@@ -98,6 +99,7 @@ func init() {
 	log = openLog()
 	dieInit()
 	genWeaponsOfWeek()
+	genArmorOfWeek()
 }
 
 func main() {
@@ -137,14 +139,16 @@ func main() {
 			keep.goKeep()
 			character.save()
 		} else if rsp == "3" {
-			chooseAdventure()
-			adventure()
+			txt := "It's cold and dark here. Shadows from my waning fire dance across the vacant expanse. Sometimes the end of the world looks as bleak and sorrowful as its beginning. But only if just."
+			showDialogBox(makeDialogBox("Smack Knob Carlson", txt))
 		} else if rsp == "4" {
 			chooseAdventure()
 			adventure()
-		} else if rsp == "5" {
-			openMinutiae()
+		} else if rsp == "5" {		
+			drawWorldMap()
 		} else if rsp == "6" {
+			openMinutiae()
+		} else if rsp == "7" {
 			gameFlag = false
 		}
 	}

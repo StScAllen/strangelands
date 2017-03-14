@@ -54,7 +54,7 @@ func (keep *Keep) goKeep() {
 	for rsp != "7" {
 		clearConsole()
 		fmt.Println("╔ Keep ╗")
-		fmt.Println(keep.description)
+		fmt.Println(makeDialogString(keep.description))
 		fmt.Printf("Day: %v \n", gameDay)
 		fmt.Printf("Acres: %v / %v \n", keep.usedacres, keep.acres)
 		fmt.Println("------------")
