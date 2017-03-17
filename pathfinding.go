@@ -28,6 +28,7 @@ type PathfindingGrid struct {
 	shortestPathCount int
 }
 
+// gives absolute value between int values
 func iAbsDiff(x1, x2 int) int {
 	if x1 > x2 {
 		return x1 - x2
@@ -41,6 +42,13 @@ func getCityBlockDistance(sx, sy, ex, ey int) int {
 }
 
 func getCrowDistance(sx, sy, ex, ey int) int {
+	
+	if sx == ex {
+		return iAbsDiff(sy, ey)
+	} else if sy == ey {
+		return iAbsDiff(sx, ex)
+	}
+	
 	xDist := iAbsDiff(sx, ex)
 	yDist := iAbsDiff(sy, ey)
 

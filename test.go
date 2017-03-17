@@ -17,6 +17,38 @@ func showDialogBox(diag []string) {
 	fmt.Scanln(&rsp)
 }
 
+func showDialogBoxRight(diag []string) {
+	clearConsole()
+	
+	justBuffer := ""
+	// have to cast the string because escape sequences will count as double
+	iBuffer := 78 - len([]rune(diag[0]))	
+	
+	for k := 0; k < iBuffer; k++ {
+		justBuffer += " "
+	}
+	
+	for k := 0; k < len(diag); k++{
+		fmt.Println(justBuffer + diag[k])
+	}
+	
+	rsp := ""
+	fmt.Printf("Press any key to continue.")
+	fmt.Scanln(&rsp)
+}
+
+func printArrayString(arr []string) {
+
+	for k := 0; k < len(arr); k++{
+		fmt.Println(len(arr[k]))
+		fmt.Println(arr[k])
+	}
+
+	rsp := ""
+	fmt.Printf("Press any key to continue.")
+	fmt.Scanln(&rsp)
+}
+
 func drawWorldMap(){
 	clearConsole()
 	

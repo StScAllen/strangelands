@@ -140,7 +140,7 @@ func main() {
 			character.save()
 		} else if rsp == "3" {
 			txt := "It's cold and dark here. Shadows from my waning fire dance across the vacant expanse. Sometimes the end of the world looks as bleak and sorrowful as its beginning. But only if just."
-			showDialogBox(makeDialogBox("Smack Knob Carlson", txt))
+			showDialogBoxRight(makeDialogBox("Joe Durden", txt, DIALOG_RIGHT))
 		} else if rsp == "4" {
 			chooseAdventure()
 			adventure()

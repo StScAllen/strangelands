@@ -46,12 +46,13 @@ var qualBonuses = [][]int{
 	{2, 2, 1, -2, 2, 6, 3, 4, -1}, // master
 }
 
-var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns
-	{"Club", 1, 1, 4, 0, 0, 9, 12, 5, 1, 3},
-	{"Knife", 1, 2, 4, 0, 0, 4, 30, 7, 1, 2},
-	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3},
-	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2},
-	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3},
+var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag
+	{"Club", 1, 1, 4, 0, 0, 9, 12, 5, 1, 3, 0},
+	{"Knife", 1, 2, 4, 0, 0, 4, 30, 7, 1, 2, 0},
+	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0},
+	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0},
+	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0},
+	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1},	
 }
 
 var armors = []Armor{ // name, shields, defense, weight, value, slot
@@ -86,28 +87,30 @@ type Item struct { // regular items
 	value                     int    // value, in currency
 	magical                   int    // flag 0, 1
 	// weapon stuff
-	dmgMin, dmgMax int
-	wRange         int
-	accuracy       int
-	atkTurns       int
+	dmgMin, dmgMax 				int
+	wRange         				int
+	accuracy       				int
+	atkTurns      				int
 	// armor stuff
-	defense int
-	shields int
+	defense 					int
+	shields 					int
+	noMaterialFlag 				int		// used for crossbows or any other item that shouldn't have a material
 }
 
 //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns
 type Weapon struct {
-	name     string
-	hands    int
-	dmgMin   int
-	dmgMax   int
-	accuracy int
-	defense  int
-	weight   int
-	durab    int
-	value    int
-	wRange   int
-	atkTurns int
+	name     	string
+	hands    	int
+	dmgMin   	int
+	dmgMax   	int
+	accuracy 	int
+	defense  	int
+	weight   	int
+	durab    	int
+	value    	int
+	wRange   	int
+	atkTurns 	int
+	noMaterialFlag int
 }
 
 // name, shields, defense, weight, value, equip
@@ -143,7 +146,8 @@ func genGameWeapon(weapon Weapon, qual string, mat string) Item {
 	item.accuracy = weapon.accuracy
 	item.defense = weapon.defense
 	item.shields = 0
-
+	item.noMaterialFlag = weapon.noMaterialFlag
+	
 	// apply quality modifiers
 	qIdx := getQualityIndex(qual)
 	if qIdx > -1 {
@@ -161,7 +165,7 @@ func genGameWeapon(weapon Weapon, qual string, mat string) Item {
 	}
 
 	mIdx := getMaterialIndex(mat)
-	if mIdx > -1 {
+	if mIdx > -1 && weapon.noMaterialFlag == 0{
 		// dmgMod, accMod, defMod, weightMod, durabMultiplier, costMultip
 		item.dmgMax += materialBonuses[mIdx][0]
 		item.accuracy += materialBonuses[mIdx][1]
@@ -203,7 +207,8 @@ func genGameArmor(armor Armor, qual string) Item {
 	item.accuracy = 0
 	item.defense = armor.defense
 	item.shields = 0
-
+	item.noMaterialFlag = 1	// armor never has a conventional material, its all dessicated flesh and steel
+	
 	// apply quality modifiers
 	qIdx := getQualityIndex(qual)
 	if qIdx > -1 {

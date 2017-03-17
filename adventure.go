@@ -8,6 +8,58 @@ func chooseAdventure() {
 
 }
 
+func (bg * BattleGrid) canCharacterCast(char Character, currTurns int) (bool){
+	return true
+}
+
+func (bg * BattleGrid) canCharacterAttack(char Character, currTurns int) (bool){
+	if bg.isMonsterVisible() {
+		if bg.isMonsterInAttackRange(bg.turn) && bg.isAttackPathClear(bt.turn){
+			if (char.handSlots[0].typeCode == ITEM_TYPE_WEAPON && char.handSlots[0].atkTurns <= currTurns){
+				return true
+			} else if (char.handSlots[1].typeCode == ITEM_TYPE_WEAPON && char.handSlots[1].atkTurns <= currTurns){
+				return true
+			} else {
+				fmt.Println("no attackable weapons")
+			}
+		} else {
+			fmt.Println("monster not in range")
+		}
+	} else {
+		fmt.Println("monster not vis")
+	}
+	
+	return false
+}
+
+func (bg *BattleGrid) getAvailableActions(char Character, currTurns int) (string){
+
+	actions := ""
+
+	if currTurns < 1 {
+		actions = "(Inventory) (Status) (End Turn) (Help) (Exit) \n\nAction: "
+	} else {
+		actions = "(Move ++)"
+		
+		if bg.canCharacterAttack(char, currTurns){
+			actions += " (Attack)"
+		}		
+		
+		if bg.canCharacterCast(char, currTurns) {
+			actions += " (Cast)"			
+		}
+		
+		if currTurns > 0 {
+			actions += " (Defend) (Search) (Wait)"
+		}
+				
+		actions += "\n(Inventory) (Status) (End Turn) (Help) (Exit) \n\nAction: "		
+	}
+
+
+	return actions
+}
+
 func adventure() {
 
 	var bg = buildBattleGrid(1)
@@ -25,11 +77,12 @@ func adventure() {
 		bg.drawGrid()
 		fmt.Printf("Turns: %v / %v  (%v : %v : %v) \n", currTurns, maxTurns, bg.charXLoc, bg.charYLoc, bg.charGridId)
 		descrip := ""
-		if currTurns < 1 {
-			descrip = "(Inventory) (Status) (End Turn) (Help) (Exit) \n\nAction: "
-		} else {
-			descrip = "(Move ++) (Attack) (Defend) (Get) (Search) (Cast) (Wait)\n(Inventory) (Status) (End Turn) (Help) (Exit) \n\nAction: "
+		if bg.turn == CHAR_TURN {
+			descrip = bg.getAvailableActions(character, currTurns)
+		} else if bg.turn == APP_TURN {
+			descrip = bg.getAvailableActions(apprentice, currTurns)		
 		}
+
 		fmt.Printf(descrip)
 		fmt.Scanln(&rsp, &rsp2)
 

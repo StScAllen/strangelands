@@ -163,6 +163,42 @@ func (bg *BattleGrid) isApprenticeVisible() bool {
 	return false
 }
 
+func (bg * BattleGrid) isAttackPathClear() (bool){
+
+}
+
+func (bg * BattleGrid) isMonsterInAttackRange(turn int) (bool){
+	if bg.isMonsterVisible() == false {
+		return false
+	}
+	
+	weaponRange := 0
+	actorX, actorY := 0, 0
+	if turn == CHAR_TURN {
+		weaponRange = character.getWeaponRange()	
+		actorX = bg.charXLoc
+		actorY = bg.charYLoc
+	} else {
+		weaponRange = apprentice.getWeaponRange()	
+		actorX = bg.appXLoc
+		actorY = bg.appYLoc		
+	}
+
+	if weaponRange < 1 {
+		return false
+	}
+
+	actorDistance := getCrowDistance(actorX, actorY, bg.monsterXLoc, bg.monsterYLoc)
+
+	fmt.Println("actor dist is", actorDistance)
+	
+	if actorDistance <= weaponRange {
+		return true
+	}
+	
+	return false
+}
+
 func (bg *BattleGrid) isMonsterVisible() bool {
 
 	var sameCharGrid bool = false
@@ -866,7 +902,7 @@ func buildBattleGrid(id int) BattleGrid {
 	grid.hasApprentice = false
 
 	if id == 1 { // cemetary
-		grid.numGrids = 32
+		grid.numGrids = 4
 		// for random, done after number of grids is assigned!
 
 		for k := 0; k < grid.numGrids; k++ {

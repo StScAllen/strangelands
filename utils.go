@@ -5,6 +5,9 @@ package main
 import "fmt"
 import "strings"
 
+const DIALOG_RIGHT = 0
+const DIALOG_LEFT = 1
+
 func packSpace(num int, digits int) string {
 	ret := fmt.Sprintf("%v", num)
 
@@ -30,15 +33,19 @@ func makeDialogString(str string) (string) {
 }
 
 
-func makeDialogBox(actorName, msg string) ([]string){
+func makeDialogBox(actorName, msg string, side int) ([]string){
 	width := 60
 //	height := 12
 	
 	elements := make([]string, 2)
 	mid := strings.Repeat("─", width-(3+len(actorName)))
-	elements[0] = "╔─" + actorName + mid + "╗"
-	elements[1] = "│" + packSpaceString(" ", 58) + "│"	
-	
+	if side == DIALOG_LEFT{
+		elements[0] = "╔─" + actorName + mid + "╗"	
+	} else {
+		elements[0] = "╔" + mid + actorName + "-╗"
+	}
+
+	elements[1] = "│" + packSpaceString(" ", 58) + "│"		
 	if len(msg) < width {
 		row := packSpaceString(msg, 58)
 		elements = append(elements, "│ " + row + " │")

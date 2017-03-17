@@ -57,6 +57,26 @@ func (char *Character) getCharacterMoves() int {
 	return char.agi
 }
 
+func (char *Character) getWeaponRange() int {
+	hand1 := char.handSlots[0]
+	hand2 := char.handSlots[1]
+	itmRange := -1
+	
+	if hand1.id != -1 {
+		itmRange = hand1.wRange
+	} 
+	
+	if hand2.id != -1 {
+		if hand2.wRange > itmRange {
+			itmRange = hand2.wRange
+		}
+	}
+	
+	fmt.Println("Weapon range is ", itmRange)
+	
+	return itmRange
+}
+
 func (char *Character) recalcCharacterWeight() {
 	weight := 0
 
