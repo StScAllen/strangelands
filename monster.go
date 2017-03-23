@@ -10,11 +10,16 @@ const STEP_MOVE = 0
 const STEP_WAIT = 1
 const STEP_ATTACK = 2
 
+var person_bits = []string {"Head", "Arm", "Arm", "Chest", "Chest", "Leg", "Leg",}
+var orb_bits = []string {"Body", "Body", "Body", "Body", "Body", "Body", "Body",}
+var quad_bits = []string {"Head", "Torso", "Torso", "Torso", "Leg", "Leg", "Leg", "Leg",}
+
 type Monster struct {
 	hp, maxhp                     int
 	moves                         int
 	name                          string
 	agi, str, per, intl, cha, gui int
+	bits						  []string
 	plan                          AIPlan
 	disturbance1                  string
 	disturbance2                  string
@@ -28,7 +33,7 @@ type AIStep struct {
 }
 
 type AIPlan struct {
-	steps     [100]AIStep
+	steps     [100]AIStep  // any "plan" with more than 100 steps is for fools.
 	stepCount int
 	maneuver  string
 	nextStep  int
@@ -77,7 +82,9 @@ func createMonster(id int) Monster {
 		monster.cha = 5
 		monster.gui = 4
 		monster.intl = 5
-
+	
+		monster.bits = orb_bits
+		
 		monster.disturbance1 = "You see a faint glow to the %v"
 		monster.disturbance2 = "A sense of despair washes over you. Something is not right here."
 	}

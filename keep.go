@@ -42,11 +42,21 @@ type Keep struct {
 //
 
 // SPELLS are called LAMENTATIONS
-// "Only the majesty of grief and sorrow separates us from the dark.  The dead never grieve, and the dark knows little of sorrow."
+// "Only the majesty of grief and sorrow separate us from the dark.  The dead never grieve, and the dark knows little of sorrow."
 // Can only prepare spells at keep.  Require ingredients & preparation time. Maximum number prepared at one time is a figment of intl
 // very difficult to learn new spells and the effects are usually muted
 
 // Wander Action - create a random set of grids with ingredients/objects/npcs - potential apprentices, maybe a mugger
+
+// EXAMPLE ATTACK:
+// Character swings at Monster's HEAD with MACE - hits!  Contested attack roll: 13 vs 9
+// Penetration roll is: 13 Mace (+2) vs Leather Coif (12) - Mace Penetrates!
+// Monster takes 1 hit!
+//
+// Character swings at Monster's HEAD with MACE - hits!
+// Penetration roll is: 7 Mace (+2) vs Leather Coif (12) - Leather Coif Protects!
+// Leather Coif takes 1 hit!
+// Leather Coif is destroyed!!!  
 
 func (keep *Keep) goKeep() {
 	rsp := ""

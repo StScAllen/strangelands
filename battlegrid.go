@@ -163,8 +163,8 @@ func (bg *BattleGrid) isApprenticeVisible() bool {
 	return false
 }
 
-func (bg * BattleGrid) isAttackPathClear() (bool){
-
+func (bg * BattleGrid) isAttackPathClear(turn int) (bool){
+	return true;
 }
 
 func (bg * BattleGrid) isMonsterInAttackRange(turn int) (bool){
@@ -764,15 +764,15 @@ func (bg *BattleGrid) drawGrid() {
 				row += "  "
 			}
 		} else if i == 5 {
-			row += "  " + character.name + " Health: ["
+			row += "  " + character.name + " Health: ("
 			for hlth := 0; hlth <= character.maxhp; hlth++ {
 				if hlth > character.hp {
 					row += "-"
 				} else {
-					row += "*"
+					row += "♥"
 				}
 			}
-			row += "]"
+			row += ")"
 
 		} else if i == 6 {
 			if bg.hasApprentice {
@@ -781,7 +781,7 @@ func (bg *BattleGrid) drawGrid() {
 					if hlth > apprentice.hp {
 						row += "-"
 					} else {
-						row += "*"
+						row += "♥"
 					}
 				}
 				row += "]"
@@ -792,7 +792,7 @@ func (bg *BattleGrid) drawGrid() {
 				if hlth > bg.monster.hp {
 					row += "-"
 				} else {
-					row += "*"
+					row += "♥"
 				}
 			}
 			row += "]"

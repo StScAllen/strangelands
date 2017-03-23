@@ -2,6 +2,9 @@
 
 package main
 
+import "strings"
+import "fmt"
+
 var qualities = []string{"Crude", "Stand", "Crafts", "Master"}
 var materials = []string{"Oak", "Bone", "Stone", "Iron", "Steel", "Silver"}
 
@@ -284,6 +287,26 @@ func getEmptyItem() Item {
 	item.weight = 0
 
 	return item
+}
+
+func (item * Item) getInvDisplayString() (string){
+	
+	durab := strings.Repeat("▲", item.durability)
+	miss := ""
+	miss = strings.Repeat("•", (item.maxDurability - item.durability))
+	
+	if (len(durab) < 1 && item.maxDurability > 0){
+		durab = "X"
+	}
+	
+	disp := packSpaceString(fmt.Sprintf("%s", item.name), 25)  
+	if (item.typeCode == ITEM_TYPE_ARMOR){
+		disp += fmt.Sprintf("[%s", durab)
+		disp += miss
+		disp += "]"
+	}
+
+	return disp;
 }
 
 func (w *Weapon) getWeaponStatLine() string {

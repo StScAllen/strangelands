@@ -6,7 +6,7 @@ package main
 //import "strings"
 
 var PALLETE string = "▓ ▒ ░ ■ ║ ╣ ║ ╝ ╚ ╩ ╠ ╬ ═ ╦ ╔ ╗ │ └ ┘ ┌ ┐ ─ ┴ ├ ┤ ┬ ┼ ╞ ╫ ┴ ╨ ╥ ╖ ╒ ╓ ╙ ╜"
-var PALLETE2 string = "↨ ↔ ▀ █ ▐ ▲ ► ▼ ◄ « ˄ « ˄ ∞ ⌂ ☼ ♥ ♪ ♫ ± Σ Φ ∩ † "
+var PALLETE2 string = "↨ ↔ ▀ █ ▐ ▲ ► ▼ ◄ « ˄ « ˄ ∞ ⌂ ☼ ♥ ♪ ♫ ± Σ Φ ∩ † • ♥ ♠ ♣ ♦ × ≈"
 
 var worldmap = []string 	{
 								"┌────────────────────────────────────────────────────────────┐",

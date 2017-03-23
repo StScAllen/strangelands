@@ -14,7 +14,7 @@ func (bg * BattleGrid) canCharacterCast(char Character, currTurns int) (bool){
 
 func (bg * BattleGrid) canCharacterAttack(char Character, currTurns int) (bool){
 	if bg.isMonsterVisible() {
-		if bg.isMonsterInAttackRange(bg.turn) && bg.isAttackPathClear(bt.turn){
+		if bg.isMonsterInAttackRange(bg.turn) && bg.isAttackPathClear(bg.turn){
 			if (char.handSlots[0].typeCode == ITEM_TYPE_WEAPON && char.handSlots[0].atkTurns <= currTurns){
 				return true
 			} else if (char.handSlots[1].typeCode == ITEM_TYPE_WEAPON && char.handSlots[1].atkTurns <= currTurns){

@@ -117,6 +117,10 @@ func (char *Character) giveCharacterItem(item Item) bool {
 
 	if item.equip != EQUIP_NONE {
 		if item.equip < EQUIP_HAND {
+			if item.typeCode == ITEM_TYPE_ARMOR {
+				item.durability -= 1
+			}
+		
 			if char.armorSlots[item.equip].id == -1 {
 				char.armorSlots[item.equip] = item
 				equipped = true
@@ -301,7 +305,7 @@ func (char *Character) showStatus() {
 	fmt.Println("        ############         ")
 	fmt.Println("        ## ###### ##         ")
 	fmt.Println("        ## ###### ##        ")
-	fmt.Println("        #  ######         ")
+	fmt.Println("           ######         ")
 	fmt.Println("           ##  ##            ")
 	fmt.Println("           ##  ##            ")
 	fmt.Println("           ##  ##            ")
@@ -354,24 +358,30 @@ func (character *Character) showInventory() {
 
 	fmt.Println("")
 	fmt.Println("--Hands--")
-	seg1 = packSpaceString(fmt.Sprintf("Left Hand: %s", character.handSlots[LEFT].name), 34)
-	seg2 = packSpaceString(fmt.Sprintf("Right Hand: %s", character.handSlots[RIGHT].name), 34)
-	fmt.Println(seg1, seg2)
 
+	seg1 = packSpaceString("Left Hand: ", 14) + character.handSlots[LEFT].getInvDisplayString()
+	seg2 = packSpaceString("Right Hand: ", 14) + character.handSlots[RIGHT].getInvDisplayString()
+	fmt.Println(seg1)
+	fmt.Println(seg2)
+	
 	fmt.Println("")
 	fmt.Println("--Armor--")
-	seg1 = packSpaceString(fmt.Sprintf("Head: %s", character.armorSlots[EQUIP_HEAD].name), 34)
-	seg2 = packSpaceString(fmt.Sprintf("Neck: %s", character.armorSlots[EQUIP_NECK].name), 34)
-	fmt.Println(seg1, seg2)
-	seg1 = packSpaceString(fmt.Sprintf("Chest: %s", character.armorSlots[EQUIP_CHEST].name), 34)
-	seg2 = packSpaceString(fmt.Sprintf("Arms: %s", character.armorSlots[EQUIP_ARMS].name), 34)
-	fmt.Println(seg1, seg2)
-	seg1 = packSpaceString(fmt.Sprintf("Legs: %s", character.armorSlots[EQUIP_LEG].name), 34)
-	seg2 = packSpaceString(fmt.Sprintf("Feet: %s", character.armorSlots[EQUIP_FEET].name), 34)
-	fmt.Println(seg1, seg2)
-	seg1 = packSpaceString(fmt.Sprintf("Cloak: %s", character.armorSlots[EQUIP_CLOAK].name), 34)
-	seg2 = packSpaceString(fmt.Sprintf("Ring: %s", character.armorSlots[EQUIP_RING].name), 34)
-	fmt.Println(seg1, seg2)
+	seg1 = packSpaceString("Head: ", 14) + character.armorSlots[EQUIP_HEAD].getInvDisplayString()
+	seg2 = packSpaceString("Neck: ", 14) + character.armorSlots[EQUIP_NECK].getInvDisplayString()
+	fmt.Println(seg1)
+	fmt.Println(seg2)
+	seg1 = packSpaceString("Chest: ", 14) + character.armorSlots[EQUIP_CHEST].getInvDisplayString()
+	seg2 = packSpaceString("Arms: ", 14) + character.armorSlots[EQUIP_ARMS].getInvDisplayString()
+	fmt.Println(seg1)
+	fmt.Println(seg2)
+	seg1 = packSpaceString("Legs: ", 14) + character.armorSlots[EQUIP_LEG].getInvDisplayString()
+	seg2 = packSpaceString("Feet: ", 14) + character.armorSlots[EQUIP_FEET].getInvDisplayString()
+	fmt.Println(seg1)
+	fmt.Println(seg2)
+	seg1 = packSpaceString("Cloak: ", 14) + character.armorSlots[EQUIP_CLOAK].getInvDisplayString()
+	seg2 = packSpaceString("Ring: ", 14) + character.armorSlots[EQUIP_RING].getInvDisplayString()
+	fmt.Println(seg1)
+	fmt.Println(seg2)
 
 	fmt.Println("")
 	fmt.Println("--Bags--")
