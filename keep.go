@@ -48,6 +48,26 @@ type Keep struct {
 
 // Wander Action - create a random set of grids with ingredients/objects/npcs - potential apprentices, maybe a mugger
 
+// Combat round:
+// Player makes a contested attack against opponent.  
+//		Player attack rating + d20 vs player defense rating + d20 
+// 			- Player Attack rating is comprised of skill bonus + weapon quality/material bonuses
+//			- Player Defense rating is comprised of agi bonus + shield bonus + defense posture bonus
+//
+//		On HIT 
+//			Target roll is a d10 roll + (atk roll) bonus that determine what body location will be targeted
+// 				For every 5 points over the attack roll - defense roll character can add +1 to target roll
+//				Different body locations will provide different wound potentials, and measure armor performance (existance of, etc.)
+// 				A target roll of 10+ is considered a critical hit and will result in an additional hit being scored
+//					If a target roll is awarded a critical the target roll is remade to assess location.
+//					Multiple criticals can be stacked in this way.
+//
+//			Penetration roll is a d20 (+bonuses) vs the Penetration Rating of the armor.
+//				For every 2 points over (attack roll - defense roll) attacker receives a +1 bonus
+//				Each weapon has performance criteria vs various armors (either bonus or penalty)
+//				If the penetration roll fails, a hit is deducted from the armor durability.
+//				If the penetration roll succeeds a hit is assessed against the defender.
+
 // EXAMPLE ATTACK:
 // Character swings at Monster's HEAD with MACE - hits!  Contested attack roll: 13 vs 9
 // Penetration roll is: 13 Mace (+2) vs Leather Coif (12) - Mace Penetrates!
@@ -57,6 +77,7 @@ type Keep struct {
 // Penetration roll is: 7 Mace (+2) vs Leather Coif (12) - Leather Coif Protects!
 // Leather Coif takes 1 hit!
 // Leather Coif is destroyed!!!  
+
 
 func (keep *Keep) goKeep() {
 	rsp := ""

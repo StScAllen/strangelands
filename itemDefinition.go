@@ -59,7 +59,7 @@ var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, 
 }
 
 var armors = []Armor{ // name, shields, defense, weight, value, slot
-	{"Clothes", 1, 1, 0, 0, EQUIP_CHEST},
+	{"Cloth Shirt", 1, 1, 0, 0, EQUIP_CHEST},
 	{"Thick Cloth Coat", 1, 2, 1, 2, EQUIP_CHEST},
 	{"Padded Jerkin", 2, 3, 2, 4, EQUIP_CHEST},
 	{"Soft Leather Jerkin", 2, 4, 3, 8, EQUIP_CHEST},
@@ -71,9 +71,12 @@ var armors = []Armor{ // name, shields, defense, weight, value, slot
 	{"Padded Coif", 1, 1, 1, 2, EQUIP_HEAD},
 	{"Leather Coif", 2, 1, 1, 2, EQUIP_HEAD},
 	{"Chain Coif", 4, 2, 1, 2, EQUIP_HEAD},
+	{"Cloth Pants", 1, 1, 0, 0, EQUIP_LEGS},	
 	{"Padded Greeves", 1, 1, 1, 2, EQUIP_LEG},
 	{"Leather Greeves", 2, 1, 1, 2, EQUIP_LEG},
 	{"Chain Greeves", 4, 2, 1, 2, EQUIP_LEG},
+	{"Light Cape", 1, 1, 1, 1, EQUIP_CLOAK},
+	{"Wood Shield", 3, 1, 2, 2, EQUIP_HAND},
 }
 
 type Item struct { // regular items
