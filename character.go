@@ -9,6 +9,8 @@ var apprentice Character
 var keep Keep
 var gameDay, dayCounter int
 
+var villages []Village
+
 var log Log
 
 const VERSION = ".03a"
@@ -113,7 +115,8 @@ func main() {
 			character = createCharacter()
 			keep = createKeep()
 			character.printCharacter(0)
-
+			buildVillages()
+			
 			fmt.Print("\nUse this character? ")
 			fmt.Scanln(&rsp)
 			clearConsole()

@@ -82,7 +82,7 @@ type Keep struct {
 func (keep *Keep) goKeep() {
 	rsp := ""
 
-	for rsp != "7" {
+	for rsp != "x" {
 		clearConsole()
 		fmt.Println("╔ Keep ╗")
 		fmt.Println(makeDialogString(keep.description))
@@ -96,7 +96,7 @@ func (keep *Keep) goKeep() {
 		fmt.Println("5. Status")
 		fmt.Println("")
 		fmt.Println("6. Minutiae")
-		fmt.Println("7. Exit")
+		fmt.Println("x. Exit")
 		fmt.Println("")
 		fmt.Printf("Select an Option:  ")
 
