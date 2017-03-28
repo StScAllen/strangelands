@@ -10,9 +10,11 @@ var keepDescriptions = []string{
 }
 
 type Keep struct {
-	name             string
-	acres, usedacres int
-	description      string
+	name             	string
+	acres, usedacres 	int
+	description      	string
+	apprentices			[]Character
+	mapX, mapY			int
 }
 
 // uses political favors to gain acres
@@ -118,5 +120,7 @@ func createKeep() Keep {
 	keep.usedacres = 0
 	keep.name = "Campground"
 	keep.description = keepDescriptions[0]
+	keep.mapX, keep.mapY = 27, 12
+	
 	return keep
 }

@@ -54,19 +54,24 @@ func showGameMenu() string {
 
 	clearConsole()
 
-	fmt.Println("Main Menu")
+	fmt.Println("Travel Menu")
 	fmt.Printf("Day: %v \n", gameDay)
 	fmt.Println("------------")
-	fmt.Println("1. Visit Village")
-	fmt.Println("2. Return to Keep")
-	fmt.Println("3. Scavenge Countryside")
-	fmt.Println("4. Missions")
-	fmt.Println("5. World Map")	
-	fmt.Println("")
-	fmt.Println("6. Minutiae")
-	fmt.Println("7. Quit")
-	fmt.Println("")
-	fmt.Println("Select an Option:  ")
+	fmt.Println("1. Keep")
+	fmt.Println("2. Crowley")
+	fmt.Println("3. Maline")
+	fmt.Println("4. Faust")
+	fmt.Println("5. Dauntun")
+	fmt.Println("6. Elice")
+	fmt.Println("7. Hastur")
+	fmt.Println("8. Hollow")
+	fmt.Println("9. Pritchard")	
+	fmt.Println("")	
+	fmt.Println("m. World Map")
+	fmt.Println("h. Minutiae")
+	fmt.Println("x. Back")
+	fmt.Println("    ----    ")
+	fmt.Println("Where do you wish to travel? ")
 
 	rsp := ""
 	fmt.Scanln(&rsp)
@@ -100,8 +105,6 @@ func init() {
 	gameDay = 1
 	log = openLog()
 	dieInit()
-	genWeaponsOfWeek()
-	genArmorOfWeek()
 }
 
 func main() {
@@ -113,16 +116,21 @@ func main() {
 		rsp = "n"
 		for rsp != "y" && rsp != "Y" {
 			character = createCharacter()
-			keep = createKeep()
 			character.printCharacter(0)
-			buildVillages()
-			
+
 			fmt.Print("\nUse this character? ")
 			fmt.Scanln(&rsp)
 			clearConsole()
 		}
+		
+		keep = createKeep()
+		buildVillages()
+		updateShops()
+		
 	} else if rsp == "2" {
 		character, keep = loadGame()
+		buildVillages()
+		updateShops()
 		character.printCharacter(1)
 		character.gold = 800
 	} else if rsp == "3" {
@@ -134,10 +142,10 @@ func main() {
 	rsp = ""
 	gameFlag := true
 	for gameFlag {
-		rsp = showGameMenu()
+		rsp = villages[character.villageIndex].visitVillage)()
 
 		if rsp == "1" {
-			goShop()
+			villages[character.villageIndex].goShop()
 		} else if rsp == "2" {
 			keep.goKeep()
 			character.save()

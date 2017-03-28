@@ -50,6 +50,7 @@ type Character struct {
 	armorSlots                    [8]Item
 	inventory                     []Item
 	spellbook                     Spellbook
+	villageIndex				  int
 }
 
 // can have special items to increase moves
@@ -290,6 +291,7 @@ func createCharacter() Character {
 	character.handSlots[1] = getEmptyItem()
 
 	character.exp = 0
+	character.villageIndex = 0
 
 	return character
 }

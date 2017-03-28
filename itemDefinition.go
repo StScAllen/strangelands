@@ -71,7 +71,7 @@ var armors = []Armor{ // name, shields, defense, weight, value, slot
 	{"Padded Coif", 1, 1, 1, 2, EQUIP_HEAD},
 	{"Leather Coif", 2, 1, 1, 2, EQUIP_HEAD},
 	{"Chain Coif", 4, 2, 1, 2, EQUIP_HEAD},
-	{"Cloth Pants", 1, 1, 0, 0, EQUIP_LEGS},	
+	{"Cloth Pants", 1, 1, 0, 0, EQUIP_LEG},	
 	{"Padded Greeves", 1, 1, 1, 2, EQUIP_LEG},
 	{"Leather Greeves", 2, 1, 1, 2, EQUIP_LEG},
 	{"Chain Greeves", 4, 2, 1, 2, EQUIP_LEG},

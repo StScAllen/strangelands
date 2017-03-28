@@ -5,37 +5,43 @@ package main
 import "fmt"
 import "strconv"
 
-var shopWeapons []Item
-var shopArmor []Item
-
-func genWeaponsOfWeek() {
+func genWeaponsOfWeek() []Item{
 	var die Die
 
-	shopWeapons = make([]Item, 0)
+	shopWeapons := make([]Item, 0)
 
 	for k := 0; k < die.rollxdx(5, 12); k++ {
 		shopWeapons = append(shopWeapons, getRandomWeapon())
 	}
+	
+	return shopWeapons
+
 }
 
-func genArmorOfWeek() {
+func genArmorOfWeek() []Item {
 	var die Die
 
-	shopArmor = make([]Item, 0)
+	shopArmor := make([]Item, 0)
 
 	for k := 0; k < die.rollxdx(5, 12); k++ {
 		shopArmor = append(shopArmor, getRandomArmor())
 	}
+	
+	return shopArmor
 }
 
 func updateShops() {
-	genWeaponsOfWeek()
-	genArmorOfWeek()
+	for i := range villages {
+		villages[i].shopWeapons = genWeaponsOfWeek()
+		villages[i].shopArmor = genArmorOfWeek()
+	}
 }
 
-func buyWeaponScreen() {
+func (village * Village) buyWeaponScreen() {
 	clearConsole()
-
+	
+	shopWeapons := village.shopWeapons
+	
 	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
 
 	fmt.Println("Weapon Shop      Gold:  " + charString)
@@ -65,24 +71,29 @@ func buyWeaponScreen() {
 		if rsp == "y" {
 			if character.gold < shopWeapons[num].value {
 				showPause("Not enough gold!")
-				buyWeaponScreen()
+				village.buyWeaponScreen()
 			} else {
 				item := shopWeapons[num]
 				if character.giveCharacterItem(item) {
 					character.gold -= item.value
 					shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
+					village.shopWeapons = shopWeapons
 				} else {
 					showPause("Character weight exceeded! Purchase not made!")
 				}
-				buyWeaponScreen()
+				village.buyWeaponScreen()
 			}
 		}
 	}
+	
+	village.shopWeapons = shopWeapons
 }
 
-func buyArmorScreen() {
+func (village * Village) buyArmorScreen() {
 	clearConsole()
 
+	shopArmor := village.shopArmor
+	
 	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
 
 	fmt.Println("Armor Shop      Gold:  " + charString)
@@ -111,26 +122,29 @@ func buyArmorScreen() {
 		if rsp == "y" {
 			if character.gold < shopArmor[num].value {
 				showPause("Not enough gold!")
-				buyArmorScreen()
+				village.buyArmorScreen()
 			} else {
 				item := shopArmor[num]
 				if character.giveCharacterItem(item) {
 					character.gold -= item.value
 					shopArmor = append(shopArmor[:num], shopArmor[num+1:]...)
+					village.shopArmor = shopArmor
 				} else {
 					showPause("Character weight exceeded! Purchase not made!")
 				}
-				buyArmorScreen()
+				village.buyArmorScreen()
 			}
 		}
 	}
+	
+	village.shopArmor = shopArmor
 }
 
-func buySuppliesScreen() {
+func (village * Village) buySuppliesScreen() {
 
 }
 
-func buyAnimalsScreen() {
+func (village * Village) buyAnimalsScreen() {
 
 }
 
