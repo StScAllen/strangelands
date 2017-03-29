@@ -92,8 +92,8 @@ func showAttributesMinutiae() {
 		fmt.Println(" level.")
 		fmt.Println("")
 		fmt.Println("Score	Modifiers")
-		fmt.Println(" 1 	Spells: 1		Max Skill: 1")
-		fmt.Println(" 2 	Spells: 1 		Max Skill: 2")
+		fmt.Println(" 1 	Spells: 0		Max Skill: 1")
+		fmt.Println(" 2 	Spells: 1 		Max Skill: 1")
 		fmt.Println(" 3 	Spells: 2 		Max Skill: 2")
 		fmt.Println(" 4 	Spells: 2 		Max Skill: 3")
 		fmt.Println(" 5 	Spells: 3 		Max Skill: 3")
@@ -156,6 +156,25 @@ func showAttributesMinutiae() {
 
 		flag = false
 	}
+}
+
+func openTownMinutiae() {
+	rsp := ""
+
+	clearConsole()
+	fmt.Println("")
+	fmt.Println("--- Minutiae: Town ---")
+	fmt.Println("Dusty, corrupt, toiling. The only remaining beacons in the vast dark.")
+	fmt.Println("╓")
+	fmt.Println("║1. Character Minutiae")
+	fmt.Println("║2. City Minutiae")
+	fmt.Println("║3. Keep Minutiae")
+	fmt.Println("║4. Mission Minutiae")
+	fmt.Println("║5. Misc Minutiae")
+	fmt.Println("╙")
+
+	fmt.Scanln(&rsp)
+
 }
 
 // main minutiae entry point

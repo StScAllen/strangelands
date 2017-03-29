@@ -51,9 +51,23 @@ func printArrayString(arr []string) {
 
 func drawWorldMap(){
 	clearConsole()
-	
+		
+	charX, charY := 0, 0
+
+	if character.villageIndex == 99 {
+		charX = keep.mapX
+		charY = keep.mapY
+	} else {
+		charX = villages[character.villageIndex].mapX
+		charY = villages[character.villageIndex].mapY
+	}
+		
 	for k := 0; k < len(worldmap2); k++{
-		fmt.Println(worldmap2[k])
+		row := worldmap2[k]
+		if charY == k {
+			row = replaceAtIndex(row, 'C', charX);
+		}
+		fmt.Println(row)
 	}
 	
 	rsp := ""

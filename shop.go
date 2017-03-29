@@ -15,7 +15,6 @@ func genWeaponsOfWeek() []Item{
 	}
 	
 	return shopWeapons
-
 }
 
 func genArmorOfWeek() []Item {
@@ -140,12 +139,66 @@ func (village * Village) buyArmorScreen() {
 	village.shopArmor = shopArmor
 }
 
-func (village * Village) buySuppliesScreen() {
+func (village * Village) buyProvisions() {
+	clearConsole()
+	rsp := ""
+	
+	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
 
+	fmt.Println("Provisions      Gold:  " + charString)
+	fmt.Println("-----------------------------------------------------------------")
+	fmt.Println("Nothing available")
+	
+	fmt.Scanln(&rsp)
 }
 
-func (village * Village) buyAnimalsScreen() {
+func (village * Village) buyCuriosities() {
+	clearConsole()
+	rsp := ""
+	
+	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
 
+	fmt.Println("Curiosities     Gold:  " + charString)
+	fmt.Println("-----------------------------------------------------------------")
+	fmt.Println("Nothing available")
+	
+	fmt.Scanln(&rsp)
 }
+
+func (village * Village) shopMenu() {
+	exitFlag := false
+	rsp := ""
+	
+	for exitFlag != true {
+		clearConsole()
+
+		fmt.Println("+++ Shops of " + village.name + " +++")
+		fmt.Println("------------")
+		fmt.Println("1. Weapons")
+		fmt.Println("2. Armor")
+		fmt.Println("3. Provisions")
+		fmt.Println("4. Curiosities (Recipes & Spells)")	
+	
+		fmt.Println("x. Exit")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
+
+		fmt.Scanln(&rsp)
+		
+		if rsp == "x" || rsp == "X" {
+			exitFlag = true
+		} else if rsp == "1" {
+			village.buyWeaponScreen()
+		} else if rsp == "2" {
+			village.buyArmorScreen()
+		} else if rsp == "3" {
+			village.buyProvisions()
+		} else if rsp == "4" {
+			village.buyCuriosities()
+		}
+	}
+}
+
+
 
 

@@ -81,10 +81,10 @@ type Keep struct {
 // Leather Coif is destroyed!!!  
 
 
-func (keep *Keep) goKeep() {
+func (keep *Keep) visitKeep() (string) {
 	rsp := ""
 
-	for rsp != "x" {
+	for rsp != "q" {
 		clearConsole()
 		fmt.Println("╔ Keep ╗")
 		fmt.Println(makeDialogString(keep.description))
@@ -96,9 +96,11 @@ func (keep *Keep) goKeep() {
 		fmt.Println("3. Apprentices")
 		fmt.Println("4. Inventory")
 		fmt.Println("5. Status")
-		fmt.Println("")
-		fmt.Println("6. Minutiae")
-		fmt.Println("x. Exit")
+		fmt.Println("6. Missions")
+		fmt.Println("7. Travel")
+		fmt.Println("")	
+		fmt.Println("m. Minutiae")
+		fmt.Println("q. Exit")
 		fmt.Println("")
 		fmt.Printf("Select an Option:  ")
 
@@ -106,11 +108,17 @@ func (keep *Keep) goKeep() {
 
 		if rsp == "1" {
 			endDay()
+			character.save()
 		} else if rsp == "5" {
 			character.showStatus()
 			character.printCharacter(1)
+		} else if rsp == "7" {
+			travel := showTravelMenu()
+			return travel
 		}
 	}
+	
+	return rsp
 }
 
 func createKeep() Keep {

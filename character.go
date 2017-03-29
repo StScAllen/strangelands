@@ -44,13 +44,13 @@ func endDay() {
 	gameDay++
 	dayCounter++
 
-	if dayCounter == 6 {
+	if dayCounter == 12 {
 		dayCounter = 0
 		updateShops()
 	}
 }
 
-func showTopMenu() string {
+func showGameMenu() string {
 
 	clearConsole()
 
@@ -66,7 +66,7 @@ func showTopMenu() string {
 	fmt.Scanln(&rsp)
 
 	if rsp == "" {
-		rsp = showTopMenu()
+		rsp = showGameMenu()
 	}
 
 	return rsp
@@ -79,7 +79,7 @@ func init() {
 }
 
 func main() {
-	rsp := showTopMenu()
+	rsp := showGameMenu()
 
 	defer finalExit()
 
@@ -113,27 +113,14 @@ func main() {
 	rsp = ""
 	gameFlag := true
 	for gameFlag {
-		rsp = villages[character.villageIndex].visitVillage()
-
-		if rsp == "1" {
-			villages[character.villageIndex].goShop()
-		} else if rsp == "2" {
-			keep.goKeep()
-			character.save()
-		} else if rsp == "3" {
-			txt := "It's cold and dark here. Shadows from my waning fire dance across the vacant expanse. Sometimes the end of the world looks as bleak and sorrowful as its beginning. But only if just."
-			showDialogBoxRight(makeDialogBox("Joe Durden", txt, DIALOG_RIGHT))
-		} else if rsp == "4" {
-			chooseAdventure()
-			adventure()
-		} else if rsp == "5" {		
-			drawWorldMap()
-		} else if rsp == "6" {
-			openMinutiae()
-		} else if rsp == "7" {
+		if (character.villageIndex == 99){
+			rsp = keep.visitKeep()
+		} else if character.villageIndex < 9 {
+			rsp = villages[character.villageIndex].visitVillage()		
+		}
+		
+		if (rsp == "q"){
 			gameFlag = false
-		} else if rsp == "9" {
-			showTravelMenu()
 		}
 	}
 

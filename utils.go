@@ -8,6 +8,42 @@ import "strings"
 const DIALOG_RIGHT = 0
 const DIALOG_LEFT = 1
 
+func replaceAtIndex(str string, replacement rune, index int) string {
+    return str[:index] + string(replacement) + str[index+1:]
+}
+
+func getVillageDistance(idx int) (int){
+	currX, currY := 0,0
+	destX, destY := 0,0
+	
+	if idx == 99 {
+		destX, destY = keep.mapX, keep.mapY
+	} else {
+		destX, destY = villages[idx].mapX, villages[idx].mapY	
+	}
+	
+	if character.villageIndex == 99 {
+		currX, currY = keep.mapX, keep.mapY
+	} else {
+		currX, currY = villages[character.villageIndex].mapX, villages[character.villageIndex].mapY
+	}
+
+	distX := iAbsDiff(currX, destX)
+	distY := iAbsDiff(currY, destY)
+	
+	if distX == 0 && distY == 0 {
+		return 0
+	}
+	
+	daysTravel := int((distX+distY) / 6)
+	
+	if daysTravel < 1 {
+		daysTravel = 1
+	}
+	
+	return daysTravel
+}
+
 func packSpace(num int, digits int) string {
 	ret := fmt.Sprintf("%v", num)
 
