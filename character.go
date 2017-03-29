@@ -50,35 +50,6 @@ func endDay() {
 	}
 }
 
-func showGameMenu() string {
-
-	clearConsole()
-
-	fmt.Println("Travel Menu")
-	fmt.Printf("Day: %v \n", gameDay)
-	fmt.Println("------------")
-	fmt.Println("1. Keep")
-	fmt.Println("2. Crowley")
-	fmt.Println("3. Maline")
-	fmt.Println("4. Faust")
-	fmt.Println("5. Dauntun")
-	fmt.Println("6. Elice")
-	fmt.Println("7. Hastur")
-	fmt.Println("8. Hollow")
-	fmt.Println("9. Pritchard")	
-	fmt.Println("")	
-	fmt.Println("m. World Map")
-	fmt.Println("h. Minutiae")
-	fmt.Println("x. Back")
-	fmt.Println("    ----    ")
-	fmt.Println("Where do you wish to travel? ")
-
-	rsp := ""
-	fmt.Scanln(&rsp)
-
-	return rsp
-}
-
 func showTopMenu() string {
 
 	clearConsole()
@@ -142,7 +113,7 @@ func main() {
 	rsp = ""
 	gameFlag := true
 	for gameFlag {
-		rsp = villages[character.villageIndex].visitVillage)()
+		rsp = villages[character.villageIndex].visitVillage()
 
 		if rsp == "1" {
 			villages[character.villageIndex].goShop()
@@ -161,6 +132,8 @@ func main() {
 			openMinutiae()
 		} else if rsp == "7" {
 			gameFlag = false
+		} else if rsp == "9" {
+			showTravelMenu()
 		}
 	}
 

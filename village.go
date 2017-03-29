@@ -78,7 +78,7 @@ func buildVillages() {
 func (village * Village) visitVillage() (string) {
 	clearConsole()
 
-	fmt.Println("+ Village of" + village.name + "+")
+	fmt.Println("+++ Village of " + village.name + " +++")
 	fmt.Println("------------")
 	fmt.Println("1. Shop Weapons")
 	fmt.Println("2. Shop Armor")
@@ -93,6 +93,56 @@ func (village * Village) visitVillage() (string) {
 	fmt.Println("q. Quit")
 	fmt.Println("")
 	fmt.Println("Select an Option:  ")
+
+	rsp := ""
+	fmt.Scanln(&rsp)
+	
+	if rsp == "1" {
+		village.buyWeaponScreen()
+	} else if rsp == "2" {
+		village.buyArmorScreen()
+	} else if rsp == "3" {
+		village.buySuppliesScreen()
+	} else if rsp == "4" {
+		village.buyAnimalsScreen()
+	} else if rsp == "5" {		
+		drawWorldMap()
+	} else if rsp == "6" {
+		openMinutiae()
+	} else if rsp == "7" {
+		gameFlag = false
+	} else if rsp == "8" {
+		gameFlag = false
+	} else if rsp == "9" {
+		showTravelMenu()
+	}
+	
+	
+	return rsp
+}
+
+func showTravelMenu() string {
+
+	clearConsole()
+
+	fmt.Println("Travel Menu")
+	fmt.Printf("Day: %v \n", gameDay)
+	fmt.Println("------------")
+	fmt.Println("1. Keep")
+	fmt.Println("2. Crowley")
+	fmt.Println("3. Maline")
+	fmt.Println("4. Faust")
+	fmt.Println("5. Dauntun")
+	fmt.Println("6. Elice")
+	fmt.Println("7. Hastur")
+	fmt.Println("8. Hollow")
+	fmt.Println("9. Pritchard")	
+	fmt.Println("")	
+	fmt.Println("m. World Map")
+	fmt.Println("h. Minutiae")
+	fmt.Println("x. Back")
+	fmt.Println("    ----    ")
+	fmt.Println("Where do you wish to travel? ")
 
 	rsp := ""
 	fmt.Scanln(&rsp)
