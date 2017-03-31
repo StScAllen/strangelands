@@ -25,40 +25,40 @@ func buildVillages() {
 	crowley.mapX, crowley.mapY = 20, 10
 	villages[0] = crowley	
 		
-	var maline Village	
-	maline.name = "Maline"
-	maline.distanceToKeep = 2
-	maline.size = 3
-	maline.mapX, maline.mapY = 17, 3
-	villages[1] = maline 
+	var bristal Village	
+	bristal.name = "Bristal"
+	bristal.distanceToKeep = 2
+	bristal.size = 3
+	bristal.mapX, bristal.mapY = 17, 3
+	villages[1] = bristal 
 	
 	var faust Village	
 	faust.name = "Faust"
 	faust.distanceToKeep = 2
 	faust.size = 3
-	faust.mapX, faust.mapY = 38, 3
+	faust.mapX, faust.mapY = 37, 2
 	villages[2] = faust 
 	
-	var dauntun Village	
-	dauntun.name = "Dauntun"
-	dauntun.distanceToKeep = 2
-	dauntun.size = 2
-	dauntun.mapX, dauntun.mapY = 25, 16
-	villages[3] = dauntun 		
+	var gould Village	
+	gould.name = "Gould"
+	gould.distanceToKeep = 2
+	gould.size = 2
+	gould.mapX, gould.mapY = 35, 15
+	villages[3] = gould 		
 		
-	var elice Village	
-	elice.name = "Elice"
-	elice.distanceToKeep = 3
-	elice.size = 2
-	elice.mapX, elice.mapY = 46, 16
-	villages[4] = elice 	
+	var elise Village	
+	elise.name = "Elise"
+	elise.distanceToKeep = 3
+	elise.size = 2
+	elise.mapX, elise.mapY = 56, 15
+	villages[4] = elise 	
 	
-	var hastur Village	
-	hastur.name = "Hastur"
-	hastur.distanceToKeep = 4
-	hastur.size = 4
-	hastur.mapX, hastur.mapY = 46, 2
-	villages[5] = hastur 
+	var autumn Village	
+	autumn.name = "Autumn"
+	autumn.distanceToKeep = 4
+	autumn.size = 4
+	autumn.mapX, autumn.mapY = 57, 3
+	villages[5] = autumn 
 	
 	var hollow Village	
 	hollow.name = "Hollow"
@@ -67,12 +67,12 @@ func buildVillages() {
 	hollow.mapX, hollow.mapY = 2, 13
 	villages[6] = hollow 	
 	
-	var pritchard Village	
-	pritchard.name = "Pritchard"
-	pritchard.distanceToKeep = 1
-	pritchard.size = 6
-	pritchard.mapX, pritchard.mapY = 25, 10
-	villages[7] = pritchard
+	var caustus Village	
+	caustus.name = "Caustus"
+	caustus.distanceToKeep = 1
+	caustus.size = 6
+	caustus.mapX, caustus.mapY = 35, 11
+	villages[7] = caustus
 }
 
 func (village *Village) research() {
@@ -134,6 +134,9 @@ func (village * Village) visitVillage() (string) {
 }
 
 func showTravelMenu() string {
+
+	showVillages()
+
 	validSelection := false
 	dist := 0
 	destination := ""
@@ -147,24 +150,24 @@ func showTravelMenu() string {
 		fmt.Printf("Day: %v \n", gameDay)
 		fmt.Println("------------")
 		dist = getVillageDistance(0)
-		fmt.Println("1. Crowley 		(", dist, " days travel)")
+		fmt.Println(packSpaceString("1. Crowley", 20) + fmt.Sprintf("(%v days travel)", dist))
 		dist = getVillageDistance(1)
-		fmt.Println("2. Maline			(", dist, " days travel)")
+		fmt.Println(packSpaceString("2. Bristal", 20) + fmt.Sprintf("(%v days travel)", dist))
 		dist = getVillageDistance(2)
-		fmt.Println("3. Faust			(", dist, " days travel)")
+		fmt.Println(packSpaceString("3. Faust", 20) + fmt.Sprintf("(%v days travel)", dist))
 		dist = getVillageDistance(3)		
-		fmt.Println("4. Dauntun 		(", dist, " days travel)")
+		fmt.Println(packSpaceString("4. Gould", 20) + fmt.Sprintf("(%v days travel)", dist))
 		dist = getVillageDistance(4)
-		fmt.Println("5. Elice 			(", dist, " days travel)")
+		fmt.Println(packSpaceString("5. Elise", 20) + fmt.Sprintf("(%v days travel)", dist))
 		dist = getVillageDistance(5)		
-		fmt.Println("6. Hastur 			(", dist, " days travel)")
+		fmt.Println(packSpaceString("6. Autumn", 20) + fmt.Sprintf("(%v days travel)", dist))
 		dist = getVillageDistance(6)
-		fmt.Println("7. Hollow 			(", dist, " days travel)")
+		fmt.Println(packSpaceString("7. Hollow", 20) + fmt.Sprintf("(%v days travel)", dist))
 		dist = getVillageDistance(7)		
-		fmt.Println("8. Pritchard 		(", dist, " days travel)")	
+		fmt.Println(packSpaceString("8. Caustus", 20) + fmt.Sprintf("(%v days travel)", dist))
 		fmt.Println("")	
 		dist = getVillageDistance(99)
-		fmt.Println("k. Return to Keep 	(", dist, " days travel)")
+		fmt.Println(packSpaceString("k. Return to Keep", 20) + fmt.Sprintf("(%v days travel)", dist))
 		fmt.Println("m. World Map")
 		fmt.Println("h. Minutiae")
 		fmt.Println("x. Back")

@@ -96,7 +96,7 @@ func loadGame() (Character, Keep) {
 		keep.acres = 0
 		keep.usedacres = 0
 		keep.description = keepDescriptions[0]
-		keep.mapX = 27
+		keep.mapX = 23
 		keep.mapY = 12
 		
 		fmt.Println("-----")

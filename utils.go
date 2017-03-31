@@ -8,8 +8,14 @@ import "strings"
 const DIALOG_RIGHT = 0
 const DIALOG_LEFT = 1
 
-func replaceAtIndex(str string, replacement rune, index int) string {
-    return str[:index] + string(replacement) + str[index+1:]
+func replaceAtIndex(str string, replacement string, index int) string {
+    return str[:index] + replacement + str[index+1:]
+}
+
+func replaceAtIndex2(str string, replacement rune, index int) string {
+    out := []rune(str)
+    out[index] = replacement
+    return string(out)
 }
 
 func getVillageDistance(idx int) (int){

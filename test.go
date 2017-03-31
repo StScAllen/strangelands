@@ -49,6 +49,26 @@ func printArrayString(arr []string) {
 	fmt.Scanln(&rsp)
 }
 
+func showVillages() {
+
+	clearConsole()
+
+	fmt.Println("Villages")
+	fmt.Println("--------------")	
+	
+	fmt.Printf("Currently in %v \n", character.villageIndex)
+	
+	for i := range villages {
+		fmt.Printf("%s   \t%v : %v  \t%v\n", packSpaceString(villages[i].name, 12), villages[i].mapX, villages[i].mapY, getVillageDistance(i))
+	}
+	
+	fmt.Printf("%s   \t%v : %v  \t%v\n", packSpaceString("Keep", 12), keep.mapX, keep.mapY, getVillageDistance(99))
+
+	rsp := ""
+	fmt.Printf("Press any key to continue.")
+	fmt.Scanln(&rsp)
+}
+
 func drawWorldMap(){
 	clearConsole()
 		
@@ -63,11 +83,14 @@ func drawWorldMap(){
 	}
 		
 	for k := 0; k < len(worldmap2); k++{
-		row := worldmap2[k]
+		row := fmt.Sprintf("%s", worldmap2[k])
 		if charY == k {
-			row = replaceAtIndex(row, 'C', charX);
+			row = fmt.Sprintf("%s", replaceAtIndex2(row, rune('C'), charX-1));
 		}
-		fmt.Println(row)
+		if k == 1 {
+			row += fmt.Sprintf("  Day: %v", gameDay)
+		}
+		fmt.Println(row) 
 	}
 	
 	rsp := ""

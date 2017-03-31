@@ -38,6 +38,17 @@ type Keep struct {
 // apprentice new skills will be hard to acquire, will require training that takes time slots for both character and apprentice
 // Rarely, a "blank slate" apprentice will be available (Tabula Rasa) - the character can shape them however they see fit.
 
+// MISSIONS are posted in the villages. 
+// Incomplete missions can have different consequences. Death toll, financial, political
+// the longer the mission is unresolved the larger the impact, death reduces village size, financial
+// reduces what is available in the stores, political reduces favor.
+// Each descriptively describes the encounter:
+// Ex. A corpse candle draws our sheep into the bog to drown. 
+// Ex. We hung the wrong man, his corpse is back for revenge!
+// Ex. A grip (goblin) absconds with our cattle after dark!
+// Ex. Valuable property tormented by wily ghast.
+// Ex. Something is eating our children.
+
 // POTIONS are called UNCTURES
 // HAND OF GLORY - make some creatures flee (5 fingers, 5 uses)
 // Cross of St Martin - Stun some creatures for a turn
@@ -128,7 +139,7 @@ func createKeep() Keep {
 	keep.usedacres = 0
 	keep.name = "Campground"
 	keep.description = keepDescriptions[0]
-	keep.mapX, keep.mapY = 27, 12
+	keep.mapX, keep.mapY = 23, 12
 	
 	return keep
 }
