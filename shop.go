@@ -36,133 +36,254 @@ func updateShops() {
 	}
 }
 
-func (village * Village) buyWeaponScreen() {
+func showWeapon(weapon Item){
 	clearConsole()
 	
-	shopWeapons := village.shopWeapons
+	fmt.Println(packSpaceString(weapon.name, 30) + "Value: " + packSpace(weapon.value, 6))
+	fmt.Println("-------------")
+	row := ""
+	row = packSpaceString("Material: " + weapon.material, 30) 
+	row += "Quality: " + weapon.quality
+	fmt.Println(row)
+	fmt.Println("")
 	
-	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
-
-	fmt.Println("Weapon Shop      Gold:  " + charString)
-	fmt.Println("-----------------------------------------------------------------")
+	row = ""	
+	row = packSpaceString(fmt.Sprintf("Durability: %v / %v", weapon.durability, weapon.maxDurability), 30)
+	row += packSpaceString(fmt.Sprintf("Weight: %v ", weapon.weight), 20)
+	row += packSpaceString(fmt.Sprintf("Hands: %v ", weapon.hands), 12)
+	fmt.Println(row)
 	fmt.Println("")
-
-	fmt.Println("   Item         Dmg   \tAcc  Def  Wgt\tCost\tQuality\t\tMaterial")
-
-	for i := 0; i < len(shopWeapons); i++ {
-		fmt.Println(fmt.Sprintf("%v. %s \t %v-%v   \t%s %s %s\t%v \t%s\t\t%s",
-			i, shopWeapons[i].name, shopWeapons[i].dmgMin, shopWeapons[i].dmgMax, packSpace(shopWeapons[i].accuracy, 4), packSpace(shopWeapons[i].defense, 4), packSpace(shopWeapons[i].weight, 4), shopWeapons[i].value, shopWeapons[i].quality, shopWeapons[i].material))
-	}
-
+	
+	row = ""	
+	row = packSpaceString(fmt.Sprintf("Attack Turns: %v ", weapon.atkTurns),30)
+	row += fmt.Sprintf("Attack Range: %v ", weapon.wRange)
+	fmt.Println(row)
 	fmt.Println("")
-	fmt.Println("[x. Back]   [n. More]")
+	
+	row = ""	
+	row = packSpaceString(fmt.Sprintf("Accuracy: %v ", weapon.accuracy), 30)
+	row += fmt.Sprintf("Defense: %v ", weapon.defense)
+	fmt.Println(row)
 	fmt.Println("")
-	fmt.Println("Select an Option:  ")
+	
+	row = ""	//paddedMod, leatherMod, chainMod
+	txt := "Penetration:\n [vs Padded: %v]    [vs Leather: %v]    [vs Chain: %v]"
+	row = fmt.Sprintf(txt, getSigned(weapon.paddedMod), getSigned(weapon.leatherMod), getSigned(weapon.chainMod))
+	fmt.Println(row)
+	fmt.Println("")	
+	fmt.Println("")	
+	
+}
 
-	rsp := ""
-	fmt.Scanln(&rsp)
+func showArmor(armor Item){
+	clearConsole()
+	
+	fmt.Println(packSpaceString(armor.name, 30) + "Value: " + packSpace(armor.value, 6))
+	fmt.Println("-------------")
+	row := packSpaceString("Equips: " + equipStrings[armor.equip], 28)
+	row += "Quality: " + armor.quality
+	fmt.Println(row)
+	fmt.Println("")
+	
+	row = ""	
+	row = packSpaceString(fmt.Sprintf("Shields: %v / %v", armor.durability, armor.maxDurability), 30)
+	fmt.Println(row)
+	fmt.Println("")
+	
+	row = ""	
+	row = packSpaceString(fmt.Sprintf("Weight: %v ", armor.weight), 20)
+	fmt.Println(row)
+	fmt.Println("")
+	
+	row = ""	
+	row = packSpaceString(fmt.Sprintf("Defense: %v ", armor.defense), 30)
+	fmt.Println(row)
+	fmt.Println("")
+	fmt.Println("")	
+	
+}
 
-	if len(rsp) > 0 && rsp != "x" && rsp != "n" {
-		num, err := strconv.Atoi(rsp)
-		fmt.Println(fmt.Sprintf("Buy %s? %v", shopWeapons[num].name, err))
+func (village * Village) buyWeaponScreen() {	
+	shopWeapons := village.shopWeapons
+	exitFlag := false
+	
+	for !exitFlag {
+		clearConsole()
+		
+		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+
+		fmt.Println("Weapon Shop      Gold:  " + charString)
+		fmt.Println("-----------------------------------------------------------------")
+		fmt.Println("")
+
+		fmt.Println("   Item         Dmg   \tAcc  Def  Wgt\tCost\tQuality\t\tMaterial")
+
+		for i := 0; i < len(shopWeapons); i++ {
+			fmt.Println(fmt.Sprintf("%v. %s \t %v-%v   \t%s %s %s\t%v \t%s\t\t%s",
+				i, shopWeapons[i].name, shopWeapons[i].dmgMin, shopWeapons[i].dmgMax, packSpace(shopWeapons[i].accuracy, 4), packSpace(shopWeapons[i].defense, 4), packSpace(shopWeapons[i].weight, 4), shopWeapons[i].value, shopWeapons[i].quality, shopWeapons[i].material))
+		}
+
+		fmt.Println("")
+		fmt.Println("[x. Back]   [n. More]")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
+
+		rsp := ""
 		fmt.Scanln(&rsp)
 
-		if rsp == "y" {
-			if character.gold < shopWeapons[num].value {
-				showPause("Not enough gold!")
-				village.buyWeaponScreen()
-			} else {
-				item := shopWeapons[num]
-				if character.giveCharacterItem(item) {
-					character.gold -= item.value
-					shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
-					village.shopWeapons = shopWeapons
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
+			num, _ := strconv.Atoi(rsp)
+			showWeapon(shopWeapons[num])
+			fmt.Println(fmt.Sprintf("Buy %s? ", shopWeapons[num].name))
+			rsp2 := ""
+			fmt.Scanln(&rsp2)
+
+			if rsp2 == "y" {
+				if character.gold < shopWeapons[num].value {
+					showPause("Not enough gold!")
+					village.buyWeaponScreen()
 				} else {
-					showPause("Character weight exceeded! Purchase not made!")
+					item := shopWeapons[num]
+					if character.giveCharacterItem(item) {
+						character.gold -= item.value
+						shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
+						village.shopWeapons = shopWeapons
+					} else {
+						showPause("Character weight exceeded! Purchase not made!")
+					}
 				}
-				village.buyWeaponScreen()
 			}
-		}
+		} else if rsp == "x" {
+			exitFlag = true
+		}	
 	}
-	
+
 	village.shopWeapons = shopWeapons
 }
 
 func (village * Village) buyArmorScreen() {
-	clearConsole()
-
 	shopArmor := village.shopArmor
+
+	exitFlag := false
 	
-	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
+	for !exitFlag {
+		clearConsole()
+		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-	fmt.Println("Armor Shop      Gold:  " + charString)
-	fmt.Println("-----------------------------------------------------------------")
-	fmt.Println("")
+		fmt.Println("Armor Shop      Gold:  " + charString)
+		fmt.Println("-----------------------------------------------------------------")
+		fmt.Println("")
 
-	fmt.Println("   Item                    Def\tShields\tWgt \tCost\tQuality")
+		fmt.Println("   Item                    Def\tShields\tWgt \tCost\tQuality")
 
-	for i := 0; i < len(shopArmor); i++ {
-		fmt.Printf("%v. %s %s%s\t%s \t%s\t%s \n", i, packSpaceString(shopArmor[i].name, 24), packSpace(shopArmor[i].defense, 4), packSpace(shopArmor[i].durability, 4), packSpace(shopArmor[i].weight, 4), packSpace(shopArmor[i].value, 4), shopArmor[i].quality)
-	}
+		for i := 0; i < len(shopArmor); i++ {
+			fmt.Printf("%v. %s %s%s\t%s \t%s\t%s \n", i, packSpaceString(shopArmor[i].name, 24), packSpace(shopArmor[i].defense, 4), packSpace(shopArmor[i].durability, 4), packSpace(shopArmor[i].weight, 4), packSpace(shopArmor[i].value, 4), shopArmor[i].quality)
+		}
 
-	fmt.Println("")
-	fmt.Println("[x. Back]   [n. More]")
-	fmt.Println("")
-	fmt.Println("Select an Option:  ")
+		fmt.Println("")
+		fmt.Println("[x. Back]   [n. More]")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
 
-	rsp := ""
-	fmt.Scanln(&rsp)
-
-	if len(rsp) > 0 && rsp != "x" && rsp != "n" {
-		num, err := strconv.Atoi(rsp)
-		fmt.Println(fmt.Sprintf("Buy %s? %v", shopArmor[num].name, err))
+		rsp := ""
 		fmt.Scanln(&rsp)
 
-		if rsp == "y" {
-			if character.gold < shopArmor[num].value {
-				showPause("Not enough gold!")
-				village.buyArmorScreen()
-			} else {
-				item := shopArmor[num]
-				if character.giveCharacterItem(item) {
-					character.gold -= item.value
-					shopArmor = append(shopArmor[:num], shopArmor[num+1:]...)
-					village.shopArmor = shopArmor
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
+			num, err := strconv.Atoi(rsp)
+			showArmor(shopArmor[num])
+			fmt.Println(fmt.Sprintf("Buy %s? %v", shopArmor[num].name, err))
+			fmt.Scanln(&rsp)
+
+			if rsp == "y" {
+				if character.gold < shopArmor[num].value {
+					showPause("Not enough gold!")
 				} else {
-					showPause("Character weight exceeded! Purchase not made!")
+					item := shopArmor[num]
+					if character.giveCharacterItem(item) {
+						character.gold -= item.value
+						shopArmor = append(shopArmor[:num], shopArmor[num+1:]...)
+						village.shopArmor = shopArmor
+					} else {
+						showPause("Character weight exceeded! Purchase not made!")
+					}
 				}
-				village.buyArmorScreen()
 			}
-		}
+		} else if rsp == "x" {
+			exitFlag = true
+		}	
 	}
 	
 	village.shopArmor = shopArmor
 }
 
 func (village * Village) buyProvisions() {
-	clearConsole()
-	rsp := ""
-	
-	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
 
-	fmt.Println("Provisions      Gold:  " + charString)
-	fmt.Println("-----------------------------------------------------------------")
-	fmt.Println("Nothing available")
+	exitFlag := false
 	
-	fmt.Scanln(&rsp)
+	for !exitFlag {
+		clearConsole()
+		rsp := ""
+		
+		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+
+		fmt.Println("Provisions      Gold:  " + charString)
+		fmt.Println("-----------------------------------------------------------------")
+		fmt.Println("Nothing available")
+		
+		fmt.Scanln(&rsp)
+	
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
+
+		} else if rsp == "x" {
+			exitFlag = true
+		}	
+	}
+}
+
+func (village * Village) buyApothecary() {
+	exitFlag := false
+	
+	for !exitFlag {
+		clearConsole()
+		rsp := ""
+		
+		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+
+		fmt.Println("Curiosities      Gold:  " + charString)
+		fmt.Println("-----------------------------------------------------------------")
+		fmt.Println("Nothing available")
+		
+		fmt.Scanln(&rsp)
+	
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
+
+		} else if rsp == "x" {
+			exitFlag = true
+		}	
+	}
 }
 
 func (village * Village) buyCuriosities() {
-	clearConsole()
-	rsp := ""
+	exitFlag := false
 	
-	charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, character.weight, character.maxweight)
+	for !exitFlag {
+		clearConsole()
+		rsp := ""
+		
+		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-	fmt.Println("Curiosities     Gold:  " + charString)
-	fmt.Println("-----------------------------------------------------------------")
-	fmt.Println("Nothing available")
+		fmt.Println("Curiosities      Gold:  " + charString)
+		fmt.Println("-----------------------------------------------------------------")
+		fmt.Println("Nothing available")
+		
+		fmt.Scanln(&rsp)
 	
-	fmt.Scanln(&rsp)
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
+
+		} else if rsp == "x" {
+			exitFlag = true
+		}	
+	}
 }
 
 func (village * Village) shopMenu() {
@@ -177,7 +298,8 @@ func (village * Village) shopMenu() {
 		fmt.Println("1. Weapons")
 		fmt.Println("2. Armor")
 		fmt.Println("3. Provisions")
-		fmt.Println("4. Curiosities (Recipes & Spells)")	
+		fmt.Println("4. Apothecary")
+		fmt.Println("5. Curiosities")	
 	
 		fmt.Println("x. Exit")
 		fmt.Println("")
@@ -194,6 +316,8 @@ func (village * Village) shopMenu() {
 		} else if rsp == "3" {
 			village.buyProvisions()
 		} else if rsp == "4" {
+			village.buyApothecary()
+		} else if rsp == "5" {
 			village.buyCuriosities()
 		}
 	}

@@ -13,7 +13,8 @@ type Spellbook struct {
 
 // Spell Ideas (Lamentations)
 // ==================================
-// Heal - heals a moderate amount of hits, or a wound
+// Cauterize - mutes a bleed hit taking it from the death total, still needs time to "heal", hurts like a B^#$&
+// Fuze
 // Divinate - Removes fog of war for the current grid?
 // Protection circle - creates defensive perimeter of salt
 // Invisibility - Remain undetected

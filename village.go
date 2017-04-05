@@ -12,6 +12,9 @@ type Village struct {
 	size 						int
 	shopWeapons 				[]Item
 	shopArmor 					[]Item
+	shopProvisions				[]Item
+	shopApothecary				[]Item
+	shopCuriosities				[]Item
 	mapX, mapY					int
 }
 
@@ -91,8 +94,8 @@ func (village *Village) politicks() {
 }
 
 func (village *Village) goMissions() {
-
-
+	chooseAdventure()
+	adventure()
 }
 
 func (village * Village) visitVillage() (string) {

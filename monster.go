@@ -10,8 +10,11 @@ const STEP_MOVE = 0
 const STEP_WAIT = 1
 const STEP_ATTACK = 2
 
+const DAMAGE_PHYSICIAL = 0
+const DAMAGE_SOUL = 1
+
 var person_bits = []string {"Head", "Arm", "Arm", "Chest", "Chest", "Leg", "Leg",}
-var orb_bits = []string {"Body", "Body", "Body", "Body", "Body", "Body", "Body",}
+var orb_bits = []string {"Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body",}
 var quad_bits = []string {"Head", "Torso", "Torso", "Torso", "Leg", "Leg", "Leg", "Leg",}
 
 type Monster struct {
@@ -19,11 +22,27 @@ type Monster struct {
 	moves                         int
 	name                          string
 	agi, str, per, intl, cha, gui int
+	attacks						  []MonsterAttack					
 	bits						  []string
 	plan                          AIPlan
+	targets						  []int
+	body						  []string
+	resistance					  []int
 	disturbance1                  string
 	disturbance2                  string
 }
+
+type MonsterAttack struct {
+	id 									int
+	wRange								int
+	dmgType								int 
+	atkTurns							int
+	accuracy							int
+	paddedMod, leatherMod, chainMod 	int
+}
+
+var SOUL_SUCK = MonsterAttack{1, 2, DAMAGE_SOUL, 3, 2, 0, 0, 0}
+var CHARGE = MonsterAttack{2, 1, DAMAGE_PHYSICIAL, 2, 1, -1, 0, 1}
 
 type AIStep struct {
 	action string
@@ -45,12 +64,27 @@ type AIPlan struct {
 	appDied   bool
 }
 
+func (mon *Monster) isAlive() bool {
+	if mon.hp < 0 {
+		return false
+	}
+	return true
+}
+
 func (mon *Monster) getMonsterMoves() int {
 	return mon.agi
 }
 
 func (mon *Monster) getMonsterVision() int {
 	return mon.per
+}
+
+func (mon *Monster) getTotalAttackAdjustment() int {
+	return 0
+}
+
+func (mon *Monster) getTotalDefenseAdjustment() int {
+	return 0
 }
 
 func (mon *Monster) getMonsterStealthModifier() int {
@@ -87,6 +121,11 @@ func createMonster(id int) Monster {
 		
 		monster.disturbance1 = "You see a faint glow to the %v"
 		monster.disturbance2 = "A sense of despair washes over you. Something is not right here."
+		
+		monster.targets = ORB_TARGETS
+		monster.body = ORB_STRING
+		monster.resistance = []int{10, 10, 10, 10, 10, 10, 10, 10, 10, 10}
+		monster.attacks = []MonsterAttack{CHARGE, SOUL_SUCK}
 	}
 
 	monster.moves = monster.agi
@@ -142,6 +181,12 @@ func getStepFromTile(tile Tile) AIStep {
 	return step
 }
 
+func (bg *BattleGrid) getAttack() (int) {
+	
+	
+	return -1
+}
+
 func (bg *BattleGrid) isStepValid(step AIStep) bool {
 
 	if bg.monster.plan.nextStep >= bg.monster.plan.stepCount {
@@ -168,6 +213,10 @@ func (bg *BattleGrid) isStepValid(step AIStep) bool {
 }
 
 func (bg *BattleGrid) doMonsterActivity() int {
+
+	if (!bg.monster.isAlive()){
+		return 0
+	}
 
 	oldX := bg.monsterXLoc
 	oldY := bg.monsterYLoc
@@ -209,6 +258,7 @@ func (bg *BattleGrid) doMonsterActivity() int {
 				bg.moveMonsterXY(step.x, step.y)
 			} else if step.id == STEP_ATTACK {
 				log.addAi("Monster attacks!")
+				showPause("Monster attacks!")
 			} else if step.id == STEP_WAIT {
 				log.addAi("Monster waits")
 			}

@@ -18,6 +18,32 @@ func replaceAtIndex2(str string, replacement rune, index int) string {
     return string(out)
 }
 
+func getSigned(val int) (string) {
+	if val > 0 {
+		return fmt.Sprintf("+%v", val)
+	} 
+
+	return fmt.Sprintf("%v", val)
+}
+
+func convertPoundsToStone(lbs int) (string) {
+
+	if lbs < 14 {
+		return fmt.Sprintf("0 stone %v", lbs)
+	}
+	
+	stone := 0
+	for ; lbs > 0; lbs -= 14 {
+		stone++
+	}
+	
+	return fmt.Sprintf("%v stone, %v", stone, lbs)
+}
+
+func convertStoneToPounds(stone int) (int) {
+	return stone * 14
+}
+
 func getVillageDistance(idx int) (int){
 	currX, currY := 0,0
 	destX, destY := 0,0

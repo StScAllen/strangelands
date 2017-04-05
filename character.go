@@ -13,7 +13,7 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".03a"
+const VERSION = ".04a"
 
 // this needs to be command prompt generic
 func clearConsole() {
@@ -44,7 +44,7 @@ func endDay() {
 	gameDay++
 	dayCounter++
 
-	if dayCounter == 12 {
+	if dayCounter == 21 {
 		dayCounter = 0
 		updateShops()
 	}

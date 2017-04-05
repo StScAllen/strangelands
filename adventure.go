@@ -12,15 +12,94 @@ func (bg * BattleGrid) canCharacterCast(char Character, currTurns int) (bool){
 	return true
 }
 
-func (bg * BattleGrid) canCharacterAttack(char Character, currTurns int) (bool){
+func (bg * BattleGrid) doPlayerAttack(turn int, hand int) {
+	var die Die
+
+	if turn == CHAR_TURN {	
+		adj := character.getTotalAttackAdjustment(hand)
+		atkRoll := die.rollxdx(1, 20)
+		atkTotal := adj + atkRoll
+	
+		def := bg.monster.getTotalDefenseAdjustment()
+		defRoll := die.rollxdx(1, 20)
+		defTotal := def + defRoll
+	
+		fmt.Println(fmt.Sprintf("Character rolls %v + %v = [%v]", atkRoll, adj, atkTotal))
+		fmt.Println(fmt.Sprintf("Monster rolls %v + %v = [%v]", defRoll, def, defTotal))
+
+		if atkTotal > defTotal {
+			showPause("Character hits!")
+		} else {
+			showPause("Character misses!")		
+			return
+		}
+		
+		diff := atkTotal - defTotal
+		tBonus := 0
+		for ; diff >= 5; diff -= 5 {
+			tBonus++
+		}
+		
+		fmt.Println(fmt.Sprintf("Bonus is %v", getSigned(tBonus)))
+		targetRoll := die.rollxdx(1, 10)
+		totalTarget := targetRoll + tBonus
+		if totalTarget > 10 {
+			totalTarget = 10
+		}
+		
+		fmt.Println(fmt.Sprintf("Target is %v + %v = %v", targetRoll, tBonus, totalTarget))
+		crits := ""
+		hits := 1
+		if totalTarget == 10 {
+			hits++
+			for totalTarget == 10 {
+				crits += "[Crit!]"
+				targetRoll = die.rollxdx(1, 10)
+				totalTarget = targetRoll + tBonus
+				if totalTarget >= 10 {
+					totalTarget = 10
+					hits++
+				}
+			}	
+			fmt.Println(crits)
+		}
+		showPause("Hit on " + bg.monster.body[totalTarget-1])
+
+		penetrationBonus := 0
+		diff = atkTotal - defTotal
+		for ; diff >= 2; diff -= 2 {
+			penetrationBonus++
+		}
+		fmt.Println(fmt.Sprintf("Penetration bonus is %v", penetrationBonus))
+		penetrationRoll := die.rollxdx(1, 20)
+		totalPenetration := penetrationBonus + penetrationRoll
+		
+		fmt.Println(fmt.Sprintf("Penetration Roll: %v + %v = [%v]", penetrationRoll, penetrationBonus, totalPenetration))	
+		fmt.Println(fmt.Sprintf("Resistance is %v", bg.monster.resistance[targetRoll-1]))		
+		
+		if totalPenetration > bg.monster.resistance[targetRoll-1] {
+			showPause(fmt.Sprintf("Attack penetrates! Monster takes %v hits!", hits))		
+			bg.monster.hp -= hits
+		} else {
+			showPause("Monster soaks the attack.")
+		}
+
+	} else {
+	
+	
+	}	
+}
+
+// return - hand value
+func (bg * BattleGrid) canCharacterAttack(char Character, currTurns int) (int){
 	if bg.isMonsterVisible() {
 		if bg.isMonsterInAttackRange(bg.turn) && bg.isAttackPathClear(bg.turn){
-			if (char.handSlots[0].typeCode == ITEM_TYPE_WEAPON && char.handSlots[0].atkTurns <= currTurns){
-				return true
-			} else if (char.handSlots[1].typeCode == ITEM_TYPE_WEAPON && char.handSlots[1].atkTurns <= currTurns){
-				return true
+			if (char.handSlots[LEFT].typeCode == ITEM_TYPE_WEAPON && char.handSlots[LEFT].atkTurns <= currTurns){
+				return LEFT
+			} else if (char.handSlots[RIGHT].typeCode == ITEM_TYPE_WEAPON && char.handSlots[RIGHT].atkTurns <= currTurns){
+				return RIGHT
 			} else {
-				fmt.Println("no attackable weapons")
+				fmt.Println("no attackable weapons " + string(currTurns))
 			}
 		} else {
 			fmt.Println("monster not in range")
@@ -29,7 +108,7 @@ func (bg * BattleGrid) canCharacterAttack(char Character, currTurns int) (bool){
 		fmt.Println("monster not vis")
 	}
 	
-	return false
+	return -1
 }
 
 func (bg *BattleGrid) getAvailableActions(char Character, currTurns int) (string){
@@ -41,7 +120,7 @@ func (bg *BattleGrid) getAvailableActions(char Character, currTurns int) (string
 	} else {
 		actions = "(Move ++)"
 		
-		if bg.canCharacterAttack(char, currTurns){
+		if bg.canCharacterAttack(char, currTurns) > -1 {
 			actions += " (Attack)"
 		}		
 		
@@ -197,6 +276,22 @@ func adventure() {
 			} else {
 				apprentice.showInventory()
 			}
+		} else if strings.Contains(rsp, "attack") {
+			if bg.turn == CHAR_TURN {
+				hand := bg.canCharacterAttack(character, currTurns)
+				if hand > -1 {
+					showPause("Character Attacks!")
+					currTurns -= character.handSlots[hand].atkTurns
+					bg.doPlayerAttack(CHAR_TURN, hand)
+				}
+			} else {
+				hand := bg.canCharacterAttack(apprentice, currTurns)
+				if hand > -1 {
+					showPause("Apprentice Attacks!")
+					currTurns -= apprentice.handSlots[hand].atkTurns	
+					bg.doPlayerAttack(APP_TURN, hand)					
+				}		
+			}			
 		}
 	}
 }

@@ -58,6 +58,22 @@ func (char *Character) getCharacterMoves() int {
 	return char.agi
 }
 
+func (char *Character) getTotalAttackAdjustment(handSlot int) (int) {
+	adj := 0
+
+	adj += char.handSlots[handSlot].accuracy
+
+	return adj
+}
+
+func (char *Character) getTotalDefenseAdjustment(handSlot int) (int) {
+	adj := 0
+
+	adj += char.handSlots[handSlot].defense
+
+	return adj
+}
+
 func (char *Character) getWeaponRange() int {
 	hand1 := char.handSlots[0]
 	hand2 := char.handSlots[1]

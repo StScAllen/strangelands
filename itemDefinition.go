@@ -7,6 +7,7 @@ import "fmt"
 
 var qualities = []string{"Crude", "Stand", "Crafts", "Master"}
 var materials = []string{"Oak", "Bone", "Stone", "Iron", "Steel", "Silver"}
+var equipStrings = []string{"Head", "Neck", "Arms", "Chest", "Leg", "Feet", "Ring", "Cloak", "Hand", "Any", "None"}
 
 var itemInstanceId int = 0
 
@@ -15,9 +16,10 @@ const ITEM_TYPE_UNSET = 0 //item struct will zeroize on init to this
 const ITEM_TYPE_WEAPON = 1
 const ITEM_TYPE_ARMOR = 2
 const ITEM_TYPE_UNCTURE = 3
-const ITEM_TYPE_SPECIAL = 4
+const ITEM_TYPE_INGREDIENT = 4
+const ITEM_TYPE_EQUIPMENT = 5
+const ITEM_TYPE_SPECIAL = 9
 
-const ITEM_TYPE_OTHER = 9
 
 // Equip Constants
 const EQUIP_HEAD = 0
@@ -31,6 +33,16 @@ const EQUIP_CLOAK = 7
 const EQUIP_HAND = 8
 const EQUIP_ANY = 9 // only used for blank items
 const EQUIP_NONE = 100
+
+const CRITICAL = 200
+
+var HUMAN_TARGETS = []int{EQUIP_FEET, EQUIP_LEG, EQUIP_LEG, EQUIP_ARMS, EQUIP_ARMS, EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, EQUIP_HEAD, CRITICAL}
+var ORB_TARGETS = []int{EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, EQUIP_CHEST, CRITICAL}
+var QUAD_TARGETS = []int{EQUIP_FEET, EQUIP_FEET, EQUIP_LEG, EQUIP_LEG, EQUIP_LEG, EQUIP_LEG, EQUIP_CHEST, EQUIP_CHEST, EQUIP_HEAD, CRITICAL}
+
+var HUMAN_STRING = []string{"Foot", "Leg", "Leg", "Arm", "Arm", "Chest", "Chest", "Chest", "Head", "Critical"}
+var ORB_STRING = []string{"Chest", "Chest", "Chest", "Chest", "Chest", "Chest", "Chest", "Chest", "Chest", "Critical"}
+var QUAD_STRING = []string{"Foot", "Foot", "Leg", "Leg", "Leg", "Leg", "Chest", "Chest", "Head", "Critical"}
 
 var materialBonuses = [][]int{
 	// dmgMod, accMod, defMod, weightMod, durabMultiplier, costMultip
@@ -49,13 +61,13 @@ var qualBonuses = [][]int{
 	{2, 2, 1, -2, 2, 6, 3, 4, -1}, // master
 }
 
-var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag
-	{"Club", 1, 1, 4, 0, 0, 9, 12, 5, 1, 3, 0},
-	{"Knife", 1, 2, 4, 0, 0, 4, 30, 7, 1, 2, 0},
-	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0},
-	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0},
-	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0},
-	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1},	
+var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag, vsPad, vsLeath, vsChain
+	{"Club", 1, 1, 4, 0, 0, 9, 12, 5, 1, 3, 0, 0, 1, 1},
+	{"Knife", 1, 2, 4, 0, 0, 4, 30, 7, 1, 2, 0, 1, 0, -1},
+	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0, 0, 0, 0},
+	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0, 1, 0, -1},
+	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0, 1, 0, -1},
+	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1, 0, 0, 0},	
 }
 
 var armors = []Armor{ // name, shields, defense, weight, value, slot
@@ -77,30 +89,45 @@ var armors = []Armor{ // name, shields, defense, weight, value, slot
 	{"Chain Greeves", 4, 2, 1, 2, EQUIP_LEG},
 	{"Light Cape", 1, 1, 1, 1, EQUIP_CLOAK},
 	{"Wood Shield", 3, 1, 2, 2, EQUIP_HAND},
+	{"Leather Boots", 1, 0, 2, 2, EQUIP_FEET},
+}
+
+var common = []Item{
+	{0, "Torch", ITEM_TYPE_EQUIPMENT, 1, 1, 3, 3, EQUIP_HAND, 1, 1, "", "", 5, 0, 0, 0, 1, -2, 3, 0, 0, 1, 2, -1, 1},
+	{0, "Lantern", ITEM_TYPE_EQUIPMENT, 99, 99, 9, 9, EQUIP_HAND, 1, 7, "", "", 48, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},
+	{0, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 12, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},
+	{0, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},	
+	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},	
+	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},		
 }
 
 type Item struct { // regular items
-	id                        int    // instance code
-	name                      string // name of item
-	typeCode                  int    // ITEM_TYPE_* constants
-	uses, maxuses             int    // uses is for unctures/items
-	durability, maxDurability int    // durability is for weapon/armor
-	equip                     int    // body part code or 0 EQUIP_* constants
-	hands                     int    // 1 or 2 handed, for items equippable in EQUIP_HAND
-	weight                    int    // weight
-	material                  string // material
-	quality                   string // QUALITY_* constants
-	value                     int    // value, in currency
-	magical                   int    // flag 0, 1
+	id                       		int    // instance code
+	name                     		string // name of item
+	typeCode                  		int    // ITEM_TYPE_* constants
+	uses, maxuses             		int    // uses is for unctures/items
+	durability, maxDurability 		int    // durability is for weapon/armor
+	equip                     		int    // body part code or 0 EQUIP_* constants
+	hands                     		int    // 1 or 2 handed, for items equippable in EQUIP_HAND
+	weight                    		int    // weight
+	material                  		string // material
+	quality                   		string // QUALITY_* constants
+	value                     		int    // value, in currency
+	magical                   		int    // flag 0, 1
 	// weapon stuff
-	dmgMin, dmgMax 				int
-	wRange         				int
-	accuracy       				int
-	atkTurns      				int
+	dmgMin, dmgMax 					int
+	wRange         					int
+	accuracy       					int
+	atkTurns      					int
 	// armor stuff
-	defense 					int
-	shields 					int
-	noMaterialFlag 				int		// used for crossbows or any other item that shouldn't have a material
+	defense 						int
+	shields 						int
+	noMaterialFlag 					int		// used for crossbows or any other item that shouldn't have a material
+	paddedMod, leatherMod, chainMod int		// vs vars for weapons
+}
+
+type Common struct {
+	na
 }
 
 //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns
@@ -117,6 +144,7 @@ type Weapon struct {
 	wRange   	int
 	atkTurns 	int
 	noMaterialFlag int
+	paddedMod, leatherMod, chainMod int
 }
 
 // name, shields, defense, weight, value, equip
@@ -153,6 +181,10 @@ func genGameWeapon(weapon Weapon, qual string, mat string) Item {
 	item.defense = weapon.defense
 	item.shields = 0
 	item.noMaterialFlag = weapon.noMaterialFlag
+	item.paddedMod = weapon.paddedMod
+	item.leatherMod = weapon.leatherMod
+	item.chainMod = weapon.chainMod
+	item.atkTurns = weapon.atkTurns
 	
 	// apply quality modifiers
 	qIdx := getQualityIndex(qual)
@@ -312,7 +344,14 @@ func (item * Item) getInvDisplayString() (string){
 	return disp;
 }
 
-func (w *Weapon) getWeaponStatLine() string {
+func createRandomLoot() (Loot) {
+	var loot Loot
+	
+	
+	
+	return loot
+}
 
+func (w *Weapon) getWeaponStatLine() string {
 	return ""
 }

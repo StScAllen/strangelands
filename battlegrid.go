@@ -51,11 +51,17 @@ type Gate struct {
 	g2x, g2y int
 }
 
+type Loot struct {
+	item 	Item
+	x, y	int
+}
+
 type Grid struct {
-	grid       [][]string
-	id         int
-	gridName   string
-	maxX, maxY int
+	grid       		[][]string
+	id         		int
+	gridName   		string
+	maxX, maxY 		int
+	loot			[]Loot
 }
 
 type BattleGrid struct {
@@ -690,7 +696,12 @@ func (bg *BattleGrid) drawGrid() {
 					log.addAi("Monster is stuck! (" + grid.grid[i][t] + ")")
 				}
 				if bg.isMonsterVisible() {
-					row += "M"
+					if bg.monster.isAlive() {
+						row += "M"					
+					} else {
+						row += "d"
+					}
+
 				} else {
 					row += HIDDEN_TILE
 				}
@@ -773,8 +784,9 @@ func (bg *BattleGrid) drawGrid() {
 				}
 			}
 			row += ")"
-
 		} else if i == 6 {
+			row += packSpaceString("    Left: " + character.handSlots[LEFT].name, 24) + packSpaceString("  Right: " + character.handSlots[RIGHT].name, 24)
+		} else if i == 7 {
 			if bg.hasApprentice {
 				row += "  " + apprentice.name + " Health: ["
 				for hlth := 0; hlth <= apprentice.maxhp; hlth++ {
@@ -786,7 +798,11 @@ func (bg *BattleGrid) drawGrid() {
 				}
 				row += "]"
 			}
-		} else if i == 7 {
+		} else if i == 8 {
+			if bg.hasApprentice {
+				row += packSpaceString("    Left: " + apprentice.handSlots[LEFT].name, 24) + packSpaceString("  Right: " + apprentice.handSlots[RIGHT].name, 24)
+			}
+		} else if i == 9 {
 			row += "  " + bg.monster.name + " Health: ["
 			for hlth := 0; hlth <= bg.monster.maxhp; hlth++ {
 				if hlth > bg.monster.hp {
@@ -849,6 +865,7 @@ func (bg *BattleGrid) addGates() {
 }
 
 func createSquareGrid(height int, width int) Grid {
+	var die Die
 
 	newGrid := make([][]string, height)
 	for i := range newGrid {
@@ -883,7 +900,13 @@ func createSquareGrid(height int, width int) Grid {
 	retGrid.maxY = width - 1
 
 	retGrid.grid = newGrid
-
+	
+	retGrid.loot = make([]Loot, 0, 0)
+	
+	for k:= 0; k < die.rollxdx(1, 5); k++ {
+		retGrid.loot = append(retGrid.loot, createRandomLoot())
+	}
+	
 	return retGrid
 }
 
@@ -933,7 +956,7 @@ func buildBattleGrid(id int) BattleGrid {
 		grid.characterSpotted = false
 		grid.monsterSpotted = false
 		grid.apprenticeSpotted = false
-
+		
 		//grid.addGates()
 		grid.placeMonster()
 
