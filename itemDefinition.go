@@ -127,7 +127,7 @@ type Item struct { // regular items
 }
 
 type Common struct {
-	na
+	
 }
 
 //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns

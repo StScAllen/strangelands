@@ -10,7 +10,7 @@ const STEP_MOVE = 0
 const STEP_WAIT = 1
 const STEP_ATTACK = 2
 
-const DAMAGE_PHYSICIAL = 0
+const DAMAGE_PHYSICAL = 0
 const DAMAGE_SOUL = 1
 
 var person_bits = []string {"Head", "Arm", "Arm", "Chest", "Chest", "Leg", "Leg",}
@@ -33,6 +33,7 @@ type Monster struct {
 }
 
 type MonsterAttack struct {
+	name								string
 	id 									int
 	wRange								int
 	dmgType								int 
@@ -41,8 +42,8 @@ type MonsterAttack struct {
 	paddedMod, leatherMod, chainMod 	int
 }
 
-var SOUL_SUCK = MonsterAttack{1, 2, DAMAGE_SOUL, 3, 2, 0, 0, 0}
-var CHARGE = MonsterAttack{2, 1, DAMAGE_PHYSICIAL, 2, 1, -1, 0, 1}
+var SOUL_SUCK = MonsterAttack{"Soul Suck", 1, 2, DAMAGE_SOUL, 3, 2, 0, 0, 0}
+var CHARGE = MonsterAttack{"Charge", 2, 1, DAMAGE_PHYSICAL, 2, 1, -1, 0, 1}
 
 type AIStep struct {
 	action string
@@ -181,10 +182,44 @@ func getStepFromTile(tile Tile) AIStep {
 	return step
 }
 
-func (bg *BattleGrid) getAttack() (int) {
+// Looks at monster turns, and attacks available and picks one, or returns -1 if no attacks are available.
+func (bg *BattleGrid) getAttack() (int, int) {
+	var die Die
+	var attacksAvailable = make([]MonsterAttack, 0, 0)
 	
+	for k := range bg.monster.attacks {
+		// get attacks that can be done withing the amount of available turns
+		if bg.monster.attacks[k].atkTurns <= bg.monster.moves {
+			// add if there is a target within range			
+			if bg.getActorInAttackRange(bg.monster.attacks[k].wRange) > -1 {
+				attacksAvailable = append(attacksAvailable, bg.monster.attacks[k])			
+			}
+		}
+	}
+
+	// if we have attacks available and targets in range, pick an attack and target
+	if len(attacksAvailable) > 0 {
+		attackIndex, targetIndex := -1, -1
+		attackIndex = die.rollxdx(1, len(attacksAvailable))
 	
-	return -1
+		actor := bg.getActorInAttackRange(attacksAvailable[attackIndex-1].wRange)
+		
+		if (actor == 2) {
+			targetIndex = die.rollxdx(1,2) - 1
+		} else {
+			targetIndex = actor
+		}
+		
+		for k := range bg.monster.attacks {
+			if bg.monster.attacks[k].id == attacksAvailable[attackIndex].id {
+				attackIndex = k
+			}
+		}
+		
+		return attackIndex, targetIndex
+	}
+	
+	return -1, -1
 }
 
 func (bg *BattleGrid) isStepValid(step AIStep) bool {
@@ -203,7 +238,8 @@ func (bg *BattleGrid) isStepValid(step AIStep) bool {
 			return false
 		}
 	} else if step.id == STEP_ATTACK {
-		return true
+		atk,_ := bg.getAttack()
+		return (atk > -1) && (bg.monster.moves >= bg.monster.attacks[atk].atkTurns)
 
 	} else if step.id == STEP_WAIT {
 		return true
@@ -252,15 +288,30 @@ func (bg *BattleGrid) doMonsterActivity() int {
 		step := bg.monster.plan.steps[bg.monster.plan.nextStep]
 
 		if bg.isStepValid(step) {
-			bg.monster.moves -= 1
-
 			if step.id == STEP_MOVE {
 				bg.moveMonsterXY(step.x, step.y)
+				bg.monster.moves -= 1
 			} else if step.id == STEP_ATTACK {
-				log.addAi("Monster attacks!")
-				showPause("Monster attacks!")
+				attackIndex, tgtIndex := bg.getAttack()
+				
+				if attackIndex > -1 {
+					if (tgtIndex == CHAR_TURN) {
+						log.addAi("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)
+						showPause("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)				
+					} else {
+						log.addAi("Monster attacks " + apprentice.name + " with " + bg.monster.attacks[attackIndex].name)
+						showPause("Monster attacks " + apprentice.name + " with " + bg.monster.attacks[attackIndex].name)				
+					}
+					
+					bg.monster.moves -= bg.monster.attacks[attackIndex].atkTurns				
+				} else {
+					log.addAi("Monster wants to attack but no attack available - waits")
+					bg.monster.moves -= 1
+				}
+				
 			} else if step.id == STEP_WAIT {
 				log.addAi("Monster waits")
+				bg.monster.moves -= 1
 			}
 
 			if bg.isMonsterVisible() {

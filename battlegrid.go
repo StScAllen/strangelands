@@ -126,6 +126,18 @@ func (bg *BattleGrid) isActorAdjacent(whoFlag, targetFlag int) bool {
 				return true
 			}
 		}
+	} else if whoFlag == APP_TURN {
+		if targetFlag == MONST_TURN {
+			if iAbsDiff(bg.monsterXLoc, bg.appXLoc) < 2 && iAbsDiff(bg.monsterYLoc, bg.appYLoc) < 2 {
+				// monster is adjacent to character
+				return true
+			}
+		} else if targetFlag == CHAR_TURN {
+			if iAbsDiff(bg.charXLoc, bg.appXLoc) < 2 && iAbsDiff(bg.charYLoc, bg.appYLoc) < 2 {
+				// apprentice is adjacent to character
+				return true
+			}
+		}
 	}
 
 	return false
@@ -203,6 +215,44 @@ func (bg * BattleGrid) isMonsterInAttackRange(turn int) (bool){
 	}
 	
 	return false
+}
+
+// returns a -1, CHAR_TURN, APP_TURN, or 2 for BOTH 
+func (bg * BattleGrid) getActorInAttackRange(aRange int) (int){
+	if bg.isCharacterVisible() == false && bg.isApprenticeVisible() == false{
+		return -1
+	}
+	
+	weaponRange := 0
+	actorX, actorY := 0, 0
+	weaponRange = aRange	
+	actorX = bg.monsterXLoc
+	actorY = bg.monsterYLoc
+
+	if weaponRange < 1 {
+		return -1
+	}
+
+	actorFlag := -1
+	
+	actorDistance := getCrowDistance(actorX, actorY, bg.charXLoc, bg.charYLoc)
+	
+	if actorDistance <= weaponRange {
+		actorFlag = CHAR_TURN
+	}
+	
+	if (bg.hasApprentice) {
+		actorDistance := getCrowDistance(actorX, actorY, bg.appXLoc, bg.appYLoc)
+		if actorDistance <= weaponRange {
+			if (actorFlag == -1) {
+				actorFlag = 2
+			} else {
+				actorFlag = APP_TURN
+			}
+		}	
+	}
+	
+	return actorFlag
 }
 
 func (bg *BattleGrid) isMonsterVisible() bool {
