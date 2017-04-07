@@ -99,6 +99,11 @@ func showArmor(armor Item){
 	row = packSpaceString(fmt.Sprintf("Defense: %v ", armor.defense), 30)
 	fmt.Println(row)
 	fmt.Println("")
+	
+	row = ""	
+	row = packSpaceString(fmt.Sprintf("Resistance: %v ", armor.resistance), 30)
+	fmt.Println(row)
+	fmt.Println("")
 	fmt.Println("")	
 	
 }
@@ -110,7 +115,7 @@ func (village * Village) buyWeaponScreen() {
 	for !exitFlag {
 		clearConsole()
 		
-		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Weapon Shop      Gold:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
@@ -168,16 +173,16 @@ func (village * Village) buyArmorScreen() {
 	
 	for !exitFlag {
 		clearConsole()
-		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Armor Shop      Gold:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("")
 
-		fmt.Println("   Item                    Def\tShields\tWgt \tCost\tQuality")
+		fmt.Println("   Item                    Resist Def\tShields\tWgt \tCost\tQuality")
 
 		for i := 0; i < len(shopArmor); i++ {
-			fmt.Printf("%v. %s %s%s\t%s \t%s\t%s \n", i, packSpaceString(shopArmor[i].name, 24), packSpace(shopArmor[i].defense, 4), packSpace(shopArmor[i].durability, 4), packSpace(shopArmor[i].weight, 4), packSpace(shopArmor[i].value, 4), shopArmor[i].quality)
+			fmt.Printf("%v. %s %s%s %s\t%s \t%s\t%s \n", i, packSpaceString(shopArmor[i].name, 24), packSpace(shopArmor[i].resistance, 7), packSpace(shopArmor[i].defense, 4), packSpace(shopArmor[i].durability, 4), packSpace(shopArmor[i].weight, 4), packSpace(shopArmor[i].value, 4), shopArmor[i].quality)
 		}
 
 		fmt.Println("")
@@ -224,7 +229,7 @@ func (village * Village) buyProvisions() {
 		clearConsole()
 		rsp := ""
 		
-		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Provisions      Gold:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
@@ -247,7 +252,7 @@ func (village * Village) buyApothecary() {
 		clearConsole()
 		rsp := ""
 		
-		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Curiosities      Gold:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
@@ -270,7 +275,7 @@ func (village * Village) buyCuriosities() {
 		clearConsole()
 		rsp := ""
 		
-		charString := fmt.Sprintf("%v  Encumb: %v / %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Curiosities      Gold:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")

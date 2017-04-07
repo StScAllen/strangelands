@@ -39,6 +39,13 @@ type Keep struct {
 // Rarely, a "blank slate" apprentice will be available (Tabula Rasa) - the character can shape them however they see fit.
 
 // MISSIONS are posted in the villages. 
+// ONLY 1 mission can be worked at a time.
+// Missions have ARCHS
+// They start with a series of puzzles, each must be solved with a skill roll. CHARM/INVESTIGATE/PUZZLES
+// Player can spend a day researching to gain a clue token, this provides a +1 to whatever skill is needed for that arch
+// Archs can force players to travel between villages for the next puzzle
+// Once an arch is complete, player travels to battlegrid to face the beast.
+// 
 // Incomplete missions can have different consequences. Death toll, financial, political
 // the longer the mission is unresolved the larger the impact, death reduces village size, financial
 // reduces what is available in the stores, political reduces favor.
@@ -48,6 +55,8 @@ type Keep struct {
 // Ex. A grip (goblin) absconds with our cattle after dark!
 // Ex. Valuable property tormented by wily ghast.
 // Ex. Something is eating our children.
+
+
 
 // POTIONS are called UNCTURES
 // HAND OF GLORY - make some creatures flee (5 fingers, 5 uses)

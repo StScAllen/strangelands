@@ -182,6 +182,99 @@ func getStepFromTile(tile Tile) AIStep {
 	return step
 }
 
+
+
+// attackIndex is index of attack in monsters attack array, tgt is either CHAR_TURN or APP_TURN
+func (bg * BattleGrid) doAttack(attackIndex, tgt int) {
+	var die Die
+	attack := bg.monster.attacks[attackIndex];
+	
+	if attack.dmgType == DAMAGE_PHYSICAL {
+
+		var target Character
+		if tgt == CHAR_TURN {
+			target = character
+		} else {
+			target = apprentice
+		}
+	
+		adj := bg.monster.attacks[attackIndex].accuracy
+		atkRoll := die.rollxdx(1, 20)
+		atkTotal := adj + atkRoll
+	
+		def := target.getTotalDefenseAdjustment()
+		defRoll := die.rollxdx(1, 20)
+		defTotal := def + defRoll
+	
+		fmt.Println(fmt.Sprintf("Monster rolls %v + %v = [%v]", atkRoll, adj, atkTotal))
+		fmt.Println(fmt.Sprintf(target.name + " rolls %v + %v = [%v]", defRoll, def, defTotal))
+
+		if atkTotal > defTotal {
+			showPause("Monster hits!")
+		} else {
+			showPause("Monster misses!")		
+			return
+		}
+		
+		diff := atkTotal - defTotal
+		tBonus := 0
+		for ; diff >= 5; diff -= 5 {
+			tBonus++
+		}
+		
+		fmt.Println(fmt.Sprintf("Bonus is %v", getSigned(tBonus)))
+		targetRoll := die.rollxdx(1, 10)
+		totalTarget := targetRoll + tBonus
+		if totalTarget > 10 {
+			totalTarget = 10
+		}
+		
+		fmt.Println(fmt.Sprintf("Target is %v + %v = %v", targetRoll, tBonus, totalTarget))
+		crits := ""
+		hits := 1
+		if totalTarget == 10 {
+			hits++
+			for totalTarget == 10 {
+				crits += "[Crit!]"
+				targetRoll = die.rollxdx(1, 10)
+				totalTarget = targetRoll + tBonus
+				if totalTarget >= 10 {
+					totalTarget = 10
+					hits++
+				}
+			}	
+			fmt.Println(crits)
+		}
+		showPause("Hit on " + HUMAN_STRING[totalTarget-1])
+
+		penetrationBonus := 0
+		diff = atkTotal - defTotal
+		for ; diff >= 2; diff -= 2 {
+			penetrationBonus++
+		}
+		fmt.Println(fmt.Sprintf("Penetration bonus is %v", penetrationBonus))
+		penetrationRoll := die.rollxdx(1, 20)
+		totalPenetration := penetrationBonus + penetrationRoll
+		
+		charBodyIndex := targetRoll-1
+		charResistance := target.getResistanceAt(charBodyIndex)
+		
+		fmt.Println(fmt.Sprintf("Penetration Roll: %v + %v = [%v]", penetrationRoll, penetrationBonus, totalPenetration))	
+		fmt.Println(fmt.Sprintf("Resistance is %v", charResistance))		
+		
+		if totalPenetration > charResistance {
+			showPause(fmt.Sprintf("Attack penetrates! Monster takes %v hits!", hits))		
+			bg.monster.hp -= hits
+		} else {
+			showPause("Monster soaks the attack.")
+		}
+	
+	} else if attack.dmgType == DAMAGE_SOUL {
+	
+	}
+
+}
+
 // Looks at monster turns, and attacks available and picks one, or returns -1 if no attacks are available.
 func (bg *BattleGrid) getAttack() (int, int) {
 	var die Die
@@ -297,10 +390,12 @@ func (bg *BattleGrid) doMonsterActivity() int {
 				if attackIndex > -1 {
 					if (tgtIndex == CHAR_TURN) {
 						log.addAi("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)
-						showPause("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)				
+						showPause("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)	
+						bg.doAttack(attackIndex, CHAR_TURN)
 					} else {
 						log.addAi("Monster attacks " + apprentice.name + " with " + bg.monster.attacks[attackIndex].name)
 						showPause("Monster attacks " + apprentice.name + " with " + bg.monster.attacks[attackIndex].name)				
+						bg.doAttack(attackIndex, APP_TURN)
 					}
 					
 					bg.monster.moves -= bg.monster.attacks[attackIndex].atkTurns				

@@ -4,7 +4,7 @@ package main
 import "fmt"
 import "strings"
 
-var skills = []string{"Puzzles", "Alchemy", "Haggle", "Instruction", "Spellcraft", "Research", "Politicking", "Chirurgery"}
+var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Crafting", "Spellcraft", "Chirurgery",}
 var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
 
 const NUM_SKILLS = 9
@@ -66,12 +66,22 @@ func (char *Character) getTotalAttackAdjustment(handSlot int) (int) {
 	return adj
 }
 
-func (char *Character) getTotalDefenseAdjustment(handSlot int) (int) {
+func (char *Character) getTotalDefenseAdjustment() (int) {
 	adj := 0
 
-	adj += char.handSlots[handSlot].defense
+	// TODO: this needs to calc total defense from all sources
 
 	return adj
+}
+
+func (char * Character) getResistanceAt(charBodyIndex int) (int) {
+	equipIndex := HUMAN_TARGETS[charBodyIndex]
+	
+	if char.armorSlots[equipIndex].id != -1 {
+		return char.armorSlots[equipIndex].resistance
+	}
+	
+	return 2
 }
 
 func (char *Character) getWeaponRange() int {

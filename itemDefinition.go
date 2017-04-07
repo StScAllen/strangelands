@@ -54,11 +54,11 @@ var materialBonuses = [][]int{
 	{0, 1, 0, 0, 2, 5},    // silver
 }
 var qualBonuses = [][]int{
-	//dmg, acc, def, wgt, armdef, shields, durabMultiplier, costMultip, atkTurnsMod
-	{-1, 0, 0, 0, 0, 1, 1, 1, 1},  // crude
-	{0, 0, 0, 0, 0, 2, 1, 2, 0},   //standard
-	{1, 1, 0, -1, 1, 4, 2, 3, -1}, // craftsman
-	{2, 2, 1, -2, 2, 6, 3, 4, -1}, // master
+	//dmg, acc, def, wgt, armdef, shields, durabMultiplier, costMultip, atkTurnsMod, resistMod
+	{-1, 0, 0, 0, 0, 1, 1, 1, 1, -1},  // crude
+	{0, 0, 0, 0, 0, 2, 1, 2, 0, 0},   //standard
+	{1, 1, 0, -1, 1, 4, 2, 3, -1, 1}, // craftsman
+	{2, 2, 1, -2, 2, 6, 3, 4, -1, 2}, // master
 }
 
 var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag, vsPad, vsLeath, vsChain
@@ -70,35 +70,43 @@ var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, 
 	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1, 0, 0, 0},	
 }
 
-var armors = []Armor{ // name, shields, defense, weight, value, slot
-	{"Cloth Shirt", 1, 1, 0, 0, EQUIP_CHEST},
-	{"Thick Cloth Coat", 1, 2, 1, 2, EQUIP_CHEST},
-	{"Padded Jerkin", 2, 3, 2, 4, EQUIP_CHEST},
-	{"Soft Leather Jerkin", 2, 4, 3, 8, EQUIP_CHEST},
-	{"Hard Leather Jerkin", 3, 5, 4, 11, EQUIP_CHEST},
-	{"Studded Leather Jerkin", 3, 6, 5, 11, EQUIP_CHEST},
-	{"Padded Sleeves", 1, 1, 1, 2, EQUIP_ARMS},
-	{"Leather Sleeves", 2, 1, 1, 2, EQUIP_ARMS},
-	{"Chain Sleeves", 4, 2, 1, 2, EQUIP_ARMS},
-	{"Padded Coif", 1, 1, 1, 2, EQUIP_HEAD},
-	{"Leather Coif", 2, 1, 1, 2, EQUIP_HEAD},
-	{"Chain Coif", 4, 2, 1, 2, EQUIP_HEAD},
-	{"Cloth Pants", 1, 1, 0, 0, EQUIP_LEG},	
-	{"Padded Greeves", 1, 1, 1, 2, EQUIP_LEG},
-	{"Leather Greeves", 2, 1, 1, 2, EQUIP_LEG},
-	{"Chain Greeves", 4, 2, 1, 2, EQUIP_LEG},
-	{"Light Cape", 1, 1, 1, 1, EQUIP_CLOAK},
-	{"Wood Shield", 3, 1, 2, 2, EQUIP_HAND},
-	{"Leather Boots", 1, 0, 2, 2, EQUIP_FEET},
+var armors = []Armor{ // name, shields, defense, resistance, weight, value, slot
+	{"Cloth Shirt", 			1, 		0, 			4, 			0, 		0, 	EQUIP_CHEST},
+	{"Thick Cloth Coat", 		1, 		0, 			6, 			4, 		5, 	EQUIP_CHEST},
+	{"Padded Jerkin", 			2, 		1, 			8, 			7, 		12,	EQUIP_CHEST},
+	{"Soft Leather Jerkin", 	2, 		1, 			9, 			10, 	25, EQUIP_CHEST},
+	{"Hard Leather Jerkin", 	3, 		1, 			10, 		14, 	36, EQUIP_CHEST},
+	{"Studded Leather Jerkin", 	4, 		2, 			11, 		16, 	48, EQUIP_CHEST},
+	{"Chain Shirt", 			5, 		2, 			14, 		24,		60, EQUIP_CHEST},
+	
+	{"Padded Sleeves", 			1, 		1, 			8, 			1, 		2, 	EQUIP_ARMS},
+	{"Leather Sleeves", 		2, 		1, 			9, 			2, 		2, 	EQUIP_ARMS},
+	{"Chain Sleeves", 			4, 		2, 			14, 		4, 		2, 	EQUIP_ARMS},
+	
+	{"Padded Coif", 			1, 		0, 			8, 			1, 		2, 	EQUIP_HEAD},
+	{"Leather Coif", 			2, 		1, 			9, 			2, 		2, 	EQUIP_HEAD},
+	{"Chain Coif", 				3, 		1, 			14, 		4, 		2, 	EQUIP_HEAD},
+	
+	{"Cloth Pants", 			1, 		0, 			4, 			0, 		0, 	EQUIP_LEG},	
+	{"Padded Greeves", 			1, 		1, 			8, 			1, 		2, 	EQUIP_LEG},
+	{"Leather Greeves", 		2, 		1, 			9, 			1, 		2, 	EQUIP_LEG},
+	{"Chain Greeves", 			4, 		2, 			14, 		7, 		2, 	EQUIP_LEG},
+	
+	{"Leather Boots",			2, 		0, 			9, 			2, 		2, 	EQUIP_FEET},
+	{"Hard Leather Boots",		3, 		0, 			10, 		3, 		7, 	EQUIP_FEET},
+	{"Chain Boots",				4, 		1, 			14, 		3, 		7, 	EQUIP_FEET},
+	
+	{"Light Cape", 				1, 		1, 			0, 			1, 		1, 	EQUIP_CLOAK},
+	{"Wood Shield", 			3, 		3, 			10, 		2, 		2, 	EQUIP_HAND},
 }
 
 var common = []Item{
-	{0, "Torch", ITEM_TYPE_EQUIPMENT, 1, 1, 3, 3, EQUIP_HAND, 1, 1, "", "", 5, 0, 0, 0, 1, -2, 3, 0, 0, 1, 2, -1, 1},
-	{0, "Lantern", ITEM_TYPE_EQUIPMENT, 99, 99, 9, 9, EQUIP_HAND, 1, 7, "", "", 48, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},
-	{0, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 12, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},
-	{0, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},	
-	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},	
-	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 1, -3, -3, -3},		
+	{0, "Torch", ITEM_TYPE_EQUIPMENT, 1, 1, 3, 3, EQUIP_HAND, 1, 1, "", "", 5, 0, 0, 0, 1, -2, 3, 0, 0, 0, 1, 2, -1, 1},
+	{0, "Lantern", ITEM_TYPE_EQUIPMENT, 99, 99, 9, 9, EQUIP_HAND, 1, 7, "", "", 48, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},
+	{0, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 12, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},
+	{0, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
+	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
+	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},		
 }
 
 type Item struct { // regular items
@@ -122,6 +130,7 @@ type Item struct { // regular items
 	// armor stuff
 	defense 						int
 	shields 						int
+	resistance						int
 	noMaterialFlag 					int		// used for crossbows or any other item that shouldn't have a material
 	paddedMod, leatherMod, chainMod int		// vs vars for weapons
 }
@@ -149,12 +158,13 @@ type Weapon struct {
 
 // name, shields, defense, weight, value, equip
 type Armor struct {
-	name    string
-	shields int
-	defense int
-	weight  int
-	value   int
-	equip   int
+	name    	string
+	shields 	int
+	defense 	int
+	resistance 	int
+	weight 	 	int
+	value   	int
+	equip   	int
 }
 
 func genGameWeapon(weapon Weapon, qual string, mat string) Item {
@@ -180,6 +190,7 @@ func genGameWeapon(weapon Weapon, qual string, mat string) Item {
 	item.accuracy = weapon.accuracy
 	item.defense = weapon.defense
 	item.shields = 0
+	item.resistance = 0
 	item.noMaterialFlag = weapon.noMaterialFlag
 	item.paddedMod = weapon.paddedMod
 	item.leatherMod = weapon.leatherMod
@@ -246,6 +257,7 @@ func genGameArmor(armor Armor, qual string) Item {
 	item.defense = armor.defense
 	item.shields = 0
 	item.noMaterialFlag = 1	// armor never has a conventional material, its all dessicated flesh and steel
+	item.resistance = armor.resistance
 	
 	// apply quality modifiers
 	qIdx := getQualityIndex(qual)
@@ -258,6 +270,8 @@ func genGameArmor(armor Armor, qual string) Item {
 		item.durability *= qualBonuses[qIdx][6]
 		item.maxDurability *= qualBonuses[qIdx][6]
 		item.value *= qualBonuses[qIdx][7]
+		item.resistance += qualBonuses[qIdx][9]
+		
 	}
 	
 	if (item.weight < 1){

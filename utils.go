@@ -33,7 +33,7 @@ func convertPoundsToStone(lbs int) (string) {
 	}
 	
 	stone := 0
-	for ; lbs > 0; lbs -= 14 {
+	for ; lbs > 14; lbs -= 14 {
 		stone++
 	}
 	
