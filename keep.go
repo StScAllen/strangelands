@@ -17,8 +17,17 @@ type Keep struct {
 	mapX, mapY			int
 }
 
-// uses political favors to gain acres
-// use land to build useful structures
+// Politicks
+// Menu:  Village Status, Curry Favor, Offer Assistance, Donate Crowns, Spend Political Currency
+// Village Status is not available until it is purchased with political currency.
+// Curry Favor - Spend time to gain favor.
+// Offer Assistance - Sometimes the mayor needs assistance, new mission 
+// Donate Crowns - Simple monetary exchange for favor, crowns donated it this way will improve village metrics.
+// Spend Political Currency - Purchase acres for keep, open village status, approve apprentice(?), options vary by village
+	// uses political favors to gain acres - use land to build useful structures
+	// View village status
+	// Approve Apprentices
+	// Request Assistance - bonus to skill check for mission arch
 
 // building ideas - each has various levels, land requirements and upgrade prices
 // farmland - "bleeding hands scrape weeds from the earth in hopes of a satiated belly - but funds must be made to pay the taxman"

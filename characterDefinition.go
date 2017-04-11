@@ -4,7 +4,7 @@ package main
 import "fmt"
 import "strings"
 
-var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Crafting", "Spellcraft", "Chirurgery",}
+var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery",}
 var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
 
 const NUM_SKILLS = 9
@@ -27,7 +27,7 @@ const RIGHT = 1
 	mana, maxmana int
 	weight, maxweight int
 	skillLevels [NUM_SKILLS]int
-	gold int
+	crowns int
 	lvl int
 	turns int
 	numWeapons, numArmor, numItems int
@@ -42,7 +42,7 @@ type Character struct {
 	hp, maxhp                     int
 	soul, maxsoul                 int // soul is both a spiritual hp and a tool to craft/power artefacts
 	weight, maxweight             int
-	gold                          int
+	crowns                        int
 	lvl                           int
 	exp                           int
 	turns                         int
@@ -302,7 +302,7 @@ func createCharacter() Character {
 
 	character.lvl = 1
 
-	character.gold = 32
+	character.crowns = 32
 
 	character.hp = character.str
 	character.maxhp = character.hp
@@ -369,7 +369,7 @@ func (character *Character) printCharacter(pause int) {
 
 	fmt.Println()
 
-	fmt.Printf("\nGold: %v", character.gold)
+	fmt.Printf("\nCrowns: %v", character.crowns)
 
 	if pause > 0 {
 		rsp := "n"

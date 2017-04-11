@@ -37,7 +37,7 @@ func (c *Character) save() {
 	saveString += fmt.Sprintf("%v,", c.weight)
 	saveString += fmt.Sprintf("%v,", c.maxweight)
 
-	saveString += fmt.Sprintf("%v,", c.gold)
+	saveString += fmt.Sprintf("%v,", c.crowns)
 	saveString += fmt.Sprintf("%v,", c.villageIndex)
 	
 	// save keep...
@@ -87,7 +87,7 @@ func loadGame() (Character, Keep) {
 			char.weight, err = strconv.Atoi(bits[12])
 			char.maxweight, err = strconv.Atoi(bits[13])
 
-			char.gold, err = strconv.Atoi(bits[14])
+			char.crowns, err = strconv.Atoi(bits[14])
 			char.villageIndex, err = strconv.Atoi(bits[15])
 		}
 

@@ -51,11 +51,6 @@ type Gate struct {
 	g2x, g2y int
 }
 
-type Loot struct {
-	item 	Item
-	x, y	int
-}
-
 type Grid struct {
 	grid       		[][]string
 	id         		int
@@ -98,6 +93,24 @@ func (gd *Grid) addCemetaryDecorations() {
 			gd.grid[x][y] = "∩"
 		}
 	}
+}
+
+func (gd *Grid) updateLootVisibility(x, y int) {
+	for k := 0; k < len(gd.loot); k++ {
+		if gd.loot[k].locX == x && gd.loot[k].locY == y {
+			gd.loot[k].seen = true
+		}
+	}
+}
+
+func (gd *Grid) isLootAtLoc(x, y int) (bool) {
+	for k := 0; k < len(gd.loot); k++ {
+		if gd.loot[k].locX == x && gd.loot[k].locY == y {
+			return true
+		}
+	}
+	
+	return false
 }
 
 func (bg *BattleGrid) isActorAdjacent(whoFlag, targetFlag int) bool {
@@ -763,7 +776,12 @@ func (bg *BattleGrid) drawGrid() {
 				if bg.isTileObscured(t, i, grid.id) {
 					row += HIDDEN_TILE
 				} else {
-					row += grid.grid[i][t]
+					grid.updateLootVisibility(t, i)
+					if grid.isLootAtLoc(t, i) {
+						row += "$"
+					} else {
+						row += grid.grid[i][t]					
+					}
 				}
 
 			} else {
@@ -954,7 +972,16 @@ func createSquareGrid(height int, width int) Grid {
 	retGrid.loot = make([]Loot, 0, 0)
 	
 	for k:= 0; k < die.rollxdx(1, 5); k++ {
-		retGrid.loot = append(retGrid.loot, createRandomLoot())
+		loot := createRandomLoot()
+		x := die.rollxdx(1, width-1)
+		y := die.rollxdx(1, height-1)
+
+		loot.locX = x
+		loot.locY = y
+		
+		// TODO: should probably make sure we aren't dropping loot on top of other loot or unreachable locations
+		
+		retGrid.loot = append(retGrid.loot, loot)
 	}
 	
 	return retGrid

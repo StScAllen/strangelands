@@ -7,7 +7,7 @@ import "os/exec"
 var character Character
 var apprentice Character
 var keep Keep
-var gameDay, dayCounter int
+var gameDay, dayCounter, weekCounter, monthCounter int
 
 var villages []Village
 
@@ -35,18 +35,28 @@ func finalExit() {
 }
 
 func endDay() {
-	character.hp += 1
 
+	character.hp += 1
 	if character.hp > character.maxhp {
 		character.hp = character.maxhp
 	}
 
 	gameDay++
 	dayCounter++
-
-	if dayCounter == 21 {
+	
+	if dayCounter == 7 {
+		weekCounter++
 		dayCounter = 0
-		updateShops()
+//		showWeekEnd()
+		
+		if weekCounter == 4{
+			monthCounter++
+			updateShops()
+			weekCounter = 0
+//			showMonthEnd()
+		}
+	} else {
+//		showDayEnd()
 	}
 }
 
@@ -103,7 +113,7 @@ func main() {
 		buildVillages()
 		updateShops()
 		character.printCharacter(1)
-		character.gold = 800
+		character.crowns = 800
 	} else if rsp == "3" {
 		return
 	}

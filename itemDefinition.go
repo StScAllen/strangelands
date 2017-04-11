@@ -8,7 +8,7 @@ import "fmt"
 var qualities = []string{"Crude", "Stand", "Crafts", "Master"}
 var materials = []string{"Oak", "Bone", "Stone", "Iron", "Steel", "Silver"}
 var equipStrings = []string{"Head", "Neck", "Arms", "Chest", "Leg", "Feet", "Ring", "Cloak", "Hand", "Any", "None"}
-
+var containers = []string{"Chest", "Bag", "Satchel", "Skeleton", "Debris"}
 var itemInstanceId int = 0
 
 // TYPE constants
@@ -67,6 +67,7 @@ var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, 
 	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0, 0, 0, 0},
 	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0, 1, 0, -1},
 	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0, 1, 0, -1},
+	{"Light Mace", 1, 3, 6, 0, 0, 8, 38, 15, 1, 3, 0, -1, 1, 1},	
 	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1, 0, 0, 0},	
 }
 
@@ -102,11 +103,28 @@ var armors = []Armor{ // name, shields, defense, resistance, weight, value, slot
 
 var common = []Item{
 	{0, "Torch", ITEM_TYPE_EQUIPMENT, 1, 1, 3, 3, EQUIP_HAND, 1, 1, "", "", 5, 0, 0, 0, 1, -2, 3, 0, 0, 0, 1, 2, -1, 1},
-	{0, "Lantern", ITEM_TYPE_EQUIPMENT, 99, 99, 9, 9, EQUIP_HAND, 1, 7, "", "", 48, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},
 	{0, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 12, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
 	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
-	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},		
+	{0, "Iron Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 9, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
+}
+
+var uncommon = []Item{
+	{0, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},			
+	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 16, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},		
+	{0, "Copper Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 24, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
+}
+
+var rare = []Item{
+	{0, "Lantern", ITEM_TYPE_EQUIPMENT, 99, 99, 9, 9, EQUIP_HAND, 1, 7, "", "", 56, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
+	{0, "Silver Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 48, 0, 0, 0, 0, -4, 4, 0, 0, 0, 1, -3, -3, -3},	
+}
+
+type Loot struct {
+	crowns 			int
+	items			[]Item
+	locX, locY		int
+	seen			bool
+	container		string
 }
 
 type Item struct { // regular items
@@ -135,9 +153,6 @@ type Item struct { // regular items
 	paddedMod, leatherMod, chainMod int		// vs vars for weapons
 }
 
-type Common struct {
-	
-}
 
 //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns
 type Weapon struct {
@@ -271,7 +286,6 @@ func genGameArmor(armor Armor, qual string) Item {
 		item.maxDurability *= qualBonuses[qIdx][6]
 		item.value *= qualBonuses[qIdx][7]
 		item.resistance += qualBonuses[qIdx][9]
-		
 	}
 	
 	if (item.weight < 1){
@@ -360,8 +374,35 @@ func (item * Item) getInvDisplayString() (string){
 
 func createRandomLoot() (Loot) {
 	var loot Loot
+	var die Die
 	
+	loot.seen = false
+	loot.crowns = die.rollxdx(0, gameDay+4)
+
+	roll := die.rollxdx(1, 100)
+	timeMod := -2
 	
+	for k := gameDay; k > 20; k -= 20 {
+		timeMod++
+	}
+	
+	roll += timeMod
+	
+	if roll >= 98 {
+		loot.items = append(loot.items, rare[die.rollxdx(1, len(rare))-1])
+	} else if roll > 88 {
+		loot.items = append(loot.items, uncommon[die.rollxdx(1, len(uncommon))-1])		
+	} else {
+		loot.items = append(loot.items, common[die.rollxdx(1, len(common))-1])				
+	}
+	
+	if die.rollxdx(1, 100) > 88 {
+		loot.items = append(loot.items, common[die.rollxdx(1, len(common))-1])					
+	}
+	
+	roll = die.rollxdx(1, len(containers))
+	
+	loot.container = containers[roll-1]
 	
 	return loot
 }

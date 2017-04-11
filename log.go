@@ -6,8 +6,8 @@ import "fmt"
 import "os"
 
 type Log struct {
-	errorCount, warnCount, infoCount, aiCount int
-	errors, warns, infos, ais                 string
+	errorCount, warnCount, infoCount, aiCount 	int
+	errors, warns, infos, ais                 	string
 }
 
 func openLog() Log {

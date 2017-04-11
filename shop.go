@@ -115,9 +115,9 @@ func (village * Village) buyWeaponScreen() {
 	for !exitFlag {
 		clearConsole()
 		
-		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-		fmt.Println("Weapon Shop      Gold:  " + charString)
+		fmt.Println("Weapon Shop      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("")
 
@@ -144,13 +144,13 @@ func (village * Village) buyWeaponScreen() {
 			fmt.Scanln(&rsp2)
 
 			if rsp2 == "y" {
-				if character.gold < shopWeapons[num].value {
-					showPause("Not enough gold!")
+				if character.crowns < shopWeapons[num].value {
+					showPause("Not enough crowns!")
 					village.buyWeaponScreen()
 				} else {
 					item := shopWeapons[num]
 					if character.giveCharacterItem(item) {
-						character.gold -= item.value
+						character.crowns -= item.value
 						shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
 						village.shopWeapons = shopWeapons
 					} else {
@@ -173,9 +173,9 @@ func (village * Village) buyArmorScreen() {
 	
 	for !exitFlag {
 		clearConsole()
-		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-		fmt.Println("Armor Shop      Gold:  " + charString)
+		fmt.Println("Armor Shop      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("")
 
@@ -200,12 +200,12 @@ func (village * Village) buyArmorScreen() {
 			fmt.Scanln(&rsp)
 
 			if rsp == "y" {
-				if character.gold < shopArmor[num].value {
-					showPause("Not enough gold!")
+				if character.crowns < shopArmor[num].value {
+					showPause("Not enough crowns!")
 				} else {
 					item := shopArmor[num]
 					if character.giveCharacterItem(item) {
-						character.gold -= item.value
+						character.crowns -= item.value
 						shopArmor = append(shopArmor[:num], shopArmor[num+1:]...)
 						village.shopArmor = shopArmor
 					} else {
@@ -229,9 +229,9 @@ func (village * Village) buyProvisions() {
 		clearConsole()
 		rsp := ""
 		
-		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-		fmt.Println("Provisions      Gold:  " + charString)
+		fmt.Println("Provisions      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("Nothing available")
 		
@@ -252,9 +252,9 @@ func (village * Village) buyApothecary() {
 		clearConsole()
 		rsp := ""
 		
-		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-		fmt.Println("Curiosities      Gold:  " + charString)
+		fmt.Println("Curiosities      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("Nothing available")
 		
@@ -275,9 +275,9 @@ func (village * Village) buyCuriosities() {
 		clearConsole()
 		rsp := ""
 		
-		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.gold, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
+		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-		fmt.Println("Curiosities      Gold:  " + charString)
+		fmt.Println("Curiosities      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("Nothing available")
 		

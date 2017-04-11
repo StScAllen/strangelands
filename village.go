@@ -10,6 +10,7 @@ type Village struct {
 	name    					string
 	distanceToKeep 				int
 	size 						int
+	politicalFavor				int
 	shopWeapons 				[]Item
 	shopArmor 					[]Item
 	shopProvisions				[]Item
