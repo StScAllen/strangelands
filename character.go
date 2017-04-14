@@ -7,13 +7,28 @@ import "os/exec"
 var character Character
 var apprentice Character
 var keep Keep
-var gameDay, dayCounter, weekCounter, monthCounter int
 
+var game Game
 var villages []Village
 
 var log Log
 
-const VERSION = ".04a"
+const VERSION = ".06a"
+
+type Game struct {
+	gameDay        int
+	dayCounter     int
+	weekCounter    int
+	monthCounter   int
+	itemInstanceId int
+}
+
+func init() {
+	game.gameDay = 1
+	game.itemInstanceId = 1
+	log = openLog()
+	dieInit()
+}
 
 // this needs to be command prompt generic
 func clearConsole() {
@@ -41,22 +56,22 @@ func endDay() {
 		character.hp = character.maxhp
 	}
 
-	gameDay++
-	dayCounter++
-	
-	if dayCounter == 7 {
-		weekCounter++
-		dayCounter = 0
-//		showWeekEnd()
-		
-		if weekCounter == 4{
-			monthCounter++
+	game.gameDay++
+	game.dayCounter++
+
+	if game.dayCounter == 7 {
+		game.weekCounter++
+		game.dayCounter = 0
+		//		showWeekEnd()
+
+		if game.weekCounter == 4 {
+			game.monthCounter++
 			updateShops()
-			weekCounter = 0
-//			showMonthEnd()
+			game.weekCounter = 0
+			//			showMonthEnd()
 		}
 	} else {
-//		showDayEnd()
+		//		showDayEnd()
 	}
 }
 
@@ -82,14 +97,9 @@ func showGameMenu() string {
 	return rsp
 }
 
-func init() {
-	gameDay = 1
-	log = openLog()
-	dieInit()
-}
-
 func main() {
 	rsp := showGameMenu()
+	err := 0
 
 	defer finalExit()
 
@@ -103,13 +113,18 @@ func main() {
 			fmt.Scanln(&rsp)
 			clearConsole()
 		}
-		
+
 		keep = createKeep()
 		buildVillages()
 		updateShops()
-		
+
 	} else if rsp == "2" {
-		character, keep = loadGame()
+		err = loadGame()
+		if err == -1 {
+			showPause("Game File is missing or corrupted!")
+			return
+		}
+
 		buildVillages()
 		updateShops()
 		character.printCharacter(1)
@@ -123,13 +138,13 @@ func main() {
 	rsp = ""
 	gameFlag := true
 	for gameFlag {
-		if (character.villageIndex == 99){
+		if character.villageIndex == 99 {
 			rsp = keep.visitKeep()
 		} else if character.villageIndex < 9 {
-			rsp = villages[character.villageIndex].visitVillage()		
+			rsp = villages[character.villageIndex].visitVillage()
 		}
-		
-		if (rsp == "q"){
+
+		if rsp == "q" {
 			gameFlag = false
 		}
 	}

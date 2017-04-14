@@ -8,6 +8,10 @@ import "fmt"
 *	Ai behaviours
  */
 
+const ACTOR_SPOTTED = 1
+const ACTOR_KILLED = 2
+const MONST_CHANGED_GRID = 3 
+ 
 func (bg *BattleGrid) getDirectAttackBehavior(target int) (int, [MAX_PF_TILES]Tile, []AIStep) {
 	var endSteps []AIStep
 	var tiles [MAX_PF_TILES]Tile
@@ -90,6 +94,54 @@ func (bg *BattleGrid) getMoveAttackBehavior(target int) (int, [MAX_PF_TILES]Tile
 		count, tiles, endSteps = bg.getPatrolBehavior()
 	}
 
+	return count, tiles, endSteps
+}
+
+func (bg *BattleGrid) getChangeGridBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
+	var tiles [MAX_PF_TILES]Tile
+	var count int
+	var endSteps []AIStep
+	var die Die
+	
+	gates := bg.getGatesForGrid(bg.monsterGridId)
+	monsterMoves := bg.monster.getMonsterMoves()
+	
+	if len(gates) > 0 {
+		log.addAi("Adding a change gate behavior")
+		roll := die.rollxdx(1, len(gates)) - 1
+	
+		destGate := gates[roll]
+		ex, ey := 0, 0
+		
+		if destGate.gridid1 == bg.monsterGridId {
+			ex = destGate.g1x
+			ey = destGate.g1y
+		} else {
+			ex = destGate.g2x
+			ey = destGate.g2y		
+		}
+		
+		count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, ex, ey, bg.monsterGridId)
+	
+		if count != -1 && count < monsterMoves {
+			diff := monsterMoves - count
+			endSteps = make([]AIStep, diff)
+			for i := 0; i < diff; i++ {
+				var aiStep AIStep
+				aiStep.action = "wait"
+				aiStep.id = STEP_WAIT
+				aiStep.x = 0
+				aiStep.y = 0
+				endSteps[i] = aiStep
+			}
+		} else if count == -1 {
+			count, tiles, endSteps = bg.getPatrolBehavior()
+		}
+	
+	} else {
+		return -1, tiles, endSteps
+	}
+	
 	return count, tiles, endSteps
 }
 
@@ -197,9 +249,24 @@ func (bg *BattleGrid) createMonsterPlan() AIPlan {
 
 		plan.maneuver = "Attack"
 	} else {
-		// patrol to random corner
-		count, tiles, endSteps = bg.getPatrolBehavior()
-		plan.maneuver = "Patrol"
+		if bg.turnCounter > 5 && bg.monster.gridChangeCoolDown < 1 {
+			if die.rollxdx(1, 5) > 3 {
+				// Change grids
+				count, tiles, endSteps = bg.getChangeGridBehavior()
+				plan.maneuver = "ChangeGrid"				
+			
+			} else {
+				// patrol to random corner
+				count, tiles, endSteps = bg.getPatrolBehavior()
+				plan.maneuver = "Patrol"			
+			}
+		} else {
+			// patrol to random corner
+			count, tiles, endSteps = bg.getPatrolBehavior()
+			plan.maneuver = "Patrol"			
+		}
+	
+
 	}
 
 	fmt.Println("Path found, building plan- ", " Steps:  ", count)

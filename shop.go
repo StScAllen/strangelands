@@ -5,7 +5,7 @@ package main
 import "fmt"
 import "strconv"
 
-func genWeaponsOfWeek() []Item{
+func genWeaponsOfWeek() []Item {
 	var die Die
 
 	shopWeapons := make([]Item, 0)
@@ -13,7 +13,7 @@ func genWeaponsOfWeek() []Item{
 	for k := 0; k < die.rollxdx(5, 12); k++ {
 		shopWeapons = append(shopWeapons, getRandomWeapon())
 	}
-	
+
 	return shopWeapons
 }
 
@@ -25,7 +25,7 @@ func genArmorOfWeek() []Item {
 	for k := 0; k < die.rollxdx(5, 12); k++ {
 		shopArmor = append(shopArmor, getRandomArmor())
 	}
-	
+
 	return shopArmor
 }
 
@@ -36,85 +36,85 @@ func updateShops() {
 	}
 }
 
-func showWeapon(weapon Item){
+func showWeapon(weapon Item) {
 	clearConsole()
-	
+
 	fmt.Println(packSpaceString(weapon.name, 30) + "Value: " + packSpace(weapon.value, 6))
 	fmt.Println("-------------")
 	row := ""
-	row = packSpaceString("Material: " + weapon.material, 30) 
+	row = packSpaceString("Material: "+weapon.material, 30)
 	row += "Quality: " + weapon.quality
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	
+
+	row = ""
 	row = packSpaceString(fmt.Sprintf("Durability: %v / %v", weapon.durability, weapon.maxDurability), 30)
 	row += packSpaceString(fmt.Sprintf("Weight: %v ", weapon.weight), 20)
 	row += packSpaceString(fmt.Sprintf("Hands: %v ", weapon.hands), 12)
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	
-	row = packSpaceString(fmt.Sprintf("Attack Turns: %v ", weapon.atkTurns),30)
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Attack Turns: %v ", weapon.atkTurns), 30)
 	row += fmt.Sprintf("Attack Range: %v ", weapon.wRange)
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	
+
+	row = ""
 	row = packSpaceString(fmt.Sprintf("Accuracy: %v ", weapon.accuracy), 30)
 	row += fmt.Sprintf("Defense: %v ", weapon.defense)
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	//paddedMod, leatherMod, chainMod
+
+	row = "" //paddedMod, leatherMod, chainMod
 	txt := "Penetration:\n [vs Padded: %v]    [vs Leather: %v]    [vs Chain: %v]"
 	row = fmt.Sprintf(txt, getSigned(weapon.paddedMod), getSigned(weapon.leatherMod), getSigned(weapon.chainMod))
 	fmt.Println(row)
-	fmt.Println("")	
-	fmt.Println("")	
-	
+	fmt.Println("")
+	fmt.Println("")
+
 }
 
-func showArmor(armor Item){
+func showArmor(armor Item) {
 	clearConsole()
-	
+
 	fmt.Println(packSpaceString(armor.name, 30) + "Value: " + packSpace(armor.value, 6))
 	fmt.Println("-------------")
-	row := packSpaceString("Equips: " + equipStrings[armor.equip], 28)
+	row := packSpaceString("Equips: "+equipStrings[armor.equip], 28)
 	row += "Quality: " + armor.quality
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	
+
+	row = ""
 	row = packSpaceString(fmt.Sprintf("Shields: %v / %v", armor.durability, armor.maxDurability), 30)
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	
+
+	row = ""
 	row = packSpaceString(fmt.Sprintf("Weight: %v ", armor.weight), 20)
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	
+
+	row = ""
 	row = packSpaceString(fmt.Sprintf("Defense: %v ", armor.defense), 30)
 	fmt.Println(row)
 	fmt.Println("")
-	
-	row = ""	
+
+	row = ""
 	row = packSpaceString(fmt.Sprintf("Resistance: %v ", armor.resistance), 30)
 	fmt.Println(row)
 	fmt.Println("")
-	fmt.Println("")	
-	
+	fmt.Println("")
+
 }
 
-func (village * Village) buyWeaponScreen() {	
+func (village *Village) buyWeaponScreen() {
 	shopWeapons := village.shopWeapons
 	exitFlag := false
-	
+
 	for !exitFlag {
 		clearConsole()
-		
+
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Weapon Shop      Crowns:  " + charString)
@@ -160,17 +160,17 @@ func (village * Village) buyWeaponScreen() {
 			}
 		} else if rsp == "x" {
 			exitFlag = true
-		}	
+		}
 	}
 
 	village.shopWeapons = shopWeapons
 }
 
-func (village * Village) buyArmorScreen() {
+func (village *Village) buyArmorScreen() {
 	shopArmor := village.shopArmor
 
 	exitFlag := false
-	
+
 	for !exitFlag {
 		clearConsole()
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
@@ -215,86 +215,86 @@ func (village * Village) buyArmorScreen() {
 			}
 		} else if rsp == "x" {
 			exitFlag = true
-		}	
+		}
 	}
-	
+
 	village.shopArmor = shopArmor
 }
 
-func (village * Village) buyProvisions() {
+func (village *Village) buyProvisions() {
 
 	exitFlag := false
-	
+
 	for !exitFlag {
 		clearConsole()
 		rsp := ""
-		
+
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Provisions      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("Nothing available")
-		
+
 		fmt.Scanln(&rsp)
-	
+
 		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
 
 		} else if rsp == "x" {
 			exitFlag = true
-		}	
+		}
 	}
 }
 
-func (village * Village) buyApothecary() {
+func (village *Village) buyApothecary() {
 	exitFlag := false
-	
+
 	for !exitFlag {
 		clearConsole()
 		rsp := ""
-		
+
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Curiosities      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("Nothing available")
-		
+
 		fmt.Scanln(&rsp)
-	
+
 		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
 
 		} else if rsp == "x" {
 			exitFlag = true
-		}	
+		}
 	}
 }
 
-func (village * Village) buyCuriosities() {
+func (village *Village) buyCuriosities() {
 	exitFlag := false
-	
+
 	for !exitFlag {
 		clearConsole()
 		rsp := ""
-		
+
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Curiosities      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
 		fmt.Println("Nothing available")
-		
+
 		fmt.Scanln(&rsp)
-	
+
 		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
 
 		} else if rsp == "x" {
 			exitFlag = true
-		}	
+		}
 	}
 }
 
-func (village * Village) shopMenu() {
+func (village *Village) shopMenu() {
 	exitFlag := false
 	rsp := ""
-	
+
 	for exitFlag != true {
 		clearConsole()
 
@@ -304,14 +304,14 @@ func (village * Village) shopMenu() {
 		fmt.Println("2. Armor")
 		fmt.Println("3. Provisions")
 		fmt.Println("4. Apothecary")
-		fmt.Println("5. Curiosities")	
-	
+		fmt.Println("5. Curiosities")
+
 		fmt.Println("x. Exit")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
-		
+
 		if rsp == "x" || rsp == "X" {
 			exitFlag = true
 		} else if rsp == "1" {
@@ -327,7 +327,3 @@ func (village * Village) shopMenu() {
 		}
 	}
 }
-
-
-
-

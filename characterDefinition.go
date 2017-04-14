@@ -3,8 +3,9 @@ package main
 
 import "fmt"
 import "strings"
+import "strconv"
 
-var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery",}
+var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery"}
 var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
 
 const NUM_SKILLS = 9
@@ -46,11 +47,13 @@ type Character struct {
 	lvl                           int
 	exp                           int
 	turns                         int
+	alive						  bool
 	handSlots                     [2]Item
-	armorSlots                    [8]Item
+	armorSlots                    [9]Item
+	wounds                        []Wound
 	inventory                     []Item
 	spellbook                     Spellbook
-	villageIndex				  int
+	villageIndex                  int
 }
 
 // can have special items to increase moves
@@ -58,7 +61,7 @@ func (char *Character) getCharacterMoves() int {
 	return char.agi
 }
 
-func (char *Character) getTotalAttackAdjustment(handSlot int) (int) {
+func (char *Character) getTotalAttackAdjustment(handSlot int) int {
 	adj := 0
 
 	adj += char.handSlots[handSlot].accuracy
@@ -66,7 +69,7 @@ func (char *Character) getTotalAttackAdjustment(handSlot int) (int) {
 	return adj
 }
 
-func (char *Character) getTotalDefenseAdjustment() (int) {
+func (char *Character) getTotalDefenseAdjustment() int {
 	adj := 0
 
 	// TODO: this needs to calc total defense from all sources
@@ -74,33 +77,44 @@ func (char *Character) getTotalDefenseAdjustment() (int) {
 	return adj
 }
 
-func (char * Character) getResistanceAt(charBodyIndex int) (int) {
+func (char *Character) getResistanceAt(charBodyIndex int) int {
 	equipIndex := HUMAN_TARGETS[charBodyIndex]
-	
+
 	if char.armorSlots[equipIndex].id != -1 {
 		return char.armorSlots[equipIndex].resistance
 	}
-	
+
 	return 2
+}
+
+// hits - number of hits to assess, charBodyIndex - equip constant
+func (char *Character) soakHits(hits, charBodyIndex int) {
+	char.armorSlots[charBodyIndex].shields -= hits
+
+	if char.armorSlots[charBodyIndex].shields < 1 {
+		// destroy armor
+		showPause(char.armorSlots[charBodyIndex].name + " is destroyed!")
+		char.armorSlots[charBodyIndex] = getEmptyItem()
+	}
 }
 
 func (char *Character) getWeaponRange() int {
 	hand1 := char.handSlots[0]
 	hand2 := char.handSlots[1]
 	itmRange := -1
-	
+
 	if hand1.id != -1 {
 		itmRange = hand1.wRange
-	} 
-	
+	}
+
 	if hand2.id != -1 {
 		if hand2.wRange > itmRange {
 			itmRange = hand2.wRange
 		}
 	}
-	
+
 	fmt.Println("Weapon range is ", itmRange)
-	
+
 	return itmRange
 }
 
@@ -132,6 +146,48 @@ func (char *Character) setClearInventory() {
 
 }
 
+// finds and remove an item from the characters inventory
+func (char *Character) removeItemFromCharacter(item Item) {
+	if item.id < 1 {
+		return
+	}
+
+	if item.equip == EQUIP_HAND {
+		showPause("Removing from hand...")
+		if char.handSlots[LEFT].id == item.id {
+			char.handSlots[LEFT] = getEmptyItem()
+		} else if char.handSlots[RIGHT].id == item.id {
+			char.handSlots[RIGHT] = getEmptyItem()	
+		} else {
+			for k:= 0; k < len(char.inventory); k++ {
+				if char.inventory[k].id == item.id {
+					if len(char.inventory) > 1 {
+						char.inventory = append(char.inventory[:k], char.inventory[k+1:]...)
+					} else {
+						char.inventory = make([]Item, 0, 0)
+					}
+					break
+				}
+			}
+		}
+	} else {
+		if char.armorSlots[item.equip].id == item.id {
+			char.armorSlots[item.equip] = getEmptyItem()
+		} else {
+			for k:= 0; k < len(char.inventory); k++ {
+				if char.inventory[k].id == item.id {
+					if len(char.inventory) > 1 {
+						char.inventory = append(char.inventory[:k], char.inventory[k+1:]...)
+					} else {
+						char.inventory = make([]Item, 0, 0)
+					}
+					break
+				}
+			}		
+		}
+	}
+}
+
 func (char *Character) giveCharacterItem(item Item) bool {
 	equipped := false
 
@@ -147,7 +203,7 @@ func (char *Character) giveCharacterItem(item Item) bool {
 			if item.typeCode == ITEM_TYPE_ARMOR {
 				item.durability -= 1
 			}
-		
+
 			if char.armorSlots[item.equip].id == -1 {
 				char.armorSlots[item.equip] = item
 				equipped = true
@@ -208,6 +264,31 @@ func getName() string {
 	}
 
 	return rsp
+}
+
+func (c *Character) getAllAvailableItemsForSlot(slot int) ([]Item){
+	availItems := make([]Item, 0, 0,)
+	
+	for k := range c.inventory {
+		if c.inventory[k].equip == slot || c.inventory[k].equip == EQUIP_ANY {
+			availItems = append(availItems, c.inventory[k])
+		}
+	}
+	
+	if (slot == EQUIP_HAND) {
+		if c.handSlots[0].id > 0 {
+			availItems = append(availItems, c.handSlots[0])
+		}
+		if c.handSlots[1].id > 0 {
+			availItems = append(availItems, c.handSlots[1])
+		}		
+	} else {
+		if c.armorSlots[slot].id > 0 {
+			availItems = append(availItems, c.armorSlots[slot])
+		} 	
+	}
+
+	return availItems
 }
 
 func (c *Character) purchaseStats() {
@@ -316,32 +397,95 @@ func createCharacter() Character {
 	character.handSlots[0] = getEmptyItem()
 	character.handSlots[1] = getEmptyItem()
 
+	character.wounds = make([]Wound, 0, 0)
+	character.alive = true
+	
 	character.exp = 0
 	character.villageIndex = 0
 
-	character.save()
-	
+	save()
+
 	return character
 }
 
-func (char *Character) showStatus() {
-	clearConsole()
+func (char *Character) getArmorStringForSlot(slot int) string {
+	slotString := ""
 
-	fmt.Println("[Health Status]             ")
-	fmt.Println("            ####      ▲       ")
-	fmt.Println("            ####     ◄ ►        ")
-	fmt.Println("             ##       ▼       ")
-	fmt.Println("         ##########         ")
-	fmt.Println("        ############         ")
-	fmt.Println("        ## ###### ##         ")
-	fmt.Println("        ## ###### ##        ")
-	fmt.Println("           ######         ")
-	fmt.Println("           ##  ##            ")
-	fmt.Println("           ##  ##            ")
-	fmt.Println("           ##  ##            ")
-	fmt.Println("          ###  ###           ")
+	if char.armorSlots[slot].name != "empty" {
+		slotString = char.armorSlots[slot].getStatusDisplayStringArmor()
+	} else {
+		slotString = packSpaceString("none", 24) + "[_]"
+	}
+
+	return slotString
+}
+
+func (char *Character) getWoundsString(slot int) string {
+	woundString := ""
+
+	if len(char.wounds) > 0 {
+		for k := 0; k < len(char.wounds); k++ {
+			if char.wounds[k].location == slot {
+				woundString += "(" + char.wounds[k].name + ")"
+			}
+		}
+	} else {
+		woundString = "None"
+	}
+
+	return woundString
+}
+
+func (char *Character) showStatus() {
 
 	rsp := ""
+	clearConsole()
+
+	fmt.Println("              [Armor] ")
+	fmt.Println(" ")
+	fmt.Println("      ┌─────── Head:  ")
+	fmt.Println("     ##         " + char.getArmorStringForSlot(EQUIP_HEAD))
+	fmt.Println("    ####")
+	fmt.Println("    #### ┌──── Chest: ")
+	fmt.Println("     ││         " + char.getArmorStringForSlot(EQUIP_CHEST))
+	fmt.Println(" ##########  ")
+	fmt.Println("############ ")
+	fmt.Println("## ###### ## ─ Arms:  ")
+	fmt.Println("## ###### ##    " + char.getArmorStringForSlot(EQUIP_ARMS))
+	fmt.Println("└┘ ###### └┘   ")
+	fmt.Println("   ######    ")
+	fmt.Println("   ##  ## ──── Legs:  ")
+	fmt.Println("   ##  ##       " + char.getArmorStringForSlot(EQUIP_LEG))
+	fmt.Println("   ││  ││      ")
+	fmt.Println("   ##  ##      ")
+	fmt.Println("  ###  ### ─── Feet:  ")
+	fmt.Println("                " + char.getArmorStringForSlot(EQUIP_FEET))
+
+	fmt.Println("\nPress enter to continue.")
+	fmt.Scanln(&rsp)
+
+	clearConsole()
+
+	fmt.Println("              [Wounds] ")
+	fmt.Println(" ")
+	fmt.Println("      ┌─────── Head:  ")
+	fmt.Println("     ##         " + char.getWoundsString(EQUIP_HEAD))
+	fmt.Println("    ####")
+	fmt.Println("    #### ┌──── Chest: ")
+	fmt.Println("     ││         " + char.getWoundsString(EQUIP_CHEST))
+	fmt.Println(" ##########  ")
+	fmt.Println("############ ")
+	fmt.Println("## ###### ## ─ Arms:  ")
+	fmt.Println("## ###### ##    " + char.getWoundsString(EQUIP_ARMS))
+	fmt.Println("└┘ ###### └┘   ")
+	fmt.Println("   ######    ")
+	fmt.Println("   ##  ## ──── Legs:  ")
+	fmt.Println("   ##  ##       " + char.getWoundsString(EQUIP_LEG))
+	fmt.Println("   ││  ││      ")
+	fmt.Println("   ##  ##      ")
+	fmt.Println("  ###  ### ─── Feet:  ")
+	fmt.Println("                " + char.getWoundsString(EQUIP_FEET))
+
 	fmt.Println("\nPress enter to continue.")
 	fmt.Scanln(&rsp)
 }
@@ -378,54 +522,227 @@ func (character *Character) printCharacter(pause int) {
 	}
 }
 
-func (character *Character) showInventory() {
-	clearConsole()
-
-	seg1 := ""
-	seg2 := ""
-
-	fmt.Printf("Encumb: %v / %v  (stone) \n", character.weight, character.maxweight)
-
-	fmt.Println("")
-	fmt.Println("--Hands--")
-
-	seg1 = packSpaceString("Left Hand: ", 14) + character.handSlots[LEFT].getInvDisplayString()
-	seg2 = packSpaceString("Right Hand: ", 14) + character.handSlots[RIGHT].getInvDisplayString()
-	fmt.Println(seg1)
-	fmt.Println(seg2)
+func (char *Character) chooseItemForSlot(slot string) {
+	sl,_ := strconv.Atoi(slot)
 	
-	fmt.Println("")
-	fmt.Println("--Armor--")
-	seg1 = packSpaceString("Head: ", 14) + character.armorSlots[EQUIP_HEAD].getInvDisplayString()
-	seg2 = packSpaceString("Neck: ", 14) + character.armorSlots[EQUIP_NECK].getInvDisplayString()
-	fmt.Println(seg1)
-	fmt.Println(seg2)
-	seg1 = packSpaceString("Chest: ", 14) + character.armorSlots[EQUIP_CHEST].getInvDisplayString()
-	seg2 = packSpaceString("Arms: ", 14) + character.armorSlots[EQUIP_ARMS].getInvDisplayString()
-	fmt.Println(seg1)
-	fmt.Println(seg2)
-	seg1 = packSpaceString("Legs: ", 14) + character.armorSlots[EQUIP_LEG].getInvDisplayString()
-	seg2 = packSpaceString("Feet: ", 14) + character.armorSlots[EQUIP_FEET].getInvDisplayString()
-	fmt.Println(seg1)
-	fmt.Println(seg2)
-	seg1 = packSpaceString("Cloak: ", 14) + character.armorSlots[EQUIP_CLOAK].getInvDisplayString()
-	seg2 = packSpaceString("Ring: ", 14) + character.armorSlots[EQUIP_RING].getInvDisplayString()
-	fmt.Println(seg1)
-	fmt.Println(seg2)
+	if (sl >= 3){
+		sl -= 3
+	} else if (sl == 0){
+		sl = 7
+	} else {
+		sl = EQUIP_HAND
+	}
+	
+	itemsAvail := char.getAllAvailableItemsForSlot(sl)
+	
+	if len(itemsAvail) < 1 {
+		showPause("Character does not possess any items that can be equipped to this slot.")
+		return
+	}
+	
+	cont := true
+	
+	for cont {
+		clearConsole()
 
-	fmt.Println("")
-	fmt.Println("--Bags--")
-	count := 0
-	for k := 0; k < len(character.inventory); k++ {
-		fmt.Printf("%s", packSpaceString(character.inventory[k].name, 23))
-		count++
-		if count == 3 {
-			count = 0
-			fmt.Printf("\n")
+		itmCount := 0;
+		fmt.Println("Available Items for Slot")
+		fmt.Println("--------------------------")
+
+		for k := 0; k < len(itemsAvail); k += 2 {
+			row := ""
+			row = packSpaceString(fmt.Sprintf("%v. %s", itmCount, itemsAvail[itmCount].name), 24)
+			itmCount++
+			
+			if itmCount < len(itemsAvail) {
+				row += packSpaceString(fmt.Sprintf("%v. %s", itmCount, itemsAvail[itmCount].name), 24)
+				itmCount++			
+			}
+			
+			fmt.Println(row)
+		}
+		
+		fmt.Println("")		
+		fmt.Println("n. nothing")		
+		fmt.Println("e. Exit")		
+		fmt.Println("--------------------------")	
+		fmt.Println("Choose item number to equip: ")
+		
+		rsp := ""
+		fmt.Scanln(&rsp)
+		
+		if rsp == "e" {
+			cont = false
+		} else if rsp == "n" {
+			item := getEmptyItem()
+			if slot == "1" {
+				oldItem := char.handSlots[LEFT]
+				char.removeItemFromCharacter(oldItem)
+				char.handSlots[LEFT] = item
+				if (oldItem.id > 0){
+					char.inventory = append(char.inventory, oldItem)
+				}					
+			} else if slot == "2" {
+				oldItem := char.handSlots[RIGHT]
+				char.removeItemFromCharacter(oldItem)
+				char.handSlots[RIGHT] = item
+				if (oldItem.id > 0){
+					char.inventory = append(char.inventory, oldItem)
+				}					
+			} else {
+				if (item.equip < 9) {
+					oldItem := char.armorSlots[sl]
+					if char.armorSlots[sl].id > 0 {
+						char.removeItemFromCharacter(oldItem)
+						char.armorSlots[sl] = item
+						if (oldItem.id > 0){
+							char.inventory = append(char.inventory, oldItem)
+						}
+					}
+				}
+			}
+			cont = false			
+		} else {
+			indx,exr := strconv.Atoi(rsp)
+		
+			if exr == nil {
+				if indx < len(itemsAvail) {
+					item := itemsAvail[indx]
+					if slot == "1" {
+						oldItem := char.handSlots[LEFT]
+						char.removeItemFromCharacter(oldItem)
+						char.removeItemFromCharacter(item)
+						char.handSlots[LEFT] = item
+						if (oldItem.id > 0){
+							char.inventory = append(char.inventory, oldItem)
+						}					
+					} else if slot == "2" {
+						oldItem := char.handSlots[RIGHT]
+						char.removeItemFromCharacter(oldItem)
+						char.removeItemFromCharacter(item)					
+						char.handSlots[RIGHT] = item
+						if (oldItem.id > 0){
+							char.inventory = append(char.inventory, oldItem)
+						}					
+					} else {
+						if (item.equip < 9) {
+							oldItem := char.armorSlots[sl]
+							if char.armorSlots[sl].id > 0 {
+								char.removeItemFromCharacter(oldItem)
+								char.removeItemFromCharacter(item)							
+								char.armorSlots[sl] = item
+								if (oldItem.id > 0){
+									char.inventory = append(char.inventory, oldItem)
+								}
+							}
+						}
+					}
+					
+					cont = false
+				}
+			}
+		}
+	}	
+}
+
+func (char *Character) equipScreen() {
+	cont := true
+	
+	for cont {
+		clearConsole()
+		
+		fmt.Println("Equip Screen")
+		fmt.Println("")
+		fmt.Println("1. Left Hand")
+		fmt.Println("2. Right Hand")
+		fmt.Println("")
+		fmt.Println("3. Head")
+		fmt.Println("4. Neck")
+		fmt.Println("5. Arms")
+		fmt.Println("6. Chest")
+		fmt.Println("7. Legs")
+		fmt.Println("8. Feet")
+		fmt.Println("9. Ring")
+		fmt.Println("0. Cloak")
+		fmt.Println("")		
+		fmt.Println("e. Exit")		
+		fmt.Println("")
+		fmt.Println("Choose a slot number to equip: ")
+		
+		rsp := ""
+		fmt.Scanln(&rsp)
+		
+		if rsp == "e" {
+			cont = false
+		} else if rsp == "1" || rsp == "2" || rsp == "3" || rsp == "4" || rsp == "5" || rsp == "6" || rsp == "7" || rsp == "8" || rsp == "9" || rsp == "0"{
+			char.chooseItemForSlot(rsp)	
 		}
 	}
 
-	fmt.Println("\nPress enter to continue.")
-	rsp := ""
-	fmt.Scanln(&rsp)
+}
+
+func (character *Character) showInventory() {
+	cont := true
+	
+	for cont {
+		clearConsole()
+
+		seg1 := ""
+		seg2 := ""
+
+		fmt.Printf("Encumb: %v / %v  (stone) \n", character.weight, character.maxweight)
+
+		fmt.Println("")
+		fmt.Println("--Hands--")
+
+		seg1 = packSpaceString("Left Hand: ", 14) + character.handSlots[LEFT].getInvDisplayString()
+		seg2 = packSpaceString("Right Hand: ", 14) + character.handSlots[RIGHT].getInvDisplayString()
+		fmt.Println(seg1)
+		fmt.Println(seg2)
+
+		fmt.Println("")
+		fmt.Println("--Armor--")
+		seg1 = packSpaceString("Head: ", 14) + character.armorSlots[EQUIP_HEAD].getInvDisplayString()
+		seg2 = packSpaceString("Neck: ", 14) + character.armorSlots[EQUIP_NECK].getInvDisplayString()
+		fmt.Println(seg1)
+		fmt.Println(seg2)
+		seg1 = packSpaceString("Chest: ", 14) + character.armorSlots[EQUIP_CHEST].getInvDisplayString()
+		seg2 = packSpaceString("Arms: ", 14) + character.armorSlots[EQUIP_ARMS].getInvDisplayString()
+		fmt.Println(seg1)
+		fmt.Println(seg2)
+		seg1 = packSpaceString("Legs: ", 14) + character.armorSlots[EQUIP_LEG].getInvDisplayString()
+		seg2 = packSpaceString("Feet: ", 14) + character.armorSlots[EQUIP_FEET].getInvDisplayString()
+		fmt.Println(seg1)
+		fmt.Println(seg2)
+		seg1 = packSpaceString("Cloak: ", 14) + character.armorSlots[EQUIP_CLOAK].getInvDisplayString()
+		seg2 = packSpaceString("Ring: ", 14) + character.armorSlots[EQUIP_RING].getInvDisplayString()
+		fmt.Println(seg1)
+		fmt.Println(seg2)
+
+		fmt.Println("")
+		fmt.Println("--Bags--")
+		count := 0
+		for k := 0; k < len(character.inventory); k++ {
+			fmt.Printf("%s", packSpaceString(character.inventory[k].name, 23))
+			count++
+			if count == 3 {
+				count = 0
+				fmt.Printf("\n")
+			}
+		}
+
+		fmt.Println("")
+		fmt.Println("(eq. equip) (r. remove) (ex. exit)")
+		fmt.Println("")
+		fmt.Printf("Choose an option: ")
+		rsp := ""
+		fmt.Scanln(&rsp)	
+		
+		if rsp == "eq" {
+			character.equipScreen()
+		} else if rsp == "ex" {
+			cont = false
+		}
+	}
+
 }

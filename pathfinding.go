@@ -4,6 +4,7 @@
 package main
 
 import "fmt"
+import "time"
 
 const MAX_PF_TILES = 200
 
@@ -37,18 +38,26 @@ func iAbsDiff(x1, x2 int) int {
 	}
 }
 
+func iAbsVal(x int) int {
+	if x >= 0 {
+		return x
+	} else {
+		return x * -1
+	}
+}
+
 func getCityBlockDistance(sx, sy, ex, ey int) int {
 	return iAbsDiff(sx, ex) + iAbsDiff(sy, ey)
 }
 
 func getCrowDistance(sx, sy, ex, ey int) int {
-	
+
 	if sx == ex {
 		return iAbsDiff(sy, ey)
 	} else if sy == ey {
 		return iAbsDiff(sx, ex)
 	}
-	
+
 	xDist := iAbsDiff(sx, ex)
 	yDist := iAbsDiff(sy, ey)
 
@@ -203,6 +212,9 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 
 	var endFlag int = -1
 
+	ticks := time.Now().Unix()
+	var newTicks int64 = 0
+	
 	for len(openList) > 0 {
 		// find q tile
 		highFIndex := -1
@@ -272,6 +284,15 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 		if endFlag == 1 {
 			break
 		}
+		
+		newTicks = time.Now().Unix()
+		
+		if (newTicks - ticks) > 4 {
+			// time out
+			log.addWarn("AI timed out finding path.")
+			endFlag = -2
+			break
+		}
 	}
 
 	if endFlag == 1 {
@@ -280,7 +301,10 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 		// fmt.Println(endTile)
 		pathCount = 1
 		path[0] = endTile
-		_, stepTile := pathGrid.getTileById(endTile.parentId)
+		chk, stepTile := pathGrid.getTileById(endTile.parentId)
+		if chk == -1 {
+			return 1, path
+		}
 		// fmt.Println("First Step:")
 		// fmt.Println(stepTile)
 		// fmt.Println(fmt.Sprintf("End coords: %v, %v", sx, sy)) // start position because we are moving backwards
@@ -304,6 +328,9 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 			}
 		}
 	} else {
+		if endFlag == -2 {
+			fmt.Println("AI Pathfinding timed out!")
+		}
 		showPause("**************************** No Path Found!")
 		pathCount = -1
 	}

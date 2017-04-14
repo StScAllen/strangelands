@@ -3,6 +3,8 @@
 package main
 
 import "fmt"
+import "strings"
+import "strconv"
 
 var keepDescriptions = []string{
 	"It's cold and dark here. Shadows from my waning fire dance across the vacant \nexpanse.",
@@ -10,24 +12,24 @@ var keepDescriptions = []string{
 }
 
 type Keep struct {
-	name             	string
-	acres, usedacres 	int
-	description      	string
-	apprentices			[]Character
-	mapX, mapY			int
+	name             string
+	acres, usedacres int
+	descriptionId    int
+	apprentices      []Character
+	mapX, mapY       int
 }
 
 // Politicks
 // Menu:  Village Status, Curry Favor, Offer Assistance, Donate Crowns, Spend Political Currency
 // Village Status is not available until it is purchased with political currency.
 // Curry Favor - Spend time to gain favor.
-// Offer Assistance - Sometimes the mayor needs assistance, new mission 
+// Offer Assistance - Sometimes the mayor needs assistance, new mission
 // Donate Crowns - Simple monetary exchange for favor, crowns donated it this way will improve village metrics.
 // Spend Political Currency - Purchase acres for keep, open village status, approve apprentice(?), options vary by village
-	// uses political favors to gain acres - use land to build useful structures
-	// View village status
-	// Approve Apprentices
-	// Request Assistance - bonus to skill check for mission arch
+// uses political favors to gain acres - use land to build useful structures
+// View village status
+// Approve Apprentices
+// Request Assistance - bonus to skill check for mission arch
 
 // building ideas - each has various levels, land requirements and upgrade prices
 // farmland - "bleeding hands scrape weeds from the earth in hopes of a satiated belly - but funds must be made to pay the taxman"
@@ -47,25 +49,23 @@ type Keep struct {
 // apprentice new skills will be hard to acquire, will require training that takes time slots for both character and apprentice
 // Rarely, a "blank slate" apprentice will be available (Tabula Rasa) - the character can shape them however they see fit.
 
-// MISSIONS are posted in the villages. 
+// MISSIONS are posted in the villages.
 // ONLY 1 mission can be worked at a time.
 // Missions have ARCHS
 // They start with a series of puzzles, each must be solved with a skill roll. CHARM/INVESTIGATE/PUZZLES
 // Player can spend a day researching to gain a clue token, this provides a +1 to whatever skill is needed for that arch
 // Archs can force players to travel between villages for the next puzzle
 // Once an arch is complete, player travels to battlegrid to face the beast.
-// 
+//
 // Incomplete missions can have different consequences. Death toll, financial, political
 // the longer the mission is unresolved the larger the impact, death reduces village size, financial
 // reduces what is available in the stores, political reduces favor.
 // Each descriptively describes the encounter:
-// Ex. A corpse candle draws our sheep into the bog to drown. 
+// Ex. A corpse candle draws our sheep into the bog to drown.
 // Ex. We hung the wrong man, his corpse is back for revenge!
 // Ex. A grip (goblin) absconds with our cattle after dark!
 // Ex. Valuable property tormented by wily ghast.
 // Ex. Something is eating our children.
-
-
 
 // POTIONS are called UNCTURES
 // HAND OF GLORY - make some creatures flee (5 fingers, 5 uses)
@@ -80,12 +80,12 @@ type Keep struct {
 // Wander Action - create a random set of grids with ingredients/objects/npcs - potential apprentices, maybe a mugger
 
 // Combat round:
-// Player makes a contested attack against opponent.  
-//		Player attack rating + d20 vs player defense rating + d20 
+// Player makes a contested attack against opponent.
+//		Player attack rating + d20 vs player defense rating + d20
 // 			- Player Attack rating is comprised of skill bonus + weapon quality/material bonuses
 //			- Player Defense rating is comprised of agi bonus + shield bonus + defense posture bonus
 //
-//		On HIT 
+//		On HIT
 //			Target roll is a d10 roll + (atk roll) bonus that determine what body location will be targeted
 // 				For every 5 points over the attack roll - defense roll character can add +1 to target roll
 //				Different body locations will provide different wound potentials, and measure armor performance (existance of, etc.)
@@ -107,17 +107,62 @@ type Keep struct {
 // Character swings at Monster's HEAD with MACE - hits!
 // Penetration roll is: 7 Mace (+2) vs Leather Coif (12) - Leather Coif Protects!
 // Leather Coif takes 1 hit!
-// Leather Coif is destroyed!!!  
+// Leather Coif is destroyed!!!
 
+func getKeepSaveBlock() string {
+	keepBlock := BLOCK_KEEP + ","
 
-func (keep *Keep) visitKeep() (string) {
+	keepBlock += keep.name + ","
+	keepBlock += fmt.Sprintf("%v,", keep.acres)
+	keepBlock += fmt.Sprintf("%v,", keep.usedacres)
+	keepBlock += fmt.Sprintf("%v,", keep.descriptionId)
+	keepBlock += fmt.Sprintf("%v,", keep.mapX)
+	keepBlock += fmt.Sprintf("%v,", keep.mapY)
+
+	// add new lines
+	//	keepBlock += "◄"
+	//	keepBlock += fmt.Sprintf("%v,", -1)
+
+	keepBlock += "■"
+
+	return keepBlock
+}
+
+func unpackKeepBlock(block string) (int, Keep) {
+	var keep Keep
+
+	lines := strings.Split(block, "◄")
+	bits := strings.Split(lines[0], ",")
+
+	if bits[0] == BLOCK_KEEP {
+		fmt.Println("Loading Keep Block...")
+	} else {
+		log.addError("Cant find Keep block.")
+		fmt.Println("Keep Block not found!")
+		return -1, keep
+	}
+
+	keep.name = bits[1]
+	keep.acres, _ = strconv.Atoi(bits[2])
+
+	keep.usedacres, _ = strconv.Atoi(bits[3])
+	keep.descriptionId, _ = strconv.Atoi(bits[4])
+	keep.mapX, _ = strconv.Atoi(bits[5])
+	keep.mapY, _ = strconv.Atoi(bits[6])
+
+	fmt.Println("            ...done!")
+
+	return 1, keep
+}
+
+func (keep *Keep) visitKeep() string {
 	rsp := ""
 
 	for rsp != "q" {
 		clearConsole()
 		fmt.Println("╔ Keep ╗")
-		fmt.Println(makeDialogString(keep.description))
-		fmt.Printf("Day: %v \n", gameDay)
+		fmt.Println(makeDialogString(keepDescriptions[keep.descriptionId]))
+		fmt.Printf("Day: %v \n", game.gameDay)
 		fmt.Printf("Acres: %v / %v \n", keep.usedacres, keep.acres)
 		fmt.Println("------------")
 		fmt.Println("1. Rest (End Day)")
@@ -127,7 +172,7 @@ func (keep *Keep) visitKeep() (string) {
 		fmt.Println("5. Status")
 		fmt.Println("6. Missions")
 		fmt.Println("7. Travel")
-		fmt.Println("")	
+		fmt.Println("")
 		fmt.Println("m. Minutiae")
 		fmt.Println("q. Exit")
 		fmt.Println("")
@@ -137,7 +182,7 @@ func (keep *Keep) visitKeep() (string) {
 
 		if rsp == "1" {
 			endDay()
-			character.save()
+			save()
 		} else if rsp == "5" {
 			character.showStatus()
 			character.printCharacter(1)
@@ -146,7 +191,7 @@ func (keep *Keep) visitKeep() (string) {
 			return travel
 		}
 	}
-	
+
 	return rsp
 }
 
@@ -156,8 +201,8 @@ func createKeep() Keep {
 	keep.acres = 0
 	keep.usedacres = 0
 	keep.name = "Campground"
-	keep.description = keepDescriptions[0]
+	keep.descriptionId = 0
 	keep.mapX, keep.mapY = 23, 12
-	
+
 	return keep
 }

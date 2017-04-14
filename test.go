@@ -4,14 +4,13 @@ package main
 
 import "fmt"
 
-
 func showDialogBox(diag []string) {
 	clearConsole()
-	
-	for k := 0; k < len(diag); k++{
+
+	for k := 0; k < len(diag); k++ {
 		fmt.Println(diag[k])
 	}
-	
+
 	rsp := ""
 	fmt.Printf("Press any key to continue.")
 	fmt.Scanln(&rsp)
@@ -19,19 +18,19 @@ func showDialogBox(diag []string) {
 
 func showDialogBoxRight(diag []string) {
 	clearConsole()
-	
+
 	justBuffer := ""
 	// have to cast the string because escape sequences will count as double
-	iBuffer := 78 - len([]rune(diag[0]))	
-	
+	iBuffer := 78 - len([]rune(diag[0]))
+
 	for k := 0; k < iBuffer; k++ {
 		justBuffer += " "
 	}
-	
-	for k := 0; k < len(diag); k++{
+
+	for k := 0; k < len(diag); k++ {
 		fmt.Println(justBuffer + diag[k])
 	}
-	
+
 	rsp := ""
 	fmt.Printf("Press any key to continue.")
 	fmt.Scanln(&rsp)
@@ -39,7 +38,7 @@ func showDialogBoxRight(diag []string) {
 
 func printArrayString(arr []string) {
 
-	for k := 0; k < len(arr); k++{
+	for k := 0; k < len(arr); k++ {
 		fmt.Println(len(arr[k]))
 		fmt.Println(arr[k])
 	}
@@ -54,14 +53,14 @@ func showVillages() {
 	clearConsole()
 
 	fmt.Println("Villages")
-	fmt.Println("--------------")	
-	
+	fmt.Println("--------------")
+
 	fmt.Printf("Currently in %v \n", character.villageIndex)
-	
+
 	for i := range villages {
 		fmt.Printf("%s   \t%v : %v  \t%v\n", packSpaceString(villages[i].name, 12), villages[i].mapX, villages[i].mapY, getVillageDistance(i))
 	}
-	
+
 	fmt.Printf("%s   \t%v : %v  \t%v\n", packSpaceString("Keep", 12), keep.mapX, keep.mapY, getVillageDistance(99))
 
 	rsp := ""
@@ -69,9 +68,9 @@ func showVillages() {
 	fmt.Scanln(&rsp)
 }
 
-func drawWorldMap(){
+func drawWorldMap() {
 	clearConsole()
-		
+
 	charX, charY := 0, 0
 
 	if character.villageIndex == 99 {
@@ -81,18 +80,18 @@ func drawWorldMap(){
 		charX = villages[character.villageIndex].mapX
 		charY = villages[character.villageIndex].mapY
 	}
-		
-	for k := 0; k < len(worldmap2); k++{
+
+	for k := 0; k < len(worldmap2); k++ {
 		row := fmt.Sprintf("%s", worldmap2[k])
 		if charY == k {
-			row = fmt.Sprintf("%s", replaceAtIndex2(row, rune('C'), charX-1));
+			row = fmt.Sprintf("%s", replaceAtIndex2(row, rune('C'), charX-1))
 		}
 		if k == 1 {
-			row += fmt.Sprintf("  Day: %v", gameDay)
+			row += fmt.Sprintf("  Day: %v", game.gameDay)
 		}
-		fmt.Println(row) 
+		fmt.Println(row)
 	}
-	
+
 	rsp := ""
 	fmt.Printf("Press any key to continue.")
 	fmt.Scanln(&rsp)

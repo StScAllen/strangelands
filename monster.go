@@ -13,33 +13,38 @@ const STEP_ATTACK = 2
 const DAMAGE_PHYSICAL = 0
 const DAMAGE_SOUL = 1
 
-var person_bits = []string {"Head", "Arm", "Arm", "Chest", "Chest", "Leg", "Leg",}
-var orb_bits = []string {"Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body",}
-var quad_bits = []string {"Head", "Torso", "Torso", "Torso", "Leg", "Leg", "Leg", "Leg",}
+const CHARACTER_KILLED = 1
+const APPRENTICE_KILLED = 2
+const MONSTER_RESULT_NIL = 0
+
+var person_bits = []string{"Head", "Arm", "Arm", "Chest", "Chest", "Leg", "Leg"}
+var orb_bits = []string{"Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body", "Body"}
+var quad_bits = []string{"Head", "Torso", "Torso", "Torso", "Leg", "Leg", "Leg", "Leg"}
 
 type Monster struct {
 	hp, maxhp                     int
 	moves                         int
 	name                          string
 	agi, str, per, intl, cha, gui int
-	attacks						  []MonsterAttack					
-	bits						  []string
+	gridChangeCoolDown 			  int
+	attacks                       []MonsterAttack
+	bits                          []string
 	plan                          AIPlan
-	targets						  []int
-	body						  []string
-	resistance					  []int
+	targets                       []int
+	body                          []string
+	resistance                    []int
 	disturbance1                  string
 	disturbance2                  string
 }
 
 type MonsterAttack struct {
-	name								string
-	id 									int
-	wRange								int
-	dmgType								int 
-	atkTurns							int
-	accuracy							int
-	paddedMod, leatherMod, chainMod 	int
+	name                            string
+	id                              int
+	wRange                          int
+	dmgType                         int
+	atkTurns                        int
+	accuracy                        int
+	paddedMod, leatherMod, chainMod int
 }
 
 var SOUL_SUCK = MonsterAttack{"Soul Suck", 1, 2, DAMAGE_SOUL, 3, 2, 0, 0, 0}
@@ -53,7 +58,7 @@ type AIStep struct {
 }
 
 type AIPlan struct {
-	steps     [100]AIStep  // any "plan" with more than 100 steps is for fools.
+	steps     [100]AIStep // any "plan" with more than 100 steps is for fools.
 	stepCount int
 	maneuver  string
 	nextStep  int
@@ -66,7 +71,7 @@ type AIPlan struct {
 }
 
 func (mon *Monster) isAlive() bool {
-	if mon.hp < 0 {
+	if mon.hp < 1 {
 		return false
 	}
 	return true
@@ -117,12 +122,12 @@ func createMonster(id int) Monster {
 		monster.cha = 5
 		monster.gui = 4
 		monster.intl = 5
-	
+
 		monster.bits = orb_bits
-		
+
 		monster.disturbance1 = "You see a faint glow to the %v"
 		monster.disturbance2 = "A sense of despair washes over you. Something is not right here."
-		
+
 		monster.targets = ORB_TARGETS
 		monster.body = ORB_STRING
 		monster.resistance = []int{10, 10, 10, 10, 10, 10, 10, 10, 10, 10}
@@ -182,13 +187,11 @@ func getStepFromTile(tile Tile) AIStep {
 	return step
 }
 
-
-
 // attackIndex is index of attack in monsters attack array, tgt is either CHAR_TURN or APP_TURN
-func (bg * BattleGrid) doAttack(attackIndex, tgt int) {
+func (bg *BattleGrid) doAttack(attackIndex, tgt int) (int){
 	var die Die
-	attack := bg.monster.attacks[attackIndex];
-	
+	attack := bg.monster.attacks[attackIndex]
+
 	if attack.dmgType == DAMAGE_PHYSICAL {
 
 		var target Character
@@ -197,38 +200,38 @@ func (bg * BattleGrid) doAttack(attackIndex, tgt int) {
 		} else {
 			target = apprentice
 		}
-	
+
 		adj := bg.monster.attacks[attackIndex].accuracy
 		atkRoll := die.rollxdx(1, 20)
 		atkTotal := adj + atkRoll
-	
+
 		def := target.getTotalDefenseAdjustment()
 		defRoll := die.rollxdx(1, 20)
 		defTotal := def + defRoll
-	
+
 		fmt.Println(fmt.Sprintf("Monster rolls %v + %v = [%v]", atkRoll, adj, atkTotal))
-		fmt.Println(fmt.Sprintf(target.name + " rolls %v + %v = [%v]", defRoll, def, defTotal))
+		fmt.Println(fmt.Sprintf(target.name+" rolls %v + %v = [%v]", defRoll, def, defTotal))
 
 		if atkTotal > defTotal {
 			showPause("Monster hits!")
 		} else {
-			showPause("Monster misses!")		
-			return
+			showPause("Monster misses!")
+			return -1
 		}
-		
+
 		diff := atkTotal - defTotal
 		tBonus := 0
 		for ; diff >= 5; diff -= 5 {
 			tBonus++
 		}
-		
+
 		fmt.Println(fmt.Sprintf("Bonus is %v", getSigned(tBonus)))
 		targetRoll := die.rollxdx(1, 10)
 		totalTarget := targetRoll + tBonus
 		if totalTarget > 10 {
 			totalTarget = 10
 		}
-		
+
 		fmt.Println(fmt.Sprintf("Target is %v + %v = %v", targetRoll, tBonus, totalTarget))
 		crits := ""
 		hits := 1
@@ -242,7 +245,7 @@ func (bg * BattleGrid) doAttack(attackIndex, tgt int) {
 					totalTarget = 10
 					hits++
 				}
-			}	
+			}
 			fmt.Println(crits)
 		}
 		showPause("Hit on " + HUMAN_STRING[totalTarget-1])
@@ -255,37 +258,73 @@ func (bg * BattleGrid) doAttack(attackIndex, tgt int) {
 		fmt.Println(fmt.Sprintf("Penetration bonus is %v", penetrationBonus))
 		penetrationRoll := die.rollxdx(1, 20)
 		totalPenetration := penetrationBonus + penetrationRoll
-		
-		charBodyIndex := targetRoll-1
+
+		charBodyIndex := targetRoll - 1
 		charResistance := target.getResistanceAt(charBodyIndex)
-		
-		fmt.Println(fmt.Sprintf("Penetration Roll: %v + %v = [%v]", penetrationRoll, penetrationBonus, totalPenetration))	
-		fmt.Println(fmt.Sprintf("Resistance is %v", charResistance))		
-		
+
+		fmt.Println(fmt.Sprintf("Penetration Roll: %v + %v = [%v]", penetrationRoll, penetrationBonus, totalPenetration))
+		fmt.Println(fmt.Sprintf("Resistance is %v", charResistance))
+
 		if totalPenetration > charResistance {
-			showPause(fmt.Sprintf("Attack penetrates! Monster takes %v hits!", hits))		
-			bg.monster.hp -= hits
+			showPause(fmt.Sprintf("Attack penetrates! Character takes %v hits!", hits))
+
+			if tgt == CHAR_TURN {
+				character.hp -= hits
+
+				if hits > 1 {
+					if die.rollxdx(1, 4) < hits {
+						character.wounds = append(character.wounds, genNewWound(charBodyIndex))
+						showPause("Character has suffered a new wound!")
+					}
+				} else {
+						showPause("Character has been killed!")		
+						character.alive = false
+						return 1
+				}
+
+			} else {
+				apprentice.hp -= hits
+
+				if hits > 1 {
+					if die.rollxdx(1, 4) < hits {
+						apprentice.wounds = append(apprentice.wounds, genNewWound(charBodyIndex))
+						showPause("Apprentice has suffered a new wound!")
+					}
+				} else {
+						showPause("Apprentice has been killed!")
+						apprentice.alive = false
+						return 1					
+				}
+			}
+
 		} else {
-			showPause("Monster soaks the attack.")
+			showPause("Armor soaks the attack.")
+
+			if tgt == CHAR_TURN {
+				character.soakHits(hits, charBodyIndex)
+			} else {
+				apprentice.soakHits(hits, charBodyIndex)
+			}
 		}
-	
+
 	} else if attack.dmgType == DAMAGE_SOUL {
-	
+
 	}
 
+	return 0
 }
 
 // Looks at monster turns, and attacks available and picks one, or returns -1 if no attacks are available.
 func (bg *BattleGrid) getAttack() (int, int) {
 	var die Die
 	var attacksAvailable = make([]MonsterAttack, 0, 0)
-	
+
 	for k := range bg.monster.attacks {
 		// get attacks that can be done withing the amount of available turns
 		if bg.monster.attacks[k].atkTurns <= bg.monster.moves {
-			// add if there is a target within range			
+			// add if there is a target within range
 			if bg.getActorInAttackRange(bg.monster.attacks[k].wRange) > -1 {
-				attacksAvailable = append(attacksAvailable, bg.monster.attacks[k])			
+				attacksAvailable = append(attacksAvailable, bg.monster.attacks[k])
 			}
 		}
 	}
@@ -293,25 +332,25 @@ func (bg *BattleGrid) getAttack() (int, int) {
 	// if we have attacks available and targets in range, pick an attack and target
 	if len(attacksAvailable) > 0 {
 		attackIndex, targetIndex := -1, -1
-		attackIndex = die.rollxdx(1, len(attacksAvailable))
-	
-		actor := bg.getActorInAttackRange(attacksAvailable[attackIndex-1].wRange)
-		
-		if (actor == 2) {
-			targetIndex = die.rollxdx(1,2) - 1
+		attackIndex = die.rollxdx(1, len(attacksAvailable)) - 1
+
+		actor := bg.getActorInAttackRange(attacksAvailable[attackIndex].wRange)
+
+		if actor == 2 {
+			targetIndex = die.rollxdx(1, 2) - 1
 		} else {
 			targetIndex = actor
 		}
-		
-		for k := range bg.monster.attacks {
+
+		for k := 0; k < len(bg.monster.attacks); k++ {
 			if bg.monster.attacks[k].id == attacksAvailable[attackIndex].id {
 				attackIndex = k
 			}
 		}
-		
+
 		return attackIndex, targetIndex
 	}
-	
+
 	return -1, -1
 }
 
@@ -331,7 +370,7 @@ func (bg *BattleGrid) isStepValid(step AIStep) bool {
 			return false
 		}
 	} else if step.id == STEP_ATTACK {
-		atk,_ := bg.getAttack()
+		atk, _ := bg.getAttack()
 		return (atk > -1) && (bg.monster.moves >= bg.monster.attacks[atk].atkTurns)
 
 	} else if step.id == STEP_WAIT {
@@ -343,7 +382,7 @@ func (bg *BattleGrid) isStepValid(step AIStep) bool {
 
 func (bg *BattleGrid) doMonsterActivity() int {
 
-	if (!bg.monster.isAlive()){
+	if !bg.monster.isAlive() {
 		return 0
 	}
 
@@ -373,6 +412,10 @@ func (bg *BattleGrid) doMonsterActivity() int {
 					bg.monster.plan = bg.createMonsterPlan()
 				}
 			}
+		} else if bg.monster.plan.interrupt == MONST_CHANGED_GRID {
+			log.addAi("Plan interrupted by grid change.")
+			bg.monster.plan = bg.createMonsterPlan()
+			bg.monster.gridChangeCoolDown = 2
 		}
 	}
 
@@ -386,24 +429,32 @@ func (bg *BattleGrid) doMonsterActivity() int {
 				bg.monster.moves -= 1
 			} else if step.id == STEP_ATTACK {
 				attackIndex, tgtIndex := bg.getAttack()
-				
+
 				if attackIndex > -1 {
-					if (tgtIndex == CHAR_TURN) {
+					if tgtIndex == CHAR_TURN {
 						log.addAi("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)
-						showPause("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)	
-						bg.doAttack(attackIndex, CHAR_TURN)
+						showPause("Monster attacks " + character.name + " with " + bg.monster.attacks[attackIndex].name)
+						res := bg.doAttack(attackIndex, CHAR_TURN)
+						if res == 1 {
+							bg.monster.plan.interrupt = ACTOR_KILLED
+							return CHARACTER_KILLED
+						}
 					} else {
 						log.addAi("Monster attacks " + apprentice.name + " with " + bg.monster.attacks[attackIndex].name)
-						showPause("Monster attacks " + apprentice.name + " with " + bg.monster.attacks[attackIndex].name)				
-						bg.doAttack(attackIndex, APP_TURN)
+						showPause("Monster attacks " + apprentice.name + " with " + bg.monster.attacks[attackIndex].name)
+						res := bg.doAttack(attackIndex, APP_TURN)
+						if res == 1 {
+							bg.monster.plan.interrupt = ACTOR_KILLED
+							return APPRENTICE_KILLED
+						}
 					}
-					
-					bg.monster.moves -= bg.monster.attacks[attackIndex].atkTurns				
+
+					bg.monster.moves -= bg.monster.attacks[attackIndex].atkTurns
 				} else {
 					log.addAi("Monster wants to attack but no attack available - waits")
 					bg.monster.moves -= 1
 				}
-				
+
 			} else if step.id == STEP_WAIT {
 				log.addAi("Monster waits")
 				bg.monster.moves -= 1
@@ -421,17 +472,21 @@ func (bg *BattleGrid) doMonsterActivity() int {
 			}
 
 		} else {
-			showPause("Step not valid!")
+			showPause("Step not valid! Monster thinks of new plan...")
+			bg.monster.moves -= 1
 			bg.monster.plan = bg.createMonsterPlan()
 		}
 
-		bg.updateActorVisibility()
+		bg.updateActorVisibility()		
 	}
 
+	if bg.monster.gridChangeCoolDown > 0 {
+		bg.monster.gridChangeCoolDown--
+	}
 	log.addAi(fmt.Sprintf("%s move: From: %v : %v (%v) To: %v : %v (%v)", bg.monster.name, oldX, oldY, oldG, bg.monsterXLoc, bg.monsterYLoc, bg.monsterGridId))
 	fmt.Printf("End %s move: %v : %v : %v", bg.monster.name, bg.monsterXLoc, bg.monsterYLoc, bg.monsterGridId)
 	showPause("")
 
-	return 0 // ok to continue (character didn't die or anything)
+	return MONSTER_RESULT_NIL // ok to continue (character didn't die or anything)
 
 }

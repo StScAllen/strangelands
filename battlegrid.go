@@ -52,11 +52,12 @@ type Gate struct {
 }
 
 type Grid struct {
-	grid       		[][]string
-	id         		int
-	gridName   		string
-	maxX, maxY 		int
-	loot			[]Loot
+	grid       [][]string
+	id         int
+	gridName   string
+	used	   bool
+	maxX, maxY int
+	loot       []Loot
 }
 
 type BattleGrid struct {
@@ -64,6 +65,7 @@ type BattleGrid struct {
 	gates                                [200]Gate
 	gridPattern                          [8][8]int
 	numGrids                             int
+	turnCounter							 int
 	monster                              Monster
 	locationName                         string
 	charXLoc, charYLoc                   int // character locs
@@ -95,6 +97,19 @@ func (gd *Grid) addCemetaryDecorations() {
 	}
 }
 
+func (bg * BattleGrid) getGatesForGrid(gridId int) ([]Gate) {	
+	gates := make([]Gate, 0, 0)
+	
+	for k := range bg.gates {
+		
+		if bg.gates[k].gridid1 == gridId || bg.gates[k].gridid2 == gridId {
+			gates = append(gates, bg.gates[k])
+		}
+	}
+	
+	return gates
+}
+
 func (gd *Grid) updateLootVisibility(x, y int) {
 	for k := 0; k < len(gd.loot); k++ {
 		if gd.loot[k].locX == x && gd.loot[k].locY == y {
@@ -103,14 +118,46 @@ func (gd *Grid) updateLootVisibility(x, y int) {
 	}
 }
 
-func (gd *Grid) isLootAtLoc(x, y int) (bool) {
+func (gd *Grid) isLootAtLoc(x, y int) bool {
 	for k := 0; k < len(gd.loot); k++ {
 		if gd.loot[k].locX == x && gd.loot[k].locY == y {
 			return true
 		}
 	}
-	
+
 	return false
+}
+
+func (gd *Grid) getLootAtLoc(x, y int) int {
+	for k := 0; k < len(gd.loot); k++ {
+		if gd.loot[k].locX == x && gd.loot[k].locY == y {
+			return k
+		}
+	}
+
+	return -1
+}
+
+func (gd *Grid) getNearbyLootStrings(charX, charY int, bg *BattleGrid) []string {
+	lootStrings := make([]string, 0, 0)
+
+	for k := 0; k < len(gd.loot); k++ {
+		if bg.inViewRange(gd.loot[k].locX, gd.loot[k].locY, charX, charY, 4) {
+			relativeX := charX - gd.loot[k].locX
+			relativeY := charY - gd.loot[k].locY
+
+			if getCrowDistance(charX, charY, gd.loot[k].locX, gd.loot[k].locY) < 4 {
+				card := getCardinalStringFromRelativePosition(relativeX, relativeY, true)
+				thisLoot := card + ": " + gd.loot[k].container
+				if gd.loot[k].empty {
+					thisLoot += " (empty)"
+				}
+				lootStrings = append(lootStrings, thisLoot)
+			}
+		}
+	}
+
+	return lootStrings
 }
 
 func (bg *BattleGrid) isActorAdjacent(whoFlag, targetFlag int) bool {
@@ -194,25 +241,25 @@ func (bg *BattleGrid) isApprenticeVisible() bool {
 	return false
 }
 
-func (bg * BattleGrid) isAttackPathClear(turn int) (bool){
-	return true;
+func (bg *BattleGrid) isAttackPathClear(turn int) bool {
+	return true
 }
 
-func (bg * BattleGrid) isMonsterInAttackRange(turn int) (bool){
+func (bg *BattleGrid) isMonsterInAttackRange(turn int) bool {
 	if bg.isMonsterVisible() == false {
 		return false
 	}
-	
+
 	weaponRange := 0
 	actorX, actorY := 0, 0
 	if turn == CHAR_TURN {
-		weaponRange = character.getWeaponRange()	
+		weaponRange = character.getWeaponRange()
 		actorX = bg.charXLoc
 		actorY = bg.charYLoc
 	} else {
-		weaponRange = apprentice.getWeaponRange()	
+		weaponRange = apprentice.getWeaponRange()
 		actorX = bg.appXLoc
-		actorY = bg.appYLoc		
+		actorY = bg.appYLoc
 	}
 
 	if weaponRange < 1 {
@@ -222,23 +269,23 @@ func (bg * BattleGrid) isMonsterInAttackRange(turn int) (bool){
 	actorDistance := getCrowDistance(actorX, actorY, bg.monsterXLoc, bg.monsterYLoc)
 
 	fmt.Println("actor dist is", actorDistance)
-	
+
 	if actorDistance <= weaponRange {
 		return true
 	}
-	
+
 	return false
 }
 
-// returns a -1, CHAR_TURN, APP_TURN, or 2 for BOTH 
-func (bg * BattleGrid) getActorInAttackRange(aRange int) (int){
-	if bg.isCharacterVisible() == false && bg.isApprenticeVisible() == false{
+// returns a -1, CHAR_TURN, APP_TURN, or 2 for BOTH
+func (bg *BattleGrid) getActorInAttackRange(aRange int) int {
+	if bg.isCharacterVisible() == false && bg.isApprenticeVisible() == false {
 		return -1
 	}
-	
+
 	weaponRange := 0
 	actorX, actorY := 0, 0
-	weaponRange = aRange	
+	weaponRange = aRange
 	actorX = bg.monsterXLoc
 	actorY = bg.monsterYLoc
 
@@ -247,24 +294,24 @@ func (bg * BattleGrid) getActorInAttackRange(aRange int) (int){
 	}
 
 	actorFlag := -1
-	
+
 	actorDistance := getCrowDistance(actorX, actorY, bg.charXLoc, bg.charYLoc)
-	
+
 	if actorDistance <= weaponRange {
 		actorFlag = CHAR_TURN
 	}
-	
-	if (bg.hasApprentice) {
+
+	if bg.hasApprentice {
 		actorDistance := getCrowDistance(actorX, actorY, bg.appXLoc, bg.appYLoc)
 		if actorDistance <= weaponRange {
-			if (actorFlag == -1) {
+			if actorFlag == -1 {
 				actorFlag = 2
 			} else {
 				actorFlag = APP_TURN
 			}
-		}	
+		}
 	}
-	
+
 	return actorFlag
 }
 
@@ -450,6 +497,7 @@ func (bg *BattleGrid) isGate(turn int) bool {
 		xloc = bg.appXLoc
 		yloc = bg.appYLoc
 		gridId = bg.charGridId
+		
 	} else if turn == MONST_TURN {
 		xloc = bg.monsterXLoc
 		yloc = bg.monsterYLoc
@@ -557,6 +605,20 @@ func (grid *BattleGrid) moveMonster(cardinal int) {
 func (grid *BattleGrid) moveMonsterXY(x, y int) {
 	grid.monsterXLoc = x
 	grid.monsterYLoc = y
+	
+	if grid.isGate(MONST_TURN) && grid.monster.gridChangeCoolDown == 0{
+		if grid.monsterGridId == selectedGate.gridid1 {
+			grid.monsterGridId = selectedGate.gridid2
+			grid.monsterXLoc = selectedGate.g2x
+			grid.monsterYLoc = selectedGate.g2y			
+		} else {
+			grid.monsterGridId = selectedGate.gridid1
+			grid.monsterXLoc = selectedGate.g1x
+			grid.monsterYLoc = selectedGate.g1y				
+		}
+		grid.monster.plan.interrupt = MONST_CHANGED_GRID
+		showPause(">>> Monster has changed grids!!!")
+	} 
 }
 
 func (bg *BattleGrid) getMoveOptions(gridId int, xloc int, yloc int) (int, []int) {
@@ -724,22 +786,27 @@ func (bg *BattleGrid) drawGrid() {
 	clearConsole()
 	var grid Grid
 	var id, xloc, yloc int
+	var lootStrings []string
 
 	if bg.turn == CHAR_TURN {
 		id = bg.charGridId
+		grid = bg.getEntityGrid(id)
 		xloc = bg.charXLoc
 		yloc = bg.charYLoc
+		lootStrings = grid.getNearbyLootStrings(xloc, yloc, bg)
 	} else if bg.turn == APP_TURN {
 		id = bg.appGridId
+		grid = bg.getEntityGrid(id)
 		xloc = bg.appXLoc
 		yloc = bg.appYLoc
+		lootStrings = grid.getNearbyLootStrings(xloc, yloc, bg)
 	} else {
 		id = bg.monsterGridId
+		grid = bg.getEntityGrid(id)
 		xloc = bg.monsterXLoc
 		yloc = bg.monsterYLoc
+		lootStrings = make([]string, 0, 0)
 	}
-
-	grid = bg.getEntityGrid(id)
 
 	fmt.Println("Map - " + bg.locationName + " - " + grid.gridName + " - " + bg.monster.name + " - " + times[bg.time] + " - " + weather[bg.weather])
 	fmt.Println("------------------------------------------")
@@ -747,7 +814,6 @@ func (bg *BattleGrid) drawGrid() {
 	row := ""
 	for i := 0; i < len(grid.grid); i++ {
 		for t := 0; t < len(grid.grid[i]); t++ {
-
 			if bg.charGridId == grid.id && i == bg.charYLoc && t == bg.charXLoc {
 				row += "C"
 				continue
@@ -760,7 +826,7 @@ func (bg *BattleGrid) drawGrid() {
 				}
 				if bg.isMonsterVisible() {
 					if bg.monster.isAlive() {
-						row += "M"					
+						row += "M"
 					} else {
 						row += "d"
 					}
@@ -780,7 +846,7 @@ func (bg *BattleGrid) drawGrid() {
 					if grid.isLootAtLoc(t, i) {
 						row += "$"
 					} else {
-						row += grid.grid[i][t]					
+						row += grid.grid[i][t]
 					}
 				}
 
@@ -798,7 +864,7 @@ func (bg *BattleGrid) drawGrid() {
 
 		// draw status rows
 		if i == 0 {
-			row += "  -PATHS-"
+			row += " ┌─PATHS─┐    Nearby: "
 		} else if i == 1 {
 			if bg.directionValid(xloc, yloc, 7, cgid) {
 				row += "  NW"
@@ -815,6 +881,10 @@ func (bg *BattleGrid) drawGrid() {
 			} else {
 				row += "  "
 			}
+
+			if len(lootStrings) > 0 {
+				row += "      " + lootStrings[0]
+			}
 		} else if i == 2 {
 			if bg.directionValid(xloc, yloc, 6, cgid) {
 				row += "  W  "
@@ -825,6 +895,9 @@ func (bg *BattleGrid) drawGrid() {
 				row += "   E"
 			} else {
 				row += "    "
+			}
+			if len(lootStrings) > 1 {
+				row += "      " + lootStrings[1]
 			}
 		} else if i == 3 {
 			if bg.directionValid(xloc, yloc, 5, cgid) {
@@ -842,6 +915,17 @@ func (bg *BattleGrid) drawGrid() {
 			} else {
 				row += "  "
 			}
+
+			if len(lootStrings) > 2 {
+				row += "      " + lootStrings[2]
+			}
+		} else if i == 4 {
+			row += " └───────┘"
+
+			if len(lootStrings) > 3 {
+				row += "     ..."
+			}
+
 		} else if i == 5 {
 			row += "  " + character.name + " Health: ("
 			for hlth := 0; hlth <= character.maxhp; hlth++ {
@@ -853,7 +937,7 @@ func (bg *BattleGrid) drawGrid() {
 			}
 			row += ")"
 		} else if i == 6 {
-			row += packSpaceString("    Left: " + character.handSlots[LEFT].name, 24) + packSpaceString("  Right: " + character.handSlots[RIGHT].name, 24)
+			row += packSpaceString("   Left: "+character.handSlots[LEFT].name, 23) + packSpaceString("  Right: "+character.handSlots[RIGHT].name, 22)
 		} else if i == 7 {
 			if bg.hasApprentice {
 				row += "  " + apprentice.name + " Health: ["
@@ -868,7 +952,7 @@ func (bg *BattleGrid) drawGrid() {
 			}
 		} else if i == 8 {
 			if bg.hasApprentice {
-				row += packSpaceString("    Left: " + apprentice.handSlots[LEFT].name, 24) + packSpaceString("  Right: " + apprentice.handSlots[RIGHT].name, 24)
+				row += packSpaceString("    Left: "+apprentice.handSlots[LEFT].name, 24) + packSpaceString("  Right: "+apprentice.handSlots[RIGHT].name, 24)
 			}
 		} else if i == 9 {
 			row += "  " + bg.monster.name + " Health: ["
@@ -968,22 +1052,22 @@ func createSquareGrid(height int, width int) Grid {
 	retGrid.maxY = width - 1
 
 	retGrid.grid = newGrid
-	
+
 	retGrid.loot = make([]Loot, 0, 0)
-	
-	for k:= 0; k < die.rollxdx(1, 5); k++ {
+
+	for k := 0; k < die.rollxdx(1, 5); k++ {
 		loot := createRandomLoot()
-		x := die.rollxdx(1, width-1)
-		y := die.rollxdx(1, height-1)
+		x := die.rollxdx(1, width-2)
+		y := die.rollxdx(1, height-2)
 
 		loot.locX = x
 		loot.locY = y
-		
+
 		// TODO: should probably make sure we aren't dropping loot on top of other loot or unreachable locations
-		
+
 		retGrid.loot = append(retGrid.loot, loot)
 	}
-	
+
 	return retGrid
 }
 
@@ -1009,6 +1093,7 @@ func buildBattleGrid(id int) BattleGrid {
 			g1 := createSquareGrid(16, 32)
 			g1.addCemetaryDecorations()
 			g1.id = k
+			g1.used = true
 			g1.gridName = fmt.Sprintf("%v", k)
 			grid.allGrids[k] = g1
 			grid.setRandomStamp(g1.maxX, g1.maxY, k)
@@ -1033,9 +1118,12 @@ func buildBattleGrid(id int) BattleGrid {
 		grid.characterSpotted = false
 		grid.monsterSpotted = false
 		grid.apprenticeSpotted = false
+		grid.turnCounter = 0
 		
 		//grid.addGates()
 		grid.placeMonster()
+		
+		grid.writeGridsToFile()
 
 	} else {
 		/* 		grid.grid = SMALL_GRID
