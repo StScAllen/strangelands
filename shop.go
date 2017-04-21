@@ -5,25 +5,25 @@ package main
 import "fmt"
 import "strconv"
 
-func genWeaponsOfWeek() []Item {
+func genWeaponsOfWeek(size int) []Item {
 	var die Die
 
 	shopWeapons := make([]Item, 0)
-
-	for k := 0; k < die.rollxdx(5, 12); k++ {
-		shopWeapons = append(shopWeapons, getRandomWeapon())
+	
+	for k := 0; k < die.rollxdx(4 + size, 6 + (size*2)); k++ {
+		shopWeapons = append(shopWeapons, getRandomWeapon(size))
 	}
 
 	return shopWeapons
 }
 
-func genArmorOfWeek() []Item {
+func genArmorOfWeek(size int) []Item {
 	var die Die
 
 	shopArmor := make([]Item, 0)
 
-	for k := 0; k < die.rollxdx(5, 12); k++ {
-		shopArmor = append(shopArmor, getRandomArmor())
+	for k := 0; k < die.rollxdx(4 + size, 6 + (size*2)); k++ {
+		shopArmor = append(shopArmor, getRandomArmor(size))
 	}
 
 	return shopArmor
@@ -31,8 +31,8 @@ func genArmorOfWeek() []Item {
 
 func updateShops() {
 	for i := range villages {
-		villages[i].shopWeapons = genWeaponsOfWeek()
-		villages[i].shopArmor = genArmorOfWeek()
+		villages[i].shopWeapons = genWeaponsOfWeek(villages[i].size)
+		villages[i].shopArmor = genArmorOfWeek(villages[i].size)
 	}
 }
 

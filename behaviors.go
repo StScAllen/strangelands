@@ -145,6 +145,74 @@ func (bg *BattleGrid) getChangeGridBehavior() (int, [MAX_PF_TILES]Tile, []AIStep
 	return count, tiles, endSteps
 }
 
+func (bg *BattleGrid) getHideBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
+	var count int
+	var die Die
+	var endSteps []AIStep
+	var tiles [MAX_PF_TILES]Tile
+
+	log.addAi("Adding a hiding behavior")
+
+	grid := bg.getEntityGrid(bg.monsterGridId)
+	
+	monsterMoves := bg.monster.getMonsterMoves()
+
+	// lets look at surrounding tiles in this grid and find one that is obscured...
+	
+	nearestX, nearestY, nearestDist := 0,0,9999
+	for i := 0; i < len(grid.grid); i++ {
+		for t := 0; t < len(grid.grid[i]); t++ {
+			if bg.isTileObscured(t, i, bg.monsterGridId){
+				distX := iAbsDiff(t, bg.monsterXLoc)
+				distY := iAbsDiff(i, bg.monsterYLoc)
+				thisDist := 0
+				
+				if distX == distY {
+					thisDist = distX
+				} else {
+					if distX > distY {
+						thisDist = distX
+					} else {
+						thisDist = distY
+					}
+				}
+				
+				if nearestDist > thisDist && bg.isTileOpen(t, i, bg.monsterGridId, MONST_TURN) {
+					nearestDist = thisDist
+					nearestX = t
+					nearestY = i
+				} else if nearestDist == thisDist && bg.isTileOpen(t, i, bg.monsterGridId, MONST_TURN) {
+					if die.rollxdx(1, 5) > 3 {
+						nearestDist = thisDist
+						nearestX = t
+						nearestY = i
+					}
+				}			
+			}
+		}
+	}
+	
+	count = -1
+	if nearestX+nearestY > 0 {
+		count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, nearestX, nearestY, bg.monsterGridId)	
+	}
+
+	if count != -1 && count < monsterMoves {
+		diff := monsterMoves - count
+		endSteps = make([]AIStep, diff)
+		for i := 0; i < diff; i++ {
+			var aiStep AIStep
+			aiStep.action = "wait"
+			aiStep.id = STEP_WAIT
+			aiStep.x = nearestX
+			aiStep.y = nearestY
+			endSteps[i] = aiStep
+		}
+	}
+
+	return count, tiles, endSteps
+}
+
 func (bg *BattleGrid) getPatrolBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
 	var count int
 	var die Die
@@ -205,6 +273,26 @@ func (bg *BattleGrid) getPatrolBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
 	return count, tiles, endSteps
 }
 
+// balance is a scale between -X to +X - positive number 
+// negative balance implies monster has advantage, positive implies character has advantage
+// a balance of 0 indicates an even split.  
+func (bg * BattleGrid) calcPowerBalance() float32 {
+	var balance float32
+	balance = 1.0
+
+	balance += character.getPowerBalance()
+	if bg.hasApprentice {
+		balance += apprentice.getPowerBalance()
+	}
+	
+	balance -= bg.monster.getPowerBalance()
+
+	// monster gets to cheat a bit so give them a balance adjustment
+	balance -= 2
+	
+	return balance
+}
+
 func (bg *BattleGrid) createMonsterPlan() AIPlan {
 	var plan AIPlan
 	var tiles [MAX_PF_TILES]Tile
@@ -214,7 +302,9 @@ func (bg *BattleGrid) createMonsterPlan() AIPlan {
 	//	monsterSeen := bg.isMonsterVisible()
 	apprenticeSeen := bg.isApprenticeVisible()
 	characterSeen := bg.isCharacterVisible()
-
+	
+	powerBalance := bg.calcPowerBalance()
+	
 	if characterSeen || apprenticeSeen {
 		log.addAi("Character Visible: Trying to get path...")
 
@@ -232,22 +322,30 @@ func (bg *BattleGrid) createMonsterPlan() AIPlan {
 				count, tiles, endSteps = bg.getDirectAttackBehavior(APP_TURN)
 			}
 		} else {
-			// if neither are adjacent then move to attack
-			if characterSeen && !apprenticeSeen {
-				count, tiles, endSteps = bg.getMoveAttackBehavior(CHAR_TURN)
-			} else if !characterSeen && apprenticeSeen {
-				count, tiles, endSteps = bg.getMoveAttackBehavior(APP_TURN)
+			// if neither are adjacent then move to attack, or hide
+			
+			if powerBalance > 3 && die.rollxdx(1, 10) > 6 {
+				count, tiles, endSteps = bg.getHideBehavior()	
+				plan.maneuver = "Stalk"						
 			} else {
-				// both seen, choose randomly
-				if die.rollxdx(1, 2) == 2 {
+				if characterSeen && !apprenticeSeen {
 					count, tiles, endSteps = bg.getMoveAttackBehavior(CHAR_TURN)
-				} else {
+				} else if !characterSeen && apprenticeSeen {
 					count, tiles, endSteps = bg.getMoveAttackBehavior(APP_TURN)
-				}
+				} else {
+					// both seen, choose randomly
+					if die.rollxdx(1, 2) == 2 {
+						count, tiles, endSteps = bg.getMoveAttackBehavior(CHAR_TURN)
+					} else {
+						count, tiles, endSteps = bg.getMoveAttackBehavior(APP_TURN)
+					}
+				}		
+
+				plan.maneuver = "Attack"				
 			}
+
 		}
 
-		plan.maneuver = "Attack"
 	} else {
 		if bg.turnCounter > 5 && bg.monster.gridChangeCoolDown < 1 {
 			if die.rollxdx(1, 5) > 3 {

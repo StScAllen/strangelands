@@ -56,6 +56,17 @@ type Character struct {
 	villageIndex                  int
 }
 
+func (char * Character) getPowerBalance() float32 {
+	var balance float32
+	balance = 0.0
+	
+	balance += (float32)(char.hp * 1.0)
+	
+	balance += (float32)(char.getTotalStats() / 6)
+	
+	return balance
+}
+
 // can have special items to increase moves
 func (char *Character) getCharacterMoves() int {
 	return char.agi

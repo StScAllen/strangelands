@@ -26,6 +26,53 @@ func getSigned(val int) string {
 	return fmt.Sprintf("%v", val)
 }
 
+func getSignedFloat32(val float32) string {
+	if val > 0 {
+		return fmt.Sprintf("+%v", val)
+	}
+
+	return fmt.Sprintf("%v", val)
+}
+
+func getCityBlockDistance(sx, sy, ex, ey int) int {
+	return iAbsDiff(sx, ex) + iAbsDiff(sy, ey)
+}
+
+func getCrowDistance(sx, sy, ex, ey int) int {
+
+	if sx == ex {
+		return iAbsDiff(sy, ey)
+	} else if sy == ey {
+		return iAbsDiff(sx, ex)
+	}
+
+	xDist := iAbsDiff(sx, ex)
+	yDist := iAbsDiff(sy, ey)
+
+	if xDist == yDist {
+		return xDist
+	}
+
+	return (iAbsDiff(xDist, yDist) + xDist)
+}
+
+// gives absolute value between int values
+func iAbsDiff(x1, x2 int) int {
+	if x1 > x2 {
+		return x1 - x2
+	} else {
+		return x2 - x1
+	}
+}
+
+func iAbsVal(x int) int {
+	if x >= 0 {
+		return x
+	} else {
+		return x * -1
+	}
+}
+
 func getCardinalStringFromRelativePosition(relX, relY int, shortCard bool) string {
 	retVal := "BAD!"
 

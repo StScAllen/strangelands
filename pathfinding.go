@@ -29,45 +29,6 @@ type PathfindingGrid struct {
 	shortestPathCount int
 }
 
-// gives absolute value between int values
-func iAbsDiff(x1, x2 int) int {
-	if x1 > x2 {
-		return x1 - x2
-	} else {
-		return x2 - x1
-	}
-}
-
-func iAbsVal(x int) int {
-	if x >= 0 {
-		return x
-	} else {
-		return x * -1
-	}
-}
-
-func getCityBlockDistance(sx, sy, ex, ey int) int {
-	return iAbsDiff(sx, ex) + iAbsDiff(sy, ey)
-}
-
-func getCrowDistance(sx, sy, ex, ey int) int {
-
-	if sx == ex {
-		return iAbsDiff(sy, ey)
-	} else if sy == ey {
-		return iAbsDiff(sx, ex)
-	}
-
-	xDist := iAbsDiff(sx, ex)
-	yDist := iAbsDiff(sy, ey)
-
-	if xDist == yDist {
-		return xDist
-	}
-
-	return (iAbsDiff(xDist, yDist) + xDist)
-}
-
 // returns Tile with id of sid and failure flag
 func (pfGrid *PathfindingGrid) getTileById(sid int) (int, Tile) {
 	var fTile Tile

@@ -27,6 +27,7 @@ type Monster struct {
 	name                          string
 	agi, str, per, intl, cha, gui int
 	gridChangeCoolDown 			  int
+	powerBalance				  float32
 	attacks                       []MonsterAttack
 	bits                          []string
 	plan                          AIPlan
@@ -111,6 +112,20 @@ func (mon *Monster) getMonsterStealthModifier() int {
 	return stealth
 }
 
+func (monst * Monster) getPowerBalance() float32 {
+	balance := monst.powerBalance
+
+	balance += (float32) (monst.hp * 1.0)
+	
+	balance += (float32)(monst.getTotalStats() / 6)
+	
+	return balance
+}
+
+func (m *Monster) getTotalStats() int {
+	return m.str + m.agi + m.intl + m.gui + m.cha + m.per
+}
+
 func createMonster(id int) Monster {
 	var monster Monster
 
@@ -132,12 +147,13 @@ func createMonster(id int) Monster {
 		monster.body = ORB_STRING
 		monster.resistance = []int{10, 10, 10, 10, 10, 10, 10, 10, 10, 10}
 		monster.attacks = []MonsterAttack{CHARGE, SOUL_SUCK}
+		monster.powerBalance = 12.0
 	}
 
 	monster.moves = monster.agi
 	monster.hp = monster.str
 	monster.maxhp = monster.str
-
+	
 	// create a void plan
 	var initPlan AIPlan
 	initPlan.stepCount = -1
@@ -276,10 +292,11 @@ func (bg *BattleGrid) doAttack(attackIndex, tgt int) (int){
 						character.wounds = append(character.wounds, genNewWound(charBodyIndex))
 						showPause("Character has suffered a new wound!")
 					}
-				} else {
-						showPause("Character has been killed!")		
-						character.alive = false
-						return 1
+				} 
+				if character.hp < 1	{
+					showPause("Character has been killed!")		
+					character.alive = false
+					return 1
 				}
 
 			} else {
@@ -290,10 +307,11 @@ func (bg *BattleGrid) doAttack(attackIndex, tgt int) (int){
 						apprentice.wounds = append(apprentice.wounds, genNewWound(charBodyIndex))
 						showPause("Apprentice has suffered a new wound!")
 					}
-				} else {
-						showPause("Apprentice has been killed!")
-						apprentice.alive = false
-						return 1					
+				} 
+				if apprentice.hp < 1 {
+					showPause("Apprentice has been killed!")
+					apprentice.alive = false
+					return 1					
 				}
 			}
 

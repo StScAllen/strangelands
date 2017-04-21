@@ -20,6 +20,10 @@ const ITEM_TYPE_INGREDIENT = 4
 const ITEM_TYPE_EQUIPMENT = 5
 const ITEM_TYPE_SPECIAL = 9
 
+const RARITY_LOW = 0
+const RARITY_MED = 1
+const RARITY_HIGH = 2
+
 // Equip Constants
 const EQUIP_HEAD = 0
 const EQUIP_NECK = 1
@@ -60,57 +64,61 @@ var qualBonuses = [][]int{
 	{2, 2, 1, -2, 1, 3, 3, 4, -1, 2}, // master
 }
 
-var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag, vsPad, vsLeath, vsChain
-	{"Club", 1, 1, 4, 0, 0, 9, 12, 5, 1, 3, 0, 0, 1, 1},
-	{"Knife", 1, 2, 4, 0, 0, 4, 30, 7, 1, 2, 0, 1, 0, -1},
-	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0, 0, 0, 0},
-	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0, 1, 0, -1},
-	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0, 1, 0, -1},
-	{"Light Mace", 1, 3, 6, 0, 0, 8, 38, 15, 1, 3, 0, -1, 1, 1},
-	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1, 0, 0, 0},
+var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag, vsPad, vsLeath, vsChain, rarity
+	{"Club", 1, 1, 4, 0, 0, 9, 12, 5, 1, 3, 0, 0, 1, 1, RARITY_LOW},
+	{"Knife", 1, 2, 4, 0, 0, 4, 30, 7, 1, 2, 0, 1, 0, -1, RARITY_LOW},
+	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0, 0, 0, 0, RARITY_LOW},
+	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0, 1, 0, -1, RARITY_LOW},
+	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0, 1, 0, -1, RARITY_MED},
+	{"Light Mace", 1, 3, 6, 0, 0, 8, 38, 15, 1, 3, 0, -1, 1, 1, RARITY_MED},
+	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1, 0, 0, 0, RARITY_MED},
 }
 
-var armors = []Armor{ // name, shields, defense, resistance, weight, value, slot
-	{"Cloth Shirt", 1, 0, 4, 0, 0, EQUIP_CHEST},
-	{"Thick Cloth Coat", 1, 0, 6, 4, 5, EQUIP_CHEST},
-	{"Padded Jerkin", 2, 1, 8, 7, 12, EQUIP_CHEST},
-	{"Soft Leather Jerkin", 2, 1, 9, 10, 25, EQUIP_CHEST},
-	{"Hard Leather Jerkin", 3, 1, 10, 14, 36, EQUIP_CHEST},
-	{"Studded Leather Jerkin", 4, 2, 11, 16, 48, EQUIP_CHEST},
-	{"Chain Shirt", 5, 2, 14, 24, 60, EQUIP_CHEST},
+var armors = []Armor{ // name, shields, defense, resistance, weight, value, slot, rarity (0-2)
+	{"Cloth Shirt", 1, 0, 4, 0, 0, EQUIP_CHEST, RARITY_LOW},
+	{"Thick Cloth Coat", 1, 0, 6, 4, 5, EQUIP_CHEST, RARITY_LOW},
+	{"Padded Jerkin", 2, 1, 8, 7, 12, EQUIP_CHEST, RARITY_MED},
+	{"Soft Leather Jerkin", 2, 1, 9, 10, 25, EQUIP_CHEST, RARITY_MED},
+	{"Hard Leather Jerkin", 3, 1, 10, 14, 36, EQUIP_CHEST, RARITY_MED},
+	{"Studded Leather Jerkin", 4, 2, 11, 16, 48, EQUIP_CHEST, RARITY_HIGH},
+	{"Chain Shirt", 5, 2, 14, 24, 60, EQUIP_CHEST, RARITY_HIGH},
 
-	{"Padded Sleeves", 1, 1, 8, 1, 2, EQUIP_ARMS},
-	{"Leather Sleeves", 2, 1, 9, 2, 2, EQUIP_ARMS},
-	{"Chain Sleeves", 4, 2, 14, 4, 2, EQUIP_ARMS},
+	{"Padded Sleeves", 1, 1, 8, 1, 2, EQUIP_ARMS, RARITY_LOW},
+	{"Leather Sleeves", 2, 1, 9, 2, 2, EQUIP_ARMS, RARITY_MED},
+	{"Chain Sleeves", 4, 2, 14, 4, 2, EQUIP_ARMS, RARITY_HIGH},
 
-	{"Padded Coif", 1, 0, 8, 1, 2, EQUIP_HEAD},
-	{"Leather Coif", 2, 1, 9, 2, 2, EQUIP_HEAD},
-	{"Chain Coif", 3, 1, 14, 4, 2, EQUIP_HEAD},
+	{"Padded Coif", 1, 0, 8, 1, 2, EQUIP_HEAD, RARITY_LOW},
+	{"Leather Coif", 2, 1, 9, 2, 2, EQUIP_HEAD, RARITY_MED},
+	{"Chain Coif", 3, 1, 14, 4, 2, EQUIP_HEAD, RARITY_HIGH},
 
-	{"Cloth Pants", 1, 0, 4, 0, 0, EQUIP_LEG},
-	{"Padded Greeves", 1, 1, 8, 1, 2, EQUIP_LEG},
-	{"Leather Greeves", 2, 1, 9, 1, 2, EQUIP_LEG},
-	{"Chain Greeves", 4, 2, 14, 7, 2, EQUIP_LEG},
+	{"Cloth Pants", 1, 0, 4, 0, 0, EQUIP_LEG, RARITY_LOW},
+	{"Padded Greeves", 1, 1, 8, 1, 2, EQUIP_LEG, RARITY_LOW},
+	{"Leather Greeves", 2, 1, 9, 1, 2, EQUIP_LEG, RARITY_MED},
+	{"Chain Greeves", 4, 2, 14, 7, 2, EQUIP_LEG, RARITY_HIGH},
 
-	{"Leather Boots", 2, 0, 9, 2, 2, EQUIP_FEET},
-	{"Hard Leather Boots", 3, 0, 10, 3, 7, EQUIP_FEET},
-	{"Chain Boots", 4, 1, 14, 3, 7, EQUIP_FEET},
+	{"Leather Boots", 2, 0, 9, 2, 2, EQUIP_FEET, RARITY_LOW},
+	{"Hard Leather Boots", 3, 0, 10, 3, 7, EQUIP_FEET, RARITY_MED},
+	{"Chain Boots", 4, 1, 14, 3, 7, EQUIP_FEET, RARITY_HIGH},
 
-	{"Light Cape", 1, 1, 0, 1, 1, EQUIP_CLOAK},
-	{"Wood Shield", 3, 3, 10, 2, 2, EQUIP_HAND},
+	{"Light Cape", 1, 1, 0, 1, 1, EQUIP_CLOAK, RARITY_MED},
+	{"Wood Shield", 3, 3, 10, 2, 2, EQUIP_HAND, RARITY_MED},
 }
 
 var common = []Item{
 	{0, "Torch", ITEM_TYPE_EQUIPMENT, 1, 1, 3, 3, EQUIP_HAND, 1, 2, "", "", 5, 0, 0, 0, 1, -2, 3, 0, 0, 0, 0, 1, 2, -1, 1},
-	{0, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 12, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 4, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
 	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
 	{0, "Iron Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 9, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, "Rope", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 7, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, "Bandage", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 8, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
+	{0, "Junk", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 2, "", "", 0, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
 }
 
 var uncommon = []Item{
 	{0, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
 	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 16, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
 	{0, "Copper Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 24, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, "Salve", ITEM_TYPE_UNCTURE, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 20, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
 }
 
 var rare = []Item{
@@ -169,6 +177,7 @@ type Weapon struct {
 	atkTurns                        int
 	noMaterialFlag                  int
 	paddedMod, leatherMod, chainMod int
+	rarity 							int
 }
 
 // name, shields, defense, weight, value, equip
@@ -180,6 +189,7 @@ type Armor struct {
 	weight     int
 	value      int
 	equip      int
+	rarity	   int
 }
 
 func genGameWeapon(weapon Weapon, qual string, mat string) Item {
@@ -299,7 +309,7 @@ func genGameArmor(armor Armor, qual string) Item {
 	return item
 }
 
-func getRandomWeapon() Item {
+func getRandomWeapon(weight int) Item {
 	var die Die
 
 	var weapon = weapons[die.rollxdx(0, len(weapons)-1)]
@@ -309,7 +319,7 @@ func getRandomWeapon() Item {
 	return genGameWeapon(weapon, qual, mat)
 }
 
-func getRandomArmor() Item {
+func getRandomArmor(weight int) Item {
 	var die Die
 
 	var armor = armors[die.rollxdx(0, len(armors)-1)]
@@ -505,6 +515,12 @@ func createRandomLoot() Loot {
 	roll += timeMod
 
 	if roll >= 98 {
+		if die.rollxdx(1, 6) > 3 {
+			loot.items = append(loot.items, getRandomWeapon(0))
+		} else {
+			loot.items = append(loot.items, getRandomArmor(0))		
+		}
+	} else if roll > 96 {	
 		loot.items = append(loot.items, makeLootItem(rare[die.rollxdx(1, len(rare))-1]))
 	} else if roll > 88 {
 		loot.items = append(loot.items, makeLootItem(uncommon[die.rollxdx(1, len(uncommon))-1]))

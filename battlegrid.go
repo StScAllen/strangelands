@@ -824,7 +824,7 @@ func (bg *BattleGrid) drawGrid() {
 				if !bg.isPassable(grid.grid[i][t]) {
 					log.addAi("Monster is stuck! (" + grid.grid[i][t] + ")")
 				}
-				if bg.isMonsterVisible() {
+				if bg.isMonsterVisible() && !bg.isTileObscured(t, i, grid.id){
 					if bg.monster.isAlive() {
 						row += "M"
 					} else {
@@ -1055,7 +1055,7 @@ func createSquareGrid(height int, width int) Grid {
 
 	retGrid.loot = make([]Loot, 0, 0)
 
-	for k := 0; k < die.rollxdx(1, 5); k++ {
+	for k := 0; k < die.rollxdx(1, 3); k++ {
 		loot := createRandomLoot()
 		x := die.rollxdx(1, width-2)
 		y := die.rollxdx(1, height-2)

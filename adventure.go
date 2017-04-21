@@ -438,6 +438,8 @@ func adventure() (result int) {
 				log.displayLog()
 			} else if strings.Contains(rsp2, "-pattern") {
 				bg.drawGridPattern(bg.gridPattern)
+			} else if strings.Contains(rsp2, "-balance") {
+				showPause("Power Balance: " + getSignedFloat32(bg.calcPowerBalance()))
 			}
 		} else if strings.Contains(rsp, "inventory") {
 			if bg.turn == CHAR_TURN {
