@@ -80,6 +80,8 @@ type BattleGrid struct {
 	monsterSpotted                       bool
 	characterSpotted                     bool
 	apprenticeSpotted                    bool
+	charSwitchedGrids					 bool
+	charSwitchGridGateIndex				 int
 }
 
 func (gd *Grid) addCemetaryDecorations() {
@@ -168,7 +170,7 @@ func (bg *BattleGrid) isActorAdjacent(whoFlag, targetFlag int) bool {
 				// character is adjacent to monster
 				return true
 			}
-		} else if targetFlag == APP_TURN {
+		} else if targetFlag == APP_TURN && bg.hasApprentice {
 			if iAbsDiff(bg.monsterXLoc, bg.appXLoc) < 2 && iAbsDiff(bg.monsterYLoc, bg.appYLoc) < 2 {
 				// character is adjacent to monster
 				return true
@@ -180,7 +182,7 @@ func (bg *BattleGrid) isActorAdjacent(whoFlag, targetFlag int) bool {
 				// monster is adjacent to character
 				return true
 			}
-		} else if targetFlag == APP_TURN {
+		} else if targetFlag == APP_TURN && bg.hasApprentice {
 			if iAbsDiff(bg.charXLoc, bg.appXLoc) < 2 && iAbsDiff(bg.charYLoc, bg.appYLoc) < 2 {
 				// apprentice is adjacent to character
 				return true
@@ -324,6 +326,10 @@ func (bg *BattleGrid) isMonsterVisible() bool {
 		return false
 	}
 
+	if bg.monster.invisible {
+		return false
+	}
+	
 	if bg.monsterGridId == bg.charGridId {
 		sameCharGrid = true
 	}
@@ -839,7 +845,7 @@ func (bg *BattleGrid) drawGrid() {
 			}
 
 			if bg.inViewRange(t, i, bg.charXLoc, bg.charYLoc, character.per) || (bg.hasApprentice && bg.inViewRange(t, i, bg.appXLoc, bg.appYLoc, apprentice.per)) {
-				if bg.isTileObscured(t, i, grid.id) {
+				if bg.isTileObscured(t, i, grid.id) && grid.grid[i][t] == EMPTY_TILE{
 					row += HIDDEN_TILE
 				} else {
 					grid.updateLootVisibility(t, i)
@@ -956,6 +962,9 @@ func (bg *BattleGrid) drawGrid() {
 			}
 		} else if i == 9 {
 			row += "  " + bg.monster.name + " Health: ["
+			if bg.monster.hp < 1 {
+				row += "DEAD]"
+			}
 			for hlth := 0; hlth <= bg.monster.maxhp; hlth++ {
 				if hlth > bg.monster.hp {
 					row += "-"

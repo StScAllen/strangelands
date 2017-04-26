@@ -4,11 +4,19 @@ package main
 import "time"
 import "fmt"
 
-// behaviour constants
+/*
+*	Monster ideas:
+*	++ Invisibility
+*   ++ Chamoflage
+*
+*  
+*/
 
+// behaviour constants
 const STEP_MOVE = 0
 const STEP_WAIT = 1
 const STEP_ATTACK = 2
+const STEP_DEFEND = 3
 
 const DAMAGE_PHYSICAL = 0
 const DAMAGE_SOUL = 1
@@ -34,6 +42,8 @@ type Monster struct {
 	targets                       []int
 	body                          []string
 	resistance                    []int
+	invisible					  bool
+	turnDefense					  int		// how many turns were used as defense
 	disturbance1                  string
 	disturbance2                  string
 }
@@ -59,16 +69,17 @@ type AIStep struct {
 }
 
 type AIPlan struct {
-	steps     [100]AIStep // any "plan" with more than 100 steps is for fools.
-	stepCount int
-	maneuver  string
-	nextStep  int
-	target    int // turn id MONST_TURN/CHAR_TURN/APP_TURN constants
-	interrupt int //flags set by character or scene actions that will cause monster to recalculate its plan
-	charMoved bool
-	appMoved  bool
-	charDied  bool
-	appDied   bool
+	steps     	[100]AIStep // any "plan" with more than 100 steps is for fools.
+	stepCount 	int
+	maneuver  	string
+	nextStep  	int
+	target    	int // turn id MONST_TURN/CHAR_TURN/APP_TURN constants
+	interrupt 	int //flags set by character or scene actions that will cause monster to recalculate its plan
+	invalidate 	bool
+	charMoved 	bool
+	appMoved  	bool
+	charDied  	bool
+	appDied   	bool
 }
 
 func (mon *Monster) isAlive() bool {
@@ -148,6 +159,7 @@ func createMonster(id int) Monster {
 		monster.resistance = []int{10, 10, 10, 10, 10, 10, 10, 10, 10, 10}
 		monster.attacks = []MonsterAttack{CHARGE, SOUL_SUCK}
 		monster.powerBalance = 12.0
+		monster.invisible = false
 	}
 
 	monster.moves = monster.agi
@@ -393,6 +405,9 @@ func (bg *BattleGrid) isStepValid(step AIStep) bool {
 
 	} else if step.id == STEP_WAIT {
 		return true
+		
+	} else if step.id == STEP_DEFEND {
+		return true
 	}
 
 	return false
@@ -410,12 +425,12 @@ func (bg *BattleGrid) doMonsterActivity() int {
 
 	bg.monster.moves = bg.monster.getMonsterMoves()
 
-	// plan exists?
-	if bg.monster.plan.stepCount == -1 {
+	// plan exists and is not invalidated?
+	if bg.monster.plan.stepCount == -1 || bg.monster.plan.invalidate {
 		// create plan
 		bg.monster.plan = bg.createMonsterPlan()
 	}
-
+	
 	// handle ai interrupts
 	if bg.monster.plan.interrupt != 0 {
 		if bg.monster.plan.maneuver == "Attack" {
@@ -469,13 +484,20 @@ func (bg *BattleGrid) doMonsterActivity() int {
 
 					bg.monster.moves -= bg.monster.attacks[attackIndex].atkTurns
 				} else {
-					log.addAi("Monster wants to attack but no attack available - waits")
-					bg.monster.moves -= 1
+					log.addAi("Monster wants to attack but no attack available - defends " + getSigned(bg.monster.moves))
+					bg.monster.turnDefense = bg.monster.moves
+					bg.monster.moves = 0
 				}
 
 			} else if step.id == STEP_WAIT {
 				log.addAi("Monster waits")
 				bg.monster.moves -= 1
+				
+			} else if step.id == STEP_DEFEND {
+				log.addAi("Monster Defends: " + getSigned(bg.monster.moves))
+				showPause("Monster Defends: " + getSigned(bg.monster.moves))
+				bg.monster.turnDefense = bg.monster.moves
+				bg.monster.moves = 0
 			}
 
 			if bg.isMonsterVisible() {

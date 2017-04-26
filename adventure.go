@@ -114,6 +114,39 @@ func (bg *BattleGrid) canCharacterAttack(char Character, currTurns int) int {
 	return -1
 }
 
+func (bg *BattleGrid) showConfimExit() (string) {
+	clearConsole()
+
+	if character.hp < 1 {
+		fmt.Println("You have been defeated by the monster. Game Over.")
+		fmt.Println()
+		showPause("  Press any key to exit.")	
+		return "exit"
+		
+	} else if bg.monster.isAlive() {
+		fmt.Println("Exiting without defeating the monster will cause you to fail this mission.")
+		fmt.Println()
+		fmt.Println("  Are you sure you wish to exit?")
+		
+	} else if !bg.monster.isAlive() {
+		fmt.Println("Monster Defeated!")
+		fmt.Println("If you exit any uncollected loot will be lost.")
+		fmt.Println()
+		fmt.Println("  Are you sure you wish to exit?")	
+	}
+	
+	rsp := ""
+	fmt.Scanln(rsp)
+	
+	if rsp == "y" || rsp == "Y" {
+		rsp = "exit"
+	} else {
+		rsp = ""
+	}
+
+	return rsp
+}
+
 func (bg *BattleGrid) showFoundLoot(idx int) string {
 	loop := true
 	rsp := ""
@@ -384,6 +417,15 @@ func adventure() (result int) {
 		} else if strings.Contains(rsp, "wait") {
 			showPause("You cower in the darkness...")
 			currTurns -= 1
+		} else if strings.Contains(rsp, "defend") {
+			if bg.turn == CHAR_TURN {			
+				showPause("Turn Defense: " + getSigned(currTurns))	
+				character.turnDefense = currTurns
+			} else if bg.turn == APP_TURN {
+				showPause("Turn Defense: " + getSigned(currTurns))	
+				apprentice.turnDefense = currTurns			
+			}
+			
 		} else if strings.Contains(rsp, "end") && strings.Contains(rsp2, "turn") {
 			// TODO:  THIS SHOULD BE 0!
 			if currTurns > 99 {
@@ -404,9 +446,12 @@ func adventure() (result int) {
 				}
 
 				if bg.turn == MONST_TURN {
+					bg.monster.turnDefense = 0
 					bg.currGrid = bg.monsterGridId
 					rslt := bg.doMonsterActivity()
 					bg.turnCounter++
+					character.turnDefense = 0
+					apprentice.turnDefense = 0
 					
 					if rslt == 0 {
 						currTurns = character.getCharacterMoves()
@@ -451,14 +496,14 @@ func adventure() (result int) {
 			if bg.turn == CHAR_TURN {
 				hand := bg.canCharacterAttack(character, currTurns)
 				if hand > -1 {
-					showPause("Character Attacks!")
+					showPause("Character Attacks with " + character.handSlots[hand].name + "!")
 					currTurns -= character.handSlots[hand].atkTurns
 					bg.doPlayerAttack(CHAR_TURN, hand)
 				}
 			} else {
 				hand := bg.canCharacterAttack(apprentice, currTurns)
 				if hand > -1 {
-					showPause("Apprentice Attacks!")
+					showPause("Apprentice Attacks with " + apprentice.handSlots[hand].name + "!")
 					currTurns -= apprentice.handSlots[hand].atkTurns
 					bg.doPlayerAttack(APP_TURN, hand)
 				}
@@ -472,6 +517,14 @@ func adventure() (result int) {
 		} else if strings.Contains(rsp, "search") {
 			currTurns -= 1
 			bg.searchLocation(bg.turn)
+			
+		} else if strings.Contains(rsp, "exit") {
+			rsp = bg.showConfimExit()
+			
+		} else if strings.Contains(rsp, "die") {
+			character.hp = 0
+			apprentice.hp = 0
+			result = DIED
 		}
 	}
 	

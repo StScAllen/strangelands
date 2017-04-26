@@ -47,6 +47,7 @@ type Character struct {
 	lvl                           int
 	exp                           int
 	turns                         int
+	turnDefense 				  int  // how many turns were used as defense
 	alive						  bool
 	handSlots                     [2]Item
 	armorSlots                    [9]Item

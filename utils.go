@@ -4,9 +4,32 @@ package main
 
 import "fmt"
 import "strings"
+import "os"
+import "os/exec"
 
 const DIALOG_RIGHT = 0
 const DIALOG_LEFT = 1
+
+// this needs to be command prompt generic
+func clearConsole() {
+	cmd := exec.Command("cmd", "/c", "cls")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
+func showPause(messge string) {
+	fmt.Println(messge)
+	rsp := ""
+	fmt.Scanln(&rsp)
+}
+
+func debugPause(messge string) {
+	if DEBUG_ON {
+		fmt.Println(messge)
+		rsp := ""
+		fmt.Scanln(&rsp)	
+	}
+}
 
 func replaceAtIndex(str string, replacement string, index int) string {
 	return str[:index] + replacement + str[index+1:]

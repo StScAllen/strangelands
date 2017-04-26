@@ -1,8 +1,6 @@
 package main
 
 import "fmt"
-import "os"
-import "os/exec"
 
 var character Character
 var apprentice Character
@@ -14,6 +12,8 @@ var villages []Village
 var log Log
 
 const VERSION = ".06a"
+
+const DEBUG_ON = false
 
 type Game struct {
 	gameDay        int
@@ -28,19 +28,6 @@ func init() {
 	game.itemInstanceId = 1
 	log = openLog()
 	dieInit()
-}
-
-// this needs to be command prompt generic
-func clearConsole() {
-	cmd := exec.Command("cmd", "/c", "cls")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
-}
-
-func showPause(messge string) {
-	fmt.Println(messge)
-	rsp := ""
-	fmt.Scanln(&rsp)
 }
 
 func finalExit() {
@@ -98,11 +85,13 @@ func showGameMenu() string {
 }
 
 func main() {
+	debugPause("\n\n<<DEBUG IS ON>>")
+	
 	rsp := showGameMenu()
 	err := 0
 
 	defer finalExit()
-
+	
 	if rsp == "1" { // new game, make a character
 		rsp = "n"
 		for rsp != "y" && rsp != "Y" {

@@ -11,10 +11,13 @@ import "fmt"
 const ACTOR_SPOTTED = 1
 const ACTOR_KILLED = 2
 const MONST_CHANGED_GRID = 3 
- 
-func (bg *BattleGrid) getDirectAttackBehavior(target int) (int, [MAX_PF_TILES]Tile, []AIStep) {
+
+/* 
+	*  For this behavior, the monster is adjacent to the character go full out on attacks.
+*/ 
+func (bg *BattleGrid) getDirectAttackBehavior(target int) (int, []Tile, []AIStep) {
 	var endSteps []AIStep
-	var tiles [MAX_PF_TILES]Tile
+	var tiles []Tile
 	var count int
 
 	log.addAi("Adding a direct attack behavior")
@@ -40,15 +43,20 @@ func (bg *BattleGrid) getDirectAttackBehavior(target int) (int, [MAX_PF_TILES]Ti
 	return count, tiles, endSteps
 }
 
-func (bg *BattleGrid) getMoveAttackBehavior(target int) (int, [MAX_PF_TILES]Tile, []AIStep) {
+/* 
+	*  For this behavior, the monster is going to ,move toward the character until it is close enough to attack.
+*/
+func (bg *BattleGrid) getMoveAttackBehavior(target int) (int, []Tile, []AIStep) {
 
 	var endSteps []AIStep
-	var tiles [MAX_PF_TILES]Tile
+	var tiles []Tile
 	var count int
 	var targetX, targetY int
 
-	log.addAi("Adding a move attack behavior")
-	//showPause("Adding a move attack behavior")
+	tiles = make([]Tile, 0, 0)
+	
+	log.addAi("(+) Adding a move attack behavior")
+
 	monsterMoves := bg.monster.getMonsterMoves()
 
 	if target == CHAR_TURN {
@@ -97,8 +105,11 @@ func (bg *BattleGrid) getMoveAttackBehavior(target int) (int, [MAX_PF_TILES]Tile
 	return count, tiles, endSteps
 }
 
-func (bg *BattleGrid) getChangeGridBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
-	var tiles [MAX_PF_TILES]Tile
+/* 
+	*  For this behavior, the monster is going to find a gate and then move to it. It will change grids when it arrives at it.
+*/
+func (bg *BattleGrid) getChangeGridBehavior() (int, []Tile, []AIStep) {
+	var tiles []Tile
 	var count int
 	var endSteps []AIStep
 	var die Die
@@ -106,8 +117,10 @@ func (bg *BattleGrid) getChangeGridBehavior() (int, [MAX_PF_TILES]Tile, []AIStep
 	gates := bg.getGatesForGrid(bg.monsterGridId)
 	monsterMoves := bg.monster.getMonsterMoves()
 	
+	tiles = make([]Tile, 0, 0)
+	
 	if len(gates) > 0 {
-		log.addAi("Adding a change gate behavior")
+		log.addAi("(+) Adding a change gate behavior")
 		roll := die.rollxdx(1, len(gates)) - 1
 	
 		destGate := gates[roll]
@@ -145,18 +158,22 @@ func (bg *BattleGrid) getChangeGridBehavior() (int, [MAX_PF_TILES]Tile, []AIStep
 	return count, tiles, endSteps
 }
 
-func (bg *BattleGrid) getHideBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
+/* 
+	*  For this behavior, the monster is going to seek a non-visible tile and then move to it. It will wait the rest of its turn when arriving.
+*/
+func (bg *BattleGrid) getHideBehavior() (int, []Tile, []AIStep) {
 	var count int
 	var die Die
 	var endSteps []AIStep
-	var tiles [MAX_PF_TILES]Tile
+	var tiles []Tile
 
-	log.addAi("Adding a hiding behavior")
+	log.addAi("(+) Adding a hiding behavior")
 
 	grid := bg.getEntityGrid(bg.monsterGridId)
 	
 	monsterMoves := bg.monster.getMonsterMoves()
-
+	tiles = make([]Tile, 0, 0)
+	
 	// lets look at surrounding tiles in this grid and find one that is obscured...
 	
 	nearestX, nearestY, nearestDist := 0,0,9999
@@ -213,14 +230,62 @@ func (bg *BattleGrid) getHideBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
 	return count, tiles, endSteps
 }
 
-func (bg *BattleGrid) getPatrolBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
+/* 
+	*  For this behavior, the monster is going to move to a random location in the current grid.
+*/
+func (bg *BattleGrid) getRandomMoveBehavior() (int, []Tile, []AIStep) {
 	var count int
 	var die Die
 	var endSteps []AIStep
-	var tiles [MAX_PF_TILES]Tile
+	var tiles []Tile
+	
+	tiles = make([]Tile, 0, 0)
+	log.addAi("(+) Adding a random Move behavior")
 
-	log.addAi("Adding a patroling behavior")
-	//showPause("Adding a patroling behavior")
+	monsterMoves := bg.monster.getMonsterMoves()
+
+	pathx, pathy := 0, 0
+	
+	foundFlag := false
+	
+	for !foundFlag {
+		pathx = die.rollxdx(2, 28)
+		pathy = die.rollxdx(2, 12)	
+		
+		if bg.isTileOpen(pathx, pathy, bg.monsterGridId, MONST_TURN) {
+			foundFlag = true
+		}
+	}
+	
+	count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx, pathy, bg.monsterGridId)
+
+	if count != -1 && count < monsterMoves {
+		endSteps = make([]AIStep, 1, 1)
+
+		var aiStep AIStep
+		aiStep.action = "defend"
+		aiStep.id = STEP_DEFEND
+		aiStep.x = pathx
+		aiStep.y = pathy
+		endSteps[0] = aiStep
+
+	} 
+
+	return count, tiles, endSteps
+}
+
+
+/* 
+	*  For this behavior, the monster is going to Patrol to a random corner of the current grid.
+*/
+func (bg *BattleGrid) getPatrolBehavior() (int, []Tile, []AIStep) {
+	var count int
+	var die Die
+	var endSteps []AIStep
+	var tiles []Tile
+	
+	tiles = make([]Tile, 0, 0)
+	log.addAi("(+) Adding a patroling behavior")
 
 	monsterMoves := bg.monster.getMonsterMoves()
 
@@ -273,7 +338,139 @@ func (bg *BattleGrid) getPatrolBehavior() (int, [MAX_PF_TILES]Tile, []AIStep) {
 	return count, tiles, endSteps
 }
 
-// balance is a scale between -X to +X - positive number 
+/* 
+	*  For this behavior, the monster is going to take a couple steps away from the character and then go into 
+	*  a defensive shell.
+*/
+func (bg *BattleGrid) getCowerBehavior() (int, []Tile, []AIStep) {
+	var count int
+	var endSteps []AIStep
+	var tiles []Tile
+	
+	tiles = make([]Tile, 0, 0)
+	log.addAi("(+) Adding a Cowering behavior")
+
+	monsterMoves := bg.monster.getMonsterMoves()
+	
+	oppX, oppY := 0,0
+	
+	threat := bg.getBiggestThreat()
+	
+	count = -1
+	
+	if threat == -1 {
+		// no threat, return do over
+		return -1, tiles, endSteps
+	} else if threat == CHAR_TURN {
+		oppX = bg.monsterXLoc - bg.charXLoc
+		oppY = bg.monsterYLoc - bg.charYLoc
+	} else {
+		oppX = bg.monsterXLoc - bg.appXLoc
+		oppY = bg.monsterYLoc - bg.appYLoc	
+	}
+	
+	steps := monsterMoves - 2
+	pathx, pathy := bg.monsterXLoc, bg.monsterYLoc
+	
+	if iAbsVal(oppX) < iAbsVal(oppY) {
+		if (oppX < 0) {
+			// character is mostly to the east of monster
+			if bg.canPathAndMoveHere(pathx-steps, pathy, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-steps, pathy, bg.monsterGridId)			
+			} else if bg.canPathAndMoveHere(pathx-(steps-1), pathy+1, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-(steps-1), pathy+1, bg.monsterGridId)				
+			} else if bg.canPathAndMoveHere(pathx-(steps-1), pathy-1, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-(steps-1), pathy-1, bg.monsterGridId)				
+			}
+			
+		} else {
+			// character is mostly to the west of monster			
+			if bg.canPathAndMoveHere(pathx+steps, pathy, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx+steps, pathy, bg.monsterGridId)			
+			} else if bg.canPathAndMoveHere(pathx+(steps-1), pathy+1, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx+(steps-1), pathy+1, bg.monsterGridId)				
+			} else if bg.canPathAndMoveHere(pathx+(steps-1), pathy-1, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx+(steps-1), pathy-1, bg.monsterGridId)				
+			}
+		}
+	} else {
+		if (oppY < 0) {
+			// character is mostly to the south of monster
+			if bg.canPathAndMoveHere(pathx, pathy-steps, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-steps, pathy, bg.monsterGridId)			
+			} else if bg.canPathAndMoveHere(pathx+1, pathy-(steps-1), monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx+1, pathy-(steps-1), bg.monsterGridId)				
+			} else if bg.canPathAndMoveHere(pathx-1, pathy-(steps-1), monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-1, pathy-(steps-1), bg.monsterGridId)				
+			}			
+		} else {
+			// character is mostly to the north of monster			
+			if bg.canPathAndMoveHere(pathx, pathy-steps, monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-steps, pathy, bg.monsterGridId)			
+			} else if bg.canPathAndMoveHere(pathx+1, pathy+(steps-1), monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx+1, pathy+(steps-1), bg.monsterGridId)				
+			} else if bg.canPathAndMoveHere(pathx-1, pathy+(steps-1), monsterMoves) {
+				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-1, pathy+(steps-1), bg.monsterGridId)				
+			}				
+		}	
+	}
+	
+	if count == -1 {
+		// no good grid open, figure something else out
+		return count, tiles, endSteps
+	}
+
+	if count != -1 && count < monsterMoves {
+		endSteps = make([]AIStep, 1, 1)
+
+		var aiStep AIStep
+		aiStep.action = "defend"
+		aiStep.id = STEP_DEFEND
+		aiStep.x = pathx
+		aiStep.y = pathy
+		endSteps[0] = aiStep
+
+	} 
+
+	return count, tiles, endSteps
+}
+
+// checks to see if destination path is reachable based upon tile type and move available
+// obstacles could make a direct path unviable within the given moves.
+func (bg * BattleGrid) canPathAndMoveHere(pathx, pathy, movesAvail int) (bool) {
+	if bg.isTileOpen(pathx, pathy, bg.monsterGridId, MONST_TURN) {
+		count,_ := bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx, pathy, bg.monsterGridId)
+	
+		if count <= movesAvail {
+			return true
+		}
+	}
+	
+	return false
+}
+
+// Looks at both character and apprentice and determines who is the biggest threat to us.
+// Considers location, grid, and powerlevel.  If neither is on the same grid it will return -1
+// Will default to character on draws.
+func (bg *BattleGrid) getBiggestThreat() (turn int){
+	turn = -1
+	power := float32(0.0)
+	
+	if bg.charGridId == bg.monsterGridId {
+		turn = CHAR_TURN
+		power = character.getPowerBalance()	
+	}
+	
+	if (bg.hasApprentice && bg.appGridId == bg.monsterGridId){
+		if power < apprentice.getPowerBalance() {
+			turn = APP_TURN
+		}
+	}
+
+	return turn
+}
+
+// powerbalance is a scale between -X to +X 
 // negative balance implies monster has advantage, positive implies character has advantage
 // a balance of 0 indicates an even split.  
 func (bg * BattleGrid) calcPowerBalance() float32 {
@@ -295,7 +492,7 @@ func (bg * BattleGrid) calcPowerBalance() float32 {
 
 func (bg *BattleGrid) createMonsterPlan() AIPlan {
 	var plan AIPlan
-	var tiles [MAX_PF_TILES]Tile
+	var tiles []Tile
 	var count int
 	var endSteps []AIStep
 	var die Die
@@ -311,16 +508,28 @@ func (bg *BattleGrid) createMonsterPlan() AIPlan {
 		var charAdj = bg.isActorAdjacent(MONST_TURN, CHAR_TURN)
 		var appAdj = bg.isActorAdjacent(MONST_TURN, APP_TURN)
 
-		if charAdj && !appAdj {
-			count, tiles, endSteps = bg.getDirectAttackBehavior(CHAR_TURN)
-		} else if appAdj && !charAdj {
-			count, tiles, endSteps = bg.getDirectAttackBehavior(APP_TURN)
-		} else if charAdj && appAdj {
-			if die.rollxdx(1, 2) == 2 {
-				count, tiles, endSteps = bg.getDirectAttackBehavior(CHAR_TURN)
+		if !bg.hasApprentice {
+			appAdj = false
+		}
+		
+		log.addAi(fmt.Sprintf("Char/App Adj: %s %s", charAdj, appAdj))
+		if (charAdj || appAdj){	
+			if (powerBalance > float32(die.rollxdx(1, 10))) || (bg.monster.hp == 1 && character.hp > 2) {
+				count, tiles, endSteps = bg.getCowerBehavior()	
+				plan.maneuver = "Cower"					
 			} else {
-				count, tiles, endSteps = bg.getDirectAttackBehavior(APP_TURN)
-			}
+				if charAdj && !appAdj {
+					count, tiles, endSteps = bg.getDirectAttackBehavior(CHAR_TURN)
+				} else if appAdj && !charAdj {
+					count, tiles, endSteps = bg.getDirectAttackBehavior(APP_TURN)
+				} else if charAdj && appAdj {
+					if die.rollxdx(1, 2) == 2 {
+						count, tiles, endSteps = bg.getDirectAttackBehavior(CHAR_TURN)
+					} else {
+						count, tiles, endSteps = bg.getDirectAttackBehavior(APP_TURN)
+					}
+				}			
+			}		
 		} else {
 			// if neither are adjacent then move to attack, or hide
 			
@@ -340,33 +549,45 @@ func (bg *BattleGrid) createMonsterPlan() AIPlan {
 						count, tiles, endSteps = bg.getMoveAttackBehavior(APP_TURN)
 					}
 				}		
-
 				plan.maneuver = "Attack"				
 			}
-
 		}
 
 	} else {
 		if bg.turnCounter > 5 && bg.monster.gridChangeCoolDown < 1 {
-			if die.rollxdx(1, 5) > 3 {
+			roll := die.rollxdx(1, 10)
+			if roll < 4 {
 				// Change grids
 				count, tiles, endSteps = bg.getChangeGridBehavior()
 				plan.maneuver = "ChangeGrid"				
 			
+			} else if roll < 7 {
+				count, tiles, endSteps = bg.getRandomMoveBehavior()	
+				plan.maneuver = "MoveRandom"
+				
 			} else {
 				// patrol to random corner
 				count, tiles, endSteps = bg.getPatrolBehavior()
 				plan.maneuver = "Patrol"			
 			}
 		} else {
-			// patrol to random corner
-			count, tiles, endSteps = bg.getPatrolBehavior()
-			plan.maneuver = "Patrol"			
+			// patrol or move random
+			roll := die.rollxdx(1, 4)
+			if roll < 2 {
+				count, tiles, endSteps = bg.getRandomMoveBehavior()	
+				plan.maneuver = "MoveRandom"			
+			} else {
+				count, tiles, endSteps = bg.getPatrolBehavior()
+				plan.maneuver = "Patrol"			
+			}			
 		}
-	
-
 	}
 
+	if count == -1 {
+		// whatever we tried to do was unsuccessful, try a random loc move 
+		count, tiles, endSteps = bg.getRandomMoveBehavior()	
+	}
+	
 	fmt.Println("Path found, building plan- ", " Steps:  ", count)
 
 	plan.stepCount = count

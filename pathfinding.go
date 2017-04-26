@@ -11,7 +11,7 @@ const MAX_PF_TILES = 200
 var passableTiles = []string{" ", ".", "/", "\\"}
 var seeThroughTiles = []string{" ", ".", "░"}
 var pathGrid PathfindingGrid
-var path [MAX_PF_TILES]Tile
+var path []Tile
 var pathCount int
 
 type Tile struct {
@@ -150,14 +150,16 @@ func (bg *BattleGrid) getAvailableTiles(tx, ty, pid int, playGrid Grid) (tiles [
 	return tiles, count
 }
 
-func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [MAX_PF_TILES]Tile) {
+func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, []Tile) {
 
-	showPause(fmt.Sprintf("Finding path from %v, %v to %v, %v on grid %v", sx, sy, ex, ey, gid))
+	debugPause(fmt.Sprintf("Finding path from %v, %v to %v, %v on grid %v", sx, sy, ex, ey, gid))
 
 	if sx == ex && sy == ey {
 		return -1, path // can't move to/from same square
 	}
 
+	path = make([]Tile, 0, 0)
+	
 	openList := make([]Tile, 0)
 	closedList := make([]Tile, 0)
 
@@ -261,7 +263,7 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 		// fmt.Println("End Step:")
 		// fmt.Println(endTile)
 		pathCount = 1
-		path[0] = endTile
+		path = append(path, endTile)
 		chk, stepTile := pathGrid.getTileById(endTile.parentId)
 		if chk == -1 {
 			return 1, path
@@ -271,12 +273,17 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 		// fmt.Println(fmt.Sprintf("End coords: %v, %v", sx, sy)) // start position because we are moving backwards
 		newX, newY := stepTile.x, stepTile.y
 		id := stepTile.parentId
-		path[1] = stepTile
+		path = append(path, stepTile)
 		pathCount++
 
+		chk, stepTile = pathGrid.getTileById(stepTile.parentId)
+		if chk == -1 {
+			return 2, path
+		}
+		
 		for true {
 			_, checkTile := pathGrid.getTileById(id)
-			path[pathCount] = checkTile
+			path = append(path, checkTile)
 			// fmt.Println(pathCount)
 			// fmt.Println(path[pathCount])
 			// showPause("")
@@ -287,16 +294,17 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, [M
 			if newX == sx && newY == sy {
 				break
 			}
-		}
+		}		
+
 	} else {
 		if endFlag == -2 {
 			fmt.Println("AI Pathfinding timed out!")
 		}
-		showPause("**************************** No Path Found!")
+		debugPause("**************************** No Path Found!")
 		pathCount = -1
 	}
 
-	showPause("**************************** COMPLETE PATH FOUND!")
+	debugPause("**************************** COMPLETE PATH FOUND!")
 
 	return pathCount, path
 }
