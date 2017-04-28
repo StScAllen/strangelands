@@ -5,6 +5,7 @@ package main
 
 import "fmt"
 import "time"
+import "strings"
 
 type Village struct {
 	name            string
@@ -83,14 +84,58 @@ func (village *Village) research() {
 
 }
 
+func (village *Village) viewBulletinBoard() {
+
+
+}
+
 func (village *Village) visitTavern() {
 	// rest		 (end day, gain hp)
 	// get gossip (apprentice tips, politickal gains, )
 	// gamble  (randomly gain or lose money)
 	// drink  (raise soul by 1 - cost)
 
-	endDay()
-	save()
+	exitFlag := false
+	rsp := ""
+	
+	for !exitFlag {
+		clearConsole()
+		
+		fmt.Println("+++ Tavern +++")
+		fmt.Println("------------")
+		fmt.Println("1. Buy Drink  		(1 Crown)")
+		fmt.Println("2. Rent Room   	(3 Crown)")
+		fmt.Println("3. Carrouse  ")
+		fmt.Println("4. View Bulletin Board")	
+		fmt.Println("")	
+		fmt.Println("x. Exit")
+		fmt.Println("------------")
+		fmt.Println("What do you wish to do?")		
+		
+		fmt.Scanln(&rsp)
+		
+		if rsp == "x" {
+			exitFlag = true
+		} else if rsp == "1" {
+			showPause("You take in drink and companionship. Your spirits are lifted.")
+			character.giveSoul(2)
+			character.crowns -= 1
+			endDay()
+			save()			
+		} else if rsp == "2" {	
+			showPause("You rest and regather your strength for the long road ahead.")
+			character.crowns -= 3
+			endDay()
+			save()
+		} else if rsp == "3" {
+			
+		} else if rsp == "4" {
+			village.viewBulletinBoard()
+		}
+	}
+
+	
+
 }
 
 func (village *Village) visitChirurgeon() {
@@ -105,13 +150,16 @@ func (village *Village) politicks() {
 
 }
 
-func (village *Village) goMissions() {
+func (village *Village) goMissions() (string){
 	chooseAdventure()
 	result := adventure()
 	
 	if result == DIED {
-		// end the game and go back to main menu
+		showPause("Character died! Game over Man, game over!")
+		return "q"
 	}
+	
+	return ""
 }
 
 func (village *Village) visitVillage() string {
@@ -132,7 +180,8 @@ func (village *Village) visitVillage() string {
 	fmt.Println("Select an Option:  ")
 
 	rsp := ""
-	fmt.Scanln(&rsp)
+	rsp2 := ""
+	fmt.Scanln(&rsp, &rsp2)
 
 	if rsp == "1" {
 		village.shopMenu()
@@ -145,14 +194,15 @@ func (village *Village) visitVillage() string {
 	} else if rsp == "5" {
 		village.politicks()
 	} else if rsp == "6" {
-		village.goMissions()
+		rsp = village.goMissions()
 	} else if rsp == "7" {
 		showTravelMenu()
 	} else if rsp == "m" {
 		openTownMinutiae()
-	} else if rsp != "q" {
-		village.visitVillage()
-	}
+	} else if strings.Contains(rsp, "give") && strings.Contains(rsp2, "money"){
+		showPause("Money received!")
+		character.crowns += 200
+	} 
 
 	return rsp
 }

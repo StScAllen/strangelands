@@ -41,7 +41,7 @@ func (pfGrid *PathfindingGrid) getTileById(sid int) (int, Tile) {
 		}
 	}
 
-	showPause(fmt.Sprintf("Cannot find tile in lookup: %v", sid))
+	debugPause(fmt.Sprintf("Cannot find tile in lookup: %v", sid))
 
 	return -1, fTile
 }
@@ -124,7 +124,7 @@ func (bg *BattleGrid) getAvailableTiles(tx, ty, pid int, playGrid Grid) (tiles [
 			//fmt.Println(fmt.Sprintf("range- from: %v, %v  to: %v, %v ", len(pathGrid.tiles), len(pathGrid.tiles[0]), y, x))
 			tile := pathGrid.tiles[y][x]
 			if tile.closed == false && bg.directionValid(tx, ty, dir, playGrid.id) {
-				//showPause(fmt.Sprintf("range off: tmptiles- %v, %v ", len(tmpTiles), count))
+				//debugPause(fmt.Sprintf("range off: tmptiles- %v, %v ", len(tmpTiles), count))
 				tmpTiles[count] = tile
 				count++
 			} else {
@@ -145,7 +145,7 @@ func (bg *BattleGrid) getAvailableTiles(tx, ty, pid int, playGrid Grid) (tiles [
 		tiles = make([]Tile, 1)
 	}
 
-	//showPause(fmt.Sprintf("Found %v tiles!", count))
+	//debugPause(fmt.Sprintf("Found %v tiles!", count))
 
 	return tiles, count
 }
@@ -197,14 +197,14 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, []
 		availTiles, tCount := bg.getAvailableTiles(q.x, q.y, q.id, playGrid)
 		// fmt.Println("*** Caught: ")
 		// fmt.Println(availTiles)
-		// showPause("")
+		// debugPause("")
 		for k := 0; k < tCount; k++ {
 			kTile := availTiles[k]
 			if kTile.x == ex && kTile.y == ey {
 				// destination tile, end search
 				pathGrid.tiles[kTile.y][kTile.x].parentId = q.id
 				fmt.Println(kTile)
-				showPause("End tile reached")
+				debugPause("End tile reached")
 				endFlag = 1
 				break
 			}

@@ -129,14 +129,14 @@ func (village *Village) buyWeaponScreen() {
 		}
 
 		fmt.Println("")
-		fmt.Println("[x. Back]   [n. More]")
+		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		rsp := ""
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" && rsp != "i" {
 			num, _ := strconv.Atoi(rsp)
 			showWeapon(shopWeapons[num])
 			fmt.Println(fmt.Sprintf("Buy %s? ", shopWeapons[num].name))
@@ -160,6 +160,8 @@ func (village *Village) buyWeaponScreen() {
 			}
 		} else if rsp == "x" {
 			exitFlag = true
+		} else if rsp == "i" {
+			character.showInventory()
 		}
 	}
 
@@ -186,14 +188,14 @@ func (village *Village) buyArmorScreen() {
 		}
 
 		fmt.Println("")
-		fmt.Println("[x. Back]   [n. More]")
+		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		rsp := ""
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" && rsp != "i" {
 			num, err := strconv.Atoi(rsp)
 			showArmor(shopArmor[num])
 			fmt.Println(fmt.Sprintf("Buy %s? %v", shopArmor[num].name, err))
@@ -215,6 +217,8 @@ func (village *Village) buyArmorScreen() {
 			}
 		} else if rsp == "x" {
 			exitFlag = true
+		}  else if rsp == "i" {
+			character.showInventory()
 		}
 	}
 

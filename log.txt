@@ -1,0 +1,7 @@
+--Info--
+Game loaded.
+
+--Warnings--
+--AI--
+Time at start: 1493309203755643700
+--Errors--

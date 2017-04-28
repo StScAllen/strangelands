@@ -164,20 +164,20 @@ type Item struct { // regular items
 
 //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns
 type Weapon struct {
-	name                            string
-	hands                           int
-	dmgMin                          int
-	dmgMax                          int
-	accuracy                        int
-	defense                         int
-	weight                          int
-	durab                           int
-	value                           int
-	wRange                          int
-	atkTurns                        int
-	noMaterialFlag                  int
-	paddedMod, leatherMod, chainMod int
-	rarity 							int
+	name                            	string
+	hands                           	int
+	dmgMin                          	int
+	dmgMax                          	int
+	accuracy                        	int
+	defense                         	int
+	weight                          	int
+	durab                           	int
+	value                           	int
+	wRange                          	int
+	atkTurns                        	int
+	noMaterialFlag                  	int
+	paddedMod, leatherMod, chainMod 	int
+	rarity 								int
 }
 
 // name, shields, defense, weight, value, equip
@@ -190,6 +190,13 @@ type Armor struct {
 	value      int
 	equip      int
 	rarity	   int
+}
+
+func (itm *Item) isBroken() bool {
+	if itm.durability < 1 {
+		return true
+	}	
+	return false
 }
 
 func genGameWeapon(weapon Weapon, qual string, mat string) Item {

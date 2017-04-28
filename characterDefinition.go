@@ -61,6 +61,10 @@ func (char * Character) getPowerBalance() float32 {
 	var balance float32
 	balance = 0.0
 	
+	if char.hp < 1 {
+		return balance
+	}
+	
 	balance += (float32)(char.hp * 1.0)
 	
 	balance += (float32)(char.getTotalStats() / 6)
@@ -70,7 +74,19 @@ func (char * Character) getPowerBalance() float32 {
 
 // can have special items to increase moves
 func (char *Character) getCharacterMoves() int {
-	return char.agi
+	totalMoves := char.agi
+	
+	// TODO: add equipment, other buffs
+	
+	return totalMoves
+}
+
+func (char *Character) giveSoul(amt int) {
+	if (char.soul+amt) <= char.maxsoul {
+		char.soul += amt
+	} else {
+		char.soul = char.maxsoul
+	}
 }
 
 func (char *Character) getTotalAttackAdjustment(handSlot int) int {
@@ -156,6 +172,7 @@ func (char *Character) setClearInventory() {
 		char.armorSlots[k] = getEmptyItem()
 	}
 
+	char.inventory = make([]Item, 0, 0)
 }
 
 // finds and remove an item from the characters inventory

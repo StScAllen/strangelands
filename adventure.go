@@ -38,6 +38,8 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 			return
 		}
 
+		character.handSlots[hand].durability -= 1
+		
 		diff := atkTotal - defTotal
 		tBonus := 0
 		for ; diff >= 5; diff -= 5 {
@@ -87,7 +89,11 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 		} else {
 			showPause("Monster soaks the attack.")
 		}
-
+		
+		if character.handSlots[hand].isBroken() {
+			showPause(character.handSlots[hand].name + " has broken!")
+		}
+		
 	} else {
 
 	}
@@ -97,9 +103,9 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 func (bg *BattleGrid) canCharacterAttack(char Character, currTurns int) int {
 	if bg.isMonsterVisible() {
 		if bg.isMonsterInAttackRange(bg.turn) && bg.isAttackPathClear(bg.turn) {
-			if char.handSlots[LEFT].typeCode == ITEM_TYPE_WEAPON && char.handSlots[LEFT].atkTurns <= currTurns {
+			if char.handSlots[LEFT].typeCode == ITEM_TYPE_WEAPON && char.handSlots[LEFT].atkTurns <= currTurns && !char.handSlots[LEFT].isBroken(){
 				return LEFT
-			} else if char.handSlots[RIGHT].typeCode == ITEM_TYPE_WEAPON && char.handSlots[RIGHT].atkTurns <= currTurns {
+			} else if char.handSlots[RIGHT].typeCode == ITEM_TYPE_WEAPON && char.handSlots[RIGHT].atkTurns <= currTurns && !char.handSlots[RIGHT].isBroken(){
 				return RIGHT
 			} else {
 				fmt.Println("no attackable weapons " + string(currTurns))
@@ -418,14 +424,20 @@ func adventure() (result int) {
 			showPause("You cower in the darkness...")
 			currTurns -= 1
 		} else if strings.Contains(rsp, "defend") {
-			if bg.turn == CHAR_TURN {			
-				showPause("Turn Defense: " + getSigned(currTurns))	
-				character.turnDefense = currTurns
-			} else if bg.turn == APP_TURN {
-				showPause("Turn Defense: " + getSigned(currTurns))	
-				apprentice.turnDefense = currTurns			
-			}
-			
+			if currTurns < 1 {
+				fmt.Println("No turns remain. You need at least one turn available to defend. End your turn.")
+				fmt.Scanln(&rsp3)
+			} else {
+				if bg.turn == CHAR_TURN {			
+					showPause("Turn Defense: " + getSigned(currTurns))	
+					character.turnDefense = currTurns
+					currTurns = 0
+				} else if bg.turn == APP_TURN {
+					showPause("Turn Defense: " + getSigned(currTurns))	
+					apprentice.turnDefense = currTurns	
+					currTurns = 0
+				}			
+			}			
 		} else if strings.Contains(rsp, "end") && strings.Contains(rsp2, "turn") {
 			// TODO:  THIS SHOULD BE 0!
 			if currTurns > 99 {
@@ -460,8 +472,18 @@ func adventure() (result int) {
 						bg.currGrid = bg.charGridId
 						bg.monster.plan.interrupt = 0 // clear any interrupts
 					} else if rslt == CHARACTER_KILLED {
-						rsp = "exit"
-						result = DIED
+						if bg.hasApprentice && apprentice.hp > 0 {
+							showPause("You have died! Your apprentice assumes your banner!")
+							character = apprentice
+							bg.hasApprentice = false
+							var blankApprentice Character
+							apprentice = blankApprentice
+						} else {
+							rsp = "exit"
+							result = DIED						
+						}
+					
+
 						// character has died!
 						// if character dies, and they have an apprentice, the apprentice becomes the new character
 						// assuming the apprentice lives
@@ -499,6 +521,8 @@ func adventure() (result int) {
 					showPause("Character Attacks with " + character.handSlots[hand].name + "!")
 					currTurns -= character.handSlots[hand].atkTurns
 					bg.doPlayerAttack(CHAR_TURN, hand)
+				} else {
+					showPause("Unable to attack: not enough turns or no usable weapon equipped!")					
 				}
 			} else {
 				hand := bg.canCharacterAttack(apprentice, currTurns)
@@ -506,6 +530,8 @@ func adventure() (result int) {
 					showPause("Apprentice Attacks with " + apprentice.handSlots[hand].name + "!")
 					currTurns -= apprentice.handSlots[hand].atkTurns
 					bg.doPlayerAttack(APP_TURN, hand)
+				} else {
+					showPause("Unable to attack: not enough turns or no usable weapon equipped!")					
 				}
 			}
 			
@@ -515,15 +541,20 @@ func adventure() (result int) {
 			}
 			
 		} else if strings.Contains(rsp, "search") {
-			currTurns -= 1
-			bg.searchLocation(bg.turn)
-			
+			if currTurns < 1 {
+				fmt.Println("No turns remain. End your turn.")
+				fmt.Scanln(&rsp3)
+			} else {
+				currTurns -= 1
+				bg.searchLocation(bg.turn)			
+			}			
 		} else if strings.Contains(rsp, "exit") {
 			rsp = bg.showConfimExit()
 			
 		} else if strings.Contains(rsp, "die") {
 			character.hp = 0
 			apprentice.hp = 0
+			currTurns = 0
 			result = DIED
 		}
 	}

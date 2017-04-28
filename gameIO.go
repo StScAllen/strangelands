@@ -24,7 +24,8 @@ func getGameSaveBlock() string {
 	gameBlock += fmt.Sprintf("%v,", game.dayCounter)
 	gameBlock += fmt.Sprintf("%v,", game.weekCounter)
 	gameBlock += fmt.Sprintf("%v,", game.monthCounter)
-
+	gameBlock += fmt.Sprintf("%v,", game.missionInstanceId)
+	
 	gameBlock += "■"
 
 	return gameBlock
@@ -55,7 +56,8 @@ func unpackGameBlock(block string) bool {
 	game.dayCounter, _ = strconv.Atoi(bits[4])
 	game.weekCounter, _ = strconv.Atoi(bits[5])
 	game.monthCounter, _ = strconv.Atoi(bits[6])
-
+	game.missionInstanceId, _ = strconv.Atoi(bits[7])
+	
 	fmt.Println("            ...done!")
 
 	return true
@@ -150,7 +152,7 @@ func unpackCharacterBlock(block string) (int, Character) {
 	char.villageIndex, _ = strconv.Atoi(bits[16])
 
 	inventoryCount, _ := strconv.Atoi(bits[17]) // count of items in backpack
-
+	
 	// load inventory!
 	char.handSlots[0], _ = restoreSavedItem(lines[1])
 	char.handSlots[1], _ = restoreSavedItem(lines[2])

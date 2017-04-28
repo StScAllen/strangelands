@@ -11,16 +11,17 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".06a"
+const VERSION = ".07a"
 
 const DEBUG_ON = false
 
 type Game struct {
-	gameDay        int
-	dayCounter     int
-	weekCounter    int
-	monthCounter   int
-	itemInstanceId int
+	gameDay        		int
+	dayCounter     		int
+	weekCounter    		int
+	monthCounter   		int
+	itemInstanceId 		int
+	missionInstanceId	int
 }
 
 func init() {
@@ -37,7 +38,6 @@ func finalExit() {
 }
 
 func endDay() {
-
 	character.hp += 1
 	if character.hp > character.maxhp {
 		character.hp = character.maxhp
@@ -85,13 +85,14 @@ func showGameMenu() string {
 }
 
 func main() {
-	debugPause("\n\n<<DEBUG IS ON>>")
-	
+	debugPause("\n\n< [DEBUG IS ON] >")
+	defer finalExit()
+
+	BEGIN:
+
 	rsp := showGameMenu()
 	err := 0
 
-	defer finalExit()
-	
 	if rsp == "1" { // new game, make a character
 		rsp = "n"
 		for rsp != "y" && rsp != "Y" {
@@ -135,6 +136,7 @@ func main() {
 
 		if rsp == "q" {
 			gameFlag = false
+			goto BEGIN
 		}
 	}
 

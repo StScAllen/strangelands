@@ -934,25 +934,34 @@ func (bg *BattleGrid) drawGrid() {
 
 		} else if i == 5 {
 			row += "  " + character.name + " Health: ("
-			for hlth := 0; hlth <= character.maxhp; hlth++ {
-				if hlth > character.hp {
-					row += "-"
-				} else {
-					row += "♥"
-				}
+			if character.hp < 1 {
+				row += "DEAD"
+			} else {
+				for hlth := 0; hlth <= character.maxhp; hlth++ {
+					if hlth > character.hp {
+						row += "-"
+					} else {
+						row += "♥"
+					}
+				}			
 			}
+
 			row += ")"
 		} else if i == 6 {
 			row += packSpaceString("   Left: "+character.handSlots[LEFT].name, 23) + packSpaceString("  Right: "+character.handSlots[RIGHT].name, 22)
 		} else if i == 7 {
 			if bg.hasApprentice {
 				row += "  " + apprentice.name + " Health: ["
-				for hlth := 0; hlth <= apprentice.maxhp; hlth++ {
-					if hlth > apprentice.hp {
-						row += "-"
-					} else {
-						row += "♥"
-					}
+				if apprentice.hp < 1 {
+					row += "DEAD"
+				} else {
+					for hlth := 0; hlth <= apprentice.maxhp; hlth++ {
+						if hlth > apprentice.hp {
+							row += "-"
+						} else {
+							row += "♥"
+						}
+					}			
 				}
 				row += "]"
 			}
@@ -964,14 +973,16 @@ func (bg *BattleGrid) drawGrid() {
 			row += "  " + bg.monster.name + " Health: ["
 			if bg.monster.hp < 1 {
 				row += "DEAD]"
+			} else {
+				for hlth := 0; hlth <= bg.monster.maxhp; hlth++ {
+					if hlth > bg.monster.hp {
+						row += "-"
+					} else {
+						row += "♥"
+					}
+				}			
 			}
-			for hlth := 0; hlth <= bg.monster.maxhp; hlth++ {
-				if hlth > bg.monster.hp {
-					row += "-"
-				} else {
-					row += "♥"
-				}
-			}
+
 			row += "]"
 		}
 

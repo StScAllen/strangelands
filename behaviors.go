@@ -21,7 +21,6 @@ func (bg *BattleGrid) getDirectAttackBehavior(target int) (int, []Tile, []AIStep
 	var count int
 
 	log.addAi("Adding a direct attack behavior")
-	//showPause("Adding a direct attack behavior")
 
 	monsterMoves := bg.monster.getMonsterMoves()
 	count = monsterMoves
@@ -611,13 +610,15 @@ func (bg *BattleGrid) createMonsterPlan() AIPlan {
 		}
 	}
 
-	for k := 0; k < countUp; k++ {
-		fmt.Println(plan.steps[k])
+	if DEBUG_ON {
+		for k := 0; k < countUp; k++ {
+			fmt.Println(plan.steps[k])
+		}
+		showPause("")	
+		
+		bg.drawTestGrid(plan.steps)
+		showPause("")
 	}
-	showPause("")
-
-	bg.drawTestGrid(plan.steps)
-	showPause("")
 
 	return plan
 }
