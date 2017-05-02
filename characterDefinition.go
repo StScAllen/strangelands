@@ -432,8 +432,6 @@ func createCharacter() Character {
 	character.exp = 0
 	character.villageIndex = 0
 
-	save()
-
 	return character
 }
 

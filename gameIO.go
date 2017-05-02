@@ -190,6 +190,7 @@ func save() {
 	saveString += character.getCharSaveBlock()
 	saveString += apprentice.getCharSaveBlock()
 	saveString += getKeepSaveBlock()
+	saveString += mission.getSaveString()
 
 	if err == nil {
 		defer file.Close()
@@ -222,6 +223,8 @@ func loadGame() int {
 			// keep
 			_, keep = unpackKeepBlock(blocks[3])
 
+			_, mission = unpackMissionBlock(blocks[4])
+			
 			// blocks are broken with ■
 			// blocks are character, keep, village, game
 			// lines are broken with ◄

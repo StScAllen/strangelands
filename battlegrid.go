@@ -1105,7 +1105,7 @@ func buildBattleGrid(id int) BattleGrid {
 	grid.numGrids = 4     // default
 	grid.hasApprentice = false
 
-	if id == 1 { // cemetary
+	if id == 0 { // cemetary
 		grid.numGrids = 4
 		// for random, done after number of grids is assigned!
 
@@ -1125,7 +1125,7 @@ func buildBattleGrid(id int) BattleGrid {
 		monster = createMonster(1)
 
 		grid.monster = monster
-		grid.locationName = "Cemetary"
+		grid.locationName = "Bog"
 
 		grid.charXLoc = 1
 		grid.charYLoc = 1
@@ -1145,6 +1145,45 @@ func buildBattleGrid(id int) BattleGrid {
 		
 		grid.writeGridsToFile()
 
+	} else if id == 1 {
+		grid.numGrids = 5
+		// for random, done after number of grids is assigned!
+
+		for k := 0; k < grid.numGrids; k++ {
+			g1 := createSquareGrid(16, 32)
+			g1.addCemetaryDecorations()
+			g1.id = k
+			g1.used = true
+			g1.gridName = fmt.Sprintf("%v", k)
+			grid.allGrids[k] = g1
+			grid.setRandomStamp(g1.maxX, g1.maxY, k)
+		}
+
+		grid.createGridPattern()
+
+		grid.currGrid = 0
+		monster = createMonster(mission.monsterType)
+
+		grid.monster = monster
+		grid.locationName = "Cemetary"
+
+		grid.charXLoc = 1
+		grid.charYLoc = 1
+		grid.charGridId = 0
+
+		grid.appXLoc = 2
+		grid.appYLoc = 1
+		grid.appGridId = 0
+
+		grid.characterSpotted = false
+		grid.monsterSpotted = false
+		grid.apprenticeSpotted = false
+		grid.turnCounter = 0
+
+		grid.placeMonster()
+		
+		grid.writeGridsToFile()	
+		
 	} else {
 		/* 		grid.grid = SMALL_GRID
 		   		monster.name = "Manticore"

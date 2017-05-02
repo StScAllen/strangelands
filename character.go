@@ -11,9 +11,9 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".07a"
+const VERSION = ".08a"
 
-const DEBUG_ON = false
+const DEBUG_ON = true
 
 type Game struct {
 	gameDay        		int
@@ -107,6 +107,8 @@ func main() {
 		keep = createKeep()
 		buildVillages()
 		updateShops()
+		mission = genNewMission()
+		save()
 
 	} else if rsp == "2" {
 		err = loadGame()

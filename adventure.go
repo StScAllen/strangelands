@@ -8,8 +8,10 @@ const FLED_BATTLE = 0
 const FINISHED_MISSION = 1
 const DIED = -1
 
-func chooseAdventure() {
+var mission Mission
 
+func chooseAdventure() {
+	showPause("Mission title is: " + mission.title)
 }
 
 func (bg *BattleGrid) canCharacterCast(char Character, currTurns int) bool {
@@ -120,20 +122,20 @@ func (bg *BattleGrid) canCharacterAttack(char Character, currTurns int) int {
 	return -1
 }
 
-func (bg *BattleGrid) showConfimExit() (string) {
+func (bg *BattleGrid) showConfimExit() (bool) {
 	clearConsole()
 
 	if character.hp < 1 {
 		fmt.Println("You have been defeated by the monster. Game Over.")
 		fmt.Println()
 		showPause("  Press any key to exit.")	
-		return "exit"
+		return true
 		
 	} else if bg.monster.isAlive() {
 		fmt.Println("Exiting without defeating the monster will cause you to fail this mission.")
 		fmt.Println()
 		fmt.Println("  Are you sure you wish to exit?")
-		
+
 	} else if !bg.monster.isAlive() {
 		fmt.Println("Monster Defeated!")
 		fmt.Println("If you exit any uncollected loot will be lost.")
@@ -142,15 +144,13 @@ func (bg *BattleGrid) showConfimExit() (string) {
 	}
 	
 	rsp := ""
-	fmt.Scanln(rsp)
+	fmt.Scanln(&rsp)
 	
-	if rsp == "y" || rsp == "Y" {
-		rsp = "exit"
-	} else {
-		rsp = ""
-	}
+	if rsp == "y" || rsp == "Y" || rsp == "yes"{
+		return true
+	} 
 
-	return rsp
+	return false
 }
 
 func (bg *BattleGrid) showFoundLoot(idx int) string {
@@ -337,8 +337,7 @@ func (bg *BattleGrid) getAvailableActions(char Character, currTurns int) string 
 }
 
 func adventure() (result int) {
-
-	var bg = buildBattleGrid(1)
+	var bg = buildBattleGrid(mission.typeId)
 	rsp := ""
 	rsp2 := ""
 	rsp3 := ""
@@ -351,7 +350,9 @@ func adventure() (result int) {
 
 	result = FLED_BATTLE
 	
-	for rsp != "exit" && rsp != "Exit" {
+	playFlag := false
+	
+	for !playFlag {
 		bg.drawGrid()
 		fmt.Printf("Turns: %v / %v  (%v : %v : %v) \n", currTurns, maxTurns, bg.charXLoc, bg.charYLoc, bg.charGridId)
 		descrip := ""
@@ -364,6 +365,11 @@ func adventure() (result int) {
 		fmt.Printf(descrip)
 		fmt.Scanln(&rsp, &rsp2)
 
+		if result == DIED && rsp != "exit" {
+			showPause("You and your apprentice have died.")
+			continue;
+		}
+		
 		if strings.Contains(rsp, "move") && len(rsp2) > 0 {
 			if currTurns < 1 {
 				fmt.Println("No turns remain. End your turn.")
@@ -482,7 +488,6 @@ func adventure() (result int) {
 							rsp = "exit"
 							result = DIED						
 						}
-					
 
 						// character has died!
 						// if character dies, and they have an apprentice, the apprentice becomes the new character
@@ -549,7 +554,7 @@ func adventure() (result int) {
 				bg.searchLocation(bg.turn)			
 			}			
 		} else if strings.Contains(rsp, "exit") {
-			rsp = bg.showConfimExit()
+			playFlag = bg.showConfimExit()
 			
 		} else if strings.Contains(rsp, "die") {
 			character.hp = 0

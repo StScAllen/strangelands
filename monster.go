@@ -9,7 +9,7 @@ import "fmt"
 *	++ Invisibility
 *   ++ Chamoflage
 *
-*  
+*  Spirit monsters can be drained for soul points.
 */
 
 // behaviour constants
@@ -60,6 +60,7 @@ type MonsterAttack struct {
 
 var SOUL_SUCK = MonsterAttack{"Soul Suck", 1, 2, DAMAGE_SOUL, 3, 2, 0, 0, 0}
 var CHARGE = MonsterAttack{"Charge", 2, 1, DAMAGE_PHYSICAL, 2, 1, -1, 0, 1}
+var WEAPON = MonsterAttack{"Weapon", 3, 1, DAMAGE_PHYSICAL, 3, 1, 0, 0, 0}
 
 type AIStep struct {
 	action string
@@ -159,6 +160,27 @@ func createMonster(id int) Monster {
 		monster.resistance = []int{10, 10, 10, 10, 10, 10, 10, 10, 10, 10}
 		monster.attacks = []MonsterAttack{CHARGE, SOUL_SUCK}
 		monster.powerBalance = 12.0
+		monster.invisible = false
+		
+	} else if id == 2 {
+		monster.name = "Revenant Corpse"
+		monster.str = 6
+		monster.agi = 5
+		monster.per = 5
+		monster.cha = 1
+		monster.gui = 3
+		monster.intl = 4
+
+		monster.bits = person_bits
+
+		monster.disturbance1 = "You hear branches snap to the %v. Is it footfall?"
+		monster.disturbance2 = "With nary an explanation, a terrible anger wells inside you."
+
+		monster.targets = HUMAN_TARGETS
+		monster.body = HUMAN_STRING
+		monster.resistance = []int{14, 14, 14, 14, 14, 14, 14, 14, 14, 14}
+		monster.attacks = []MonsterAttack{WEAPON, WEAPON}
+		monster.powerBalance = 14.0
 		monster.invisible = false
 	}
 
