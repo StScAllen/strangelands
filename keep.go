@@ -166,27 +166,37 @@ func (keep *Keep) visitKeep() string {
 		fmt.Printf("Acres: %v / %v \n", keep.usedacres, keep.acres)
 		fmt.Println("------------")
 		fmt.Println("1. Rest (End Day)")
-		fmt.Println("2. Manage Keep")
+		fmt.Println("2. Structures")
 		fmt.Println("3. Apprentices")
-		fmt.Println("4. Inventory")
-		fmt.Println("5. Status")
-		fmt.Println("6. Missions")
-		fmt.Println("7. Travel")
+		fmt.Println("4. Keep Storage")
+		fmt.Println("5. Travel")
 		fmt.Println("")
-		fmt.Println("m. Minutiae")
 		fmt.Println("q. Exit")
+		fmt.Println("")
+		fmt.Println(BASE_ACTIONS)
 		fmt.Println("")
 		fmt.Printf("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
 
+		//const BASE_ACTIONS = "[s. status   i. inventory   m. mission   w. world map   h. minutiae]"
+		
 		if rsp == "1" {
 			endDay()
 			save()
-		} else if rsp == "5" {
+		} else if rsp == "s" {
 			character.showStatus()
 			character.printCharacter(1)
-		} else if rsp == "7" {
+		} else if rsp == "m" {	
+			mission.viewMissionStatus()
+		} else if rsp == "i" {	
+			character.showInventory()
+		} else if rsp == "w" {	
+			drawWorldMap()	
+		} else if rsp == "h" {	
+			// show keep minutiae	
+			
+		} else if rsp == "5" {
 			travel := showTravelMenu()
 			return travel
 		}

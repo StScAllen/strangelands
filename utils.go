@@ -6,6 +6,7 @@ import "fmt"
 import "strings"
 import "os"
 import "os/exec"
+import "math"
 
 const DIALOG_RIGHT = 0
 const DIALOG_LEFT = 1
@@ -221,6 +222,37 @@ func packSpace(num int, digits int) string {
 func packSpaceString(str string, digits int) string {
 	for len(str) < digits {
 		str += " "
+	}
+
+	return str
+}
+
+func packSpaceStringCenter(str string, digits int) string {
+	padAmount := float64(digits - len(str))
+	var half float64 
+	var remain float64
+
+	half = math.Floor(padAmount / float64(2))	
+	remain = float64(padAmount / float64(2)) - half
+
+	for k := float64(0); k < half; k++ {
+		str = " " + str
+	}
+	
+	for k := float64(0); k < half; k++ {
+		str += " "
+	}
+	
+	if remain > 0 {
+		str += " "
+	}
+	
+	return str
+}
+
+func packSpaceStringWithToken(str string, digits int, token string) string {
+	for len(str) < digits {
+		str += token
 	}
 
 	return str

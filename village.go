@@ -6,12 +6,15 @@ package main
 import "fmt"
 import "time"
 import "strings"
+import "strconv"
 
 type Village struct {
 	name            string
 	distanceToKeep  int
 	size            int
 	politicalFavor  int
+	villageIndex 	int
+	missions		[]Mission
 	shopWeapons     []Item
 	shopArmor       []Item
 	shopProvisions  []Item
@@ -28,6 +31,13 @@ func buildVillages() {
 	crowley.distanceToKeep = 1
 	crowley.size = 1
 	crowley.mapX, crowley.mapY = 20, 10
+	crowley.missions = make([]Mission, 0, 0)
+	crowley.villageIndex = 0
+	// starting village, add a mission to bulletin board.
+	crowley.missions = append(crowley.missions, genNewMission(0))
+	crowley.missions = append(crowley.missions, genNewMission(0))
+	crowley.missions = append(crowley.missions, genNewMission(0))
+	
 	villages[0] = crowley
 
 	var bristal Village
@@ -35,6 +45,8 @@ func buildVillages() {
 	bristal.distanceToKeep = 2
 	bristal.size = 3
 	bristal.mapX, bristal.mapY = 17, 3
+	bristal.missions = make([]Mission, 0, 0)
+	bristal.villageIndex = 1
 	villages[1] = bristal
 
 	var faust Village
@@ -42,6 +54,8 @@ func buildVillages() {
 	faust.distanceToKeep = 2
 	faust.size = 3
 	faust.mapX, faust.mapY = 37, 2
+	faust.missions = make([]Mission, 0, 0)
+	faust.villageIndex = 2
 	villages[2] = faust
 
 	var gould Village
@@ -49,6 +63,8 @@ func buildVillages() {
 	gould.distanceToKeep = 2
 	gould.size = 2
 	gould.mapX, gould.mapY = 35, 15
+	gould.missions = make([]Mission, 0, 0)
+	gould.villageIndex = 3
 	villages[3] = gould
 
 	var elise Village
@@ -56,6 +72,8 @@ func buildVillages() {
 	elise.distanceToKeep = 3
 	elise.size = 2
 	elise.mapX, elise.mapY = 56, 15
+	elise.missions = make([]Mission, 0, 0)
+	elise.villageIndex = 4
 	villages[4] = elise
 
 	var autumn Village
@@ -63,6 +81,8 @@ func buildVillages() {
 	autumn.distanceToKeep = 4
 	autumn.size = 4
 	autumn.mapX, autumn.mapY = 57, 3
+	autumn.villageIndex = 5	
+	autumn.missions = make([]Mission, 0, 0)
 	villages[5] = autumn
 
 	var hollow Village
@@ -70,6 +90,7 @@ func buildVillages() {
 	hollow.distanceToKeep = 13
 	hollow.size = 2
 	hollow.mapX, hollow.mapY = 2, 13
+	hollow.villageIndex = 6
 	villages[6] = hollow
 
 	var caustus Village
@@ -77,6 +98,8 @@ func buildVillages() {
 	caustus.distanceToKeep = 1
 	caustus.size = 6
 	caustus.mapX, caustus.mapY = 35, 11
+	caustus.missions = make([]Mission, 0, 0)
+	caustus.villageIndex = 7	
 	villages[7] = caustus
 }
 
@@ -85,15 +108,62 @@ func (village *Village) research() {
 }
 
 func (village *Village) viewBulletinBoard() {
-
-
+	exitFlag := false
+	rsp := ""
+	
+	blank := "│" + packSpaceString("", 72) + " │"
+	
+	for !exitFlag {
+		clearConsole()
+		fmt.Println("╔────────────────── " + packSpaceStringCenter(":: " + village.name + " Bulletin Board ::", 36) + " ──────────────────╗")
+		fmt.Println(blank)		
+		fmt.Println(blank)
+		if len(village.missions) < 1 {
+			fmt.Println("│ " + packSpaceString("No jobs available.", 72) + " │")
+		} else {
+			for k := 0; k < len(village.missions); k++ {
+				job := fmt.Sprintf("│ %v. ", k)
+				fmt.Println(job + packSpaceString(village.missions[k].getDisplayString(1), 69) + " │")
+				fmt.Println(blank)			
+			}
+		}
+		fmt.Println(blank)
+		fmt.Println("╚──────────────────────────────────────────────────────────────────────────╝")
+		fmt.Println("b. Back")
+		fmt.Printf("Choose a job to view: ")
+		fmt.Scanln(&rsp)
+		
+		if rsp == "b" {
+			exitFlag = true
+		} else {
+			num,err := strconv.Atoi(rsp)
+			
+			if err == nil {
+				if num < len(village.missions) {
+					accepted := village.missions[num].viewAcceptDialog()					
+					if accepted {
+						exitFlag = true
+						
+						mission = village.missions[num]
+						mission.status = STATUS_ACTIVE
+					
+						if len(village.missions) > 1 {
+							village.missions = append(village.missions[:num], village.missions[num+1:]...)					
+						} else {
+							village.missions = make([]Mission, 0, 0)
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
-func (village *Village) visitTavern() {
-	// rest		 (end day, gain hp)
-	// get gossip (apprentice tips, politickal gains, )
-	// gamble  (randomly gain or lose money)
-	// drink  (raise soul by 1 - cost)
+func (village *Village) visitTavern() {		// 				
+	// rest		 (end day, gain hp)						  
+	// get gossip (apprentice tips, politickal gains, ) 
+	// gamble  (randomly gain or lose money)			
+	// drink  (raise soul by 1 - cost)  		   	 
 
 	exitFlag := false
 	rsp := ""
@@ -134,8 +204,6 @@ func (village *Village) visitTavern() {
 		}
 	}
 
-	
-
 }
 
 func (village *Village) visitChirurgeon() {
@@ -150,7 +218,7 @@ func (village *Village) politicks() {
 
 }
 
-func (village *Village) goMissions() (string){
+func doBattle() (string){
 	chooseAdventure()
 	result := adventure()
 	
@@ -162,7 +230,46 @@ func (village *Village) goMissions() (string){
 	return ""
 }
 
+func doMissionPhase() {
+	var die Die
+	
+	if mission.phases[mission.currentPhase - 1].id == PHASE_PUZZLE {
+		val := 0
+		for k := 0; k < character.skills[0]; k++ {
+			val += die.rollxdx(1, 6)
+		}
+		mission.phases[mission.currentPhase - 1].puzzlePips -= val
+		clearConsole()
+		showPause(fmt.Sprintf("You solved %v pips of the puzzle!", val))
+		if mission.phases[mission.currentPhase - 1].puzzlePips < 1 {
+			mission.phases[mission.currentPhase - 1].puzzlePips = 0
+			showPause("Puzzle solved!")
+			mission.currentPhase++
+			mission.viewMissionStatus()
+		}
+			
+	} else if mission.phases[mission.currentPhase - 1].id == PHASE_RESEARCH {
+		val := 0
+		for k := 0; k < character.skills[2]; k++ {
+			val += die.rollxdx(1, 6)
+		}
+		mission.phases[mission.currentPhase - 1].researchPips -= val
+		clearConsole()
+		showPause(fmt.Sprintf("You researched %v pips!", val))
+		if mission.phases[mission.currentPhase - 1].researchPips < 1 {
+			mission.phases[mission.currentPhase - 1].researchPips = 0
+			showPause("Research Complete!")
+			mission.currentPhase++
+			mission.viewMissionStatus()
+		}	
+	} 
+	
+	endDay()
+}
+
 func (village *Village) visitVillage() string {
+	canInvestigate := false
+	canBattle := true
 	clearConsole()
 
 	fmt.Println("+++ Village of " + village.name + " +++")
@@ -172,11 +279,30 @@ func (village *Village) visitVillage() string {
 	fmt.Println("3. Visit Tavern")
 	fmt.Println("4. Visit Chirurgeon")
 	fmt.Println("5. Politicks - Curry Favor / Influence")
-	fmt.Println("6. Missions")
-	fmt.Println("7. Travel")
-
+	fmt.Println("6. Travel")
+	if mission.typeId != -1 && mission.phases[mission.currentPhase - 1] != PHASE_FIGHT && mission.phases[mission.currentPhase - 1].locationIndex == village.villageIndex {
+		quip := ""
+		if mission.phases[mission.currentPhase - 1].id == PHASE_PUZZLE {
+			quip = "Solve Puzzle"
+		} else if mission.phases[mission.currentPhase - 1].id == PHASE_RESEARCH {
+			quip = "Research"
+		} 
+		fmt.Println("r. [Mission: " + quip + "]")
+		
+		canInvestigate = true
+	} 
+	if mission.typeId != -1 && mission.currentPhase >= mission.minimumPhases && mission.missionBaseLocation == village.villageIndex {
+		fmt.Println("f. [Mission: Battle Monster]")	
+		canBattle = true
+	} else {
+		fmt.Println("")
+	}
+	
 	fmt.Println("q. Quit")
 	fmt.Println("")
+	fmt.Println(BASE_ACTIONS)
+	fmt.Println("")	
+
 	fmt.Println("Select an Option:  ")
 
 	rsp := ""
@@ -193,13 +319,25 @@ func (village *Village) visitVillage() string {
 		village.visitChirurgeon()
 	} else if rsp == "5" {
 		village.politicks()
+	} else if rsp == "r" && canInvestigate {
+		doMissionPhase()	
+	} else if rsp == "f" && canBattle {
+		rsp = doBattle()			
 	} else if rsp == "6" {
-		rsp = village.goMissions()
-	} else if rsp == "7" {
 		showTravelMenu()
-	} else if rsp == "m" {
+	} else if rsp == "s" {
+		character.showStatus()
+		character.printCharacter(1)
+	} else if rsp == "m" {	
+		mission.viewMissionStatus()
+	} else if rsp == "i" {	
+		character.showInventory()
+	} else if rsp == "w" {	
+		drawWorldMap()			
+	} else if rsp == "h" {
 		openTownMinutiae()
-	} else if strings.Contains(rsp, "give") && strings.Contains(rsp2, "money"){
+		
+	} else if strings.Contains(rsp, "%give") && strings.Contains(rsp2, "money"){
 		showPause("Money received!")
 		character.crowns += 200
 	} 
@@ -242,8 +380,11 @@ func showTravelMenu() string {
 		fmt.Println("")
 		dist = getVillageDistance(99)
 		fmt.Println(packSpaceString("k. Return to Keep", 20) + fmt.Sprintf("(%v days travel)", dist))
-		fmt.Println("m. World Map")
-		fmt.Println("h. Minutiae")
+
+		fmt.Println("")
+		fmt.Println(BASE_ACTIONS)
+		fmt.Println("")	
+		
 		fmt.Println("x. Back")
 		fmt.Println("    ----    ")
 		fmt.Printf("Where do you wish to travel? ")
@@ -296,9 +437,21 @@ func showTravelMenu() string {
 			character.villageIndex = 99
 			destination = "Keep"
 			validSelection = true
-		case "m":
+			
+		case "w":
 			drawWorldMap()
 			validSelection = false
+			
+		case "s":
+			character.showStatus()
+			character.printCharacter(1)		
+			
+		case "h":
+			showTravelMinutiae()
+		
+		case "i":
+			character.showInventory()	
+			
 		case "x":
 			validSelection = true
 			dist = 0
@@ -329,18 +482,22 @@ func showTravelMenu() string {
 func showTimePassageScreen(lapse int) {
 	start := 0
 	tick := "["
-
+	
 	for start < lapse {
+		diff := lapse - start
 		clearConsole()
 		fmt.Println("Day: ", game.gameDay)
 		fmt.Println("Time Passes...")
 		endDay()
 		tick += " █ █ █"
-		if start == lapse-1 {
-			tick += " ]"
+		block := ""
+		for k := 0; k < diff-1; k++ {
+			block += "      "
 		}
-		fmt.Println(tick)
-		time.Sleep(1000 * time.Millisecond)
+		block += " ]"
+		
+		fmt.Println(tick + block)
+		time.Sleep(900 * time.Millisecond)
 		start++
 	}
 }

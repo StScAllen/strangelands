@@ -14,6 +14,17 @@ const PHASE_FIGHT = 0
 const PHASE_RESEARCH = 1
 const PHASE_PUZZLE = 2
 
+const STATUS_ACTIVE = 1		// mission is active
+const STATUS_AVAIL	= 0		// mission is available to accept
+const STATUS_NOSTART = 1	// mission start timed out
+const STATUS_TIMED	= 2		// mission not completed in time
+const STATUS_FAILED = 3		// mission failed	(killed by monster)
+const STATUS_COMPLETE = 99
+
+var monsterNames = []string {
+								"Will-O-Wisp", "Revenant Corpse",
+							}
+
 var missionDescrips = [][]string	{
 										{"None", "None"},
 										{"Corpse Candle Haunts the Bog.", "A corpse candle draws our sheep into the bog to drown."},
@@ -22,15 +33,16 @@ var missionDescrips = [][]string	{
 
 var phaseDescrips = []string 	{
 									"Its time to confront the darkness.",
-									"A witness holds the key to the beast's lair.",
-									"The secret to the beasts power lies somewhere in this tome.",
+									"A witness holds the key to the fright's lair.",
+									"A cunning riddle contains secrets to the fright's whereabouts.",
+									"The secret to the fright's power lies somewhere in this tome.",
 								}									
 									
-var BLANK_MISSION = Mission{-1, 0, 0, 0, 0, "", "", 0, 0, 0, []Phase{}, 0, 0, 0, 0, "", 0, 0, 0, 0, 0, 0, 0}
+var BLANK_MISSION = Mission{-1, 0, 0, 0, 0, "", "", 0, 0, 0, []Phase{}, 0, 0, 0, 0, "", 0, 0, 0, 0, 0, 0, 0, STATUS_AVAIL}
 
 var missions = []Mission 	{
-								{0, 0, 1, 1, 1, "", "", 2, 1, 2, []Phase{}, 0, 50, 0, 0, "", 60, 90, 15, 15, 5, 0, 1},
-								{1, 0, 1, 2, 2, "", "", 2, 1, 2, []Phase{}, 0, 60, 0, 0, "", 60, 90, 15, 15, 0, 1, 1},
+								{0, 0, 1, 1, 1, "", "", 3, 1, 2, []Phase{}, 0, 50, 0, 0, "", 60, 90, 15, 15, 5, 0, 1, STATUS_AVAIL},
+								{1, 0, 1, 2, 2, "", "", 3, 1, 2, []Phase{}, 0, 60, 0, 0, "", 60, 90, 15, 15, 0, 1, 1, STATUS_AVAIL},
 							}
 
 type Mission struct {
@@ -57,6 +69,7 @@ type Mission struct {
 	financialImpact			int
 	livesImpact				int
 	politicalImpact			int
+	status					int		
 }
 
 type Phase struct {
@@ -74,7 +87,112 @@ type Phase struct {
 	complete 				int			// 0 - incomplete, 1 - complete
 }
 
-func genNewMission() (Mission) {
+func (miss * Mission) getDisplayString(detail int) (string) {
+	dispString := ""
+	
+	if detail == 0 {
+		dispString = miss.title
+	} else if detail == 1 {
+		dispString = fmt.Sprintf("%s    Reward: %v    Challenge: %v", packSpaceString(miss.title, 34), miss.crownReward, miss.complexity)
+	}
+	
+	
+	return dispString
+}
+
+func (miss * Mission) viewMissionStatus() {
+	exitFlag := false
+	rsp := ""
+	
+	if miss.typeId == -1 {
+		return
+	}
+	
+	for !exitFlag {
+		clearConsole()
+		
+		fmt.Println(packSpaceStringCenter("┌────────────────────╡ " + packSpaceStringCenter(miss.title, 30) + " ╞────────────────────┐", 76))
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		fmt.Println("│ " + packSpaceStringCenter(makeDialogString(miss.description), 72) + " │")
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		pack1 := packSpaceString("  Start Village: " + villages[miss.missionBaseLocation].name, 36)
+		pack2 := fmt.Sprintf("Reward: %v", miss.crownReward)
+		fmt.Println("│ " + packSpaceString(pack1 + pack2, 72) + " │")		
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		fmt.Println("│ " + packSpaceString(fmt.Sprintf("  Phase: %v / %v", miss.currentPhase, miss.phasesTotal), 72) + " │")
+		fmt.Println("│ " + packSpaceString(fmt.Sprintf("  Days Remaining: %v ", miss.completeDays), 72) + " │")	
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")	
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")		
+		fmt.Println("│  " + packSpaceStringCenter(" ┌ " + packSpaceStringCenter("- - - Current Phase - - -", 64) + " ┐ ", 72) + "  │")
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		fmt.Println("│ " + packSpaceStringCenter(makeDialogString(miss.phases[miss.currentPhase-1].description), 72) + " │")
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		fmt.Println("│ " + packSpaceString("    Phase Location: " + villages[miss.phases[miss.currentPhase-1].locationIndex].name, 72) + " │")
+		pack1 = packSpaceString(fmt.Sprintf("    Research Remaining: %v", miss.phases[miss.currentPhase-1].researchPips), 30)
+		pack2 = packSpaceString(fmt.Sprintf("  Puzzles Remaining: %v", miss.phases[miss.currentPhase-1].puzzlePips), 30)
+		fmt.Println("│ " + packSpaceString(pack1 + pack2, 72) + " │")
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
+		fmt.Println("│  " + packSpaceStringCenter(" └ " + packSpaceStringCenter("- - -", 64) + " ┘ ", 72) + "  │")
+		fmt.Println("└──────────────────────────────────────────────────────────────────────────┘")		
+		fmt.Printf("\nPress enter to exit.")
+		
+		fmt.Scanln(&rsp)
+		
+		exitFlag = true
+	}
+
+}
+
+func (miss * Mission) viewAcceptDialog() (bool) {
+	accepted := false
+	
+	exitFlag := false
+	rsp := ""
+	
+	for !exitFlag {
+		clearConsole()
+		
+		fmt.Println("*** " + miss.title + " ***")
+		fmt.Println()
+		fmt.Println(miss.description)
+		fmt.Println()
+		pack1 := packSpaceString(fmt.Sprintf("Monster: %s ", monsterNames[miss.monsterType-1]), 34)
+		pack2 := fmt.Sprintf("Reward: %v crowns", miss.crownReward)
+		fmt.Println(pack1 + pack2)			
+		fmt.Println()	
+		pack1 = packSpaceString(fmt.Sprintf("Difficulty: %v ", miss.complexity), 34)
+		pack2 = fmt.Sprintf("Phases: %v ", miss.phasesTotal)
+		fmt.Println(pack1 + pack2)			
+		fmt.Println()
+		pack1 = packSpaceString(fmt.Sprintf("Days to Accept: %v", miss.startDays), 34)		
+		pack2 = fmt.Sprintf("Days to Complete: %v", miss.completeDays)
+		fmt.Println(pack1 + pack2)	
+		fmt.Println()
+		
+		fmt.Printf("\nDo you wish to accept this mission? ")
+		
+		fmt.Scanln(&rsp)
+		
+		if rsp == "y" {
+			if mission.typeId != -1 && mission.status == STATUS_ACTIVE {
+				showPause("You already have an active mission. You must complete \nthat mission before accepting a new one.")
+			} else {
+				exitFlag = true
+				accepted = true			
+			}
+
+		} else if rsp == "n" {
+			exitFlag = true
+			accepted = false
+		}
+	}
+	
+	return accepted
+}
+
+func genNewMission(villageIndex int) (Mission) {
 	var die Die
 
 	numMissions := len(missions)
@@ -84,6 +202,7 @@ func genNewMission() (Mission) {
 	
 	tMission.title = missionDescrips[tMission.txtIndex][TITLE]
 	tMission.description = missionDescrips[tMission.txtIndex][DESC]	
+	tMission.missionBaseLocation = villageIndex
 	
 	game.missionInstanceId++	
 	tMission.instanceId = game.missionInstanceId
@@ -91,7 +210,7 @@ func genNewMission() (Mission) {
 	var phase Phase
 	
 	phase.id = PHASE_PUZZLE
-	phase.locationIndex = die.rollxdx(1, 7)
+	phase.locationIndex = die.rollxdx(1, 8) - 1
 	phase.itemRequiredId = -1
 	phase.puzzlePips = die.rollxdx(1, 8) + 5
 	phase.researchPips = 0
@@ -105,16 +224,16 @@ func genNewMission() (Mission) {
 	
 	tMission.phases = make([]Phase, 0, 0)
 	tMission.phases = append(tMission.phases, phase)
-	
+			
 	var phase2 Phase
 	
-	phase2.id = PHASE_FIGHT
-	phase2.locationIndex = 0
+	phase2.id = PHASE_RESEARCH
+	phase2.locationIndex = die.rollxdx(1, 7) - 1
 	phase2.itemRequiredId = -1
 	phase2.puzzlePips = 0
-	phase2.researchPips = 0
+	phase2.researchPips = die.rollxdx(1, 8) + 5
 	phase2.descIndex = 0
-	phase2.description = phaseDescrips[0]
+	phase2.description = phaseDescrips[3]
 	phase2.rewardId = 1
 	phase2.rewardItemId = -1
 	phase2.rewardExperience = 0
@@ -123,7 +242,99 @@ func genNewMission() (Mission) {
 	
 	tMission.phases = append(tMission.phases, phase2)
 	
+	var phase3 Phase
+	
+	phase3.id = PHASE_FIGHT
+	phase3.locationIndex = villageIndex
+	phase3.itemRequiredId = -1
+	phase3.puzzlePips = 0
+	phase3.researchPips = 0
+	phase3.descIndex = 0
+	phase3.description = phaseDescrips[0]
+	phase3.rewardId = 1
+	phase3.rewardItemId = -1
+	phase3.rewardExperience = 0
+	phase3.rewardCrowns	= 0
+	phase3.complete = 0	
+	
+	tMission.phases = append(tMission.phases, phase3)	
+	
 	return tMission
+}
+
+func removeExpiredMissions() {
+	if mission.typeId != -1 {
+		mission.completeDays -= 1		
+		if mission.completeDays < 0 && mission.status != STATUS_COMPLETE {
+			mission.status = STATUS_TIMED
+			log.addInfo("Mission timed out!")
+			
+			showPause("Failed mission in " + villages[mission.missionBaseLocation].name + ". Political favor has dropped.")
+			// TODO:  Need to add a journal entry that this mission failed.
+			
+			mission = BLANK_MISSION
+		}
+	}
+
+	for k := 0; k < len(villages); k++ {
+		remove := -1
+		if len(villages[k].missions) > 0 {
+			for m := 0; m < len(villages[k].missions); m++ {
+				villages[k].missions[m].startDays -= 1
+				if villages[k].missions[m].startDays < 0 {
+					remove = m
+					break
+				}
+				if remove > -1 {
+					villages[k].missions[m].status = STATUS_NOSTART
+					villages[k].missions = append(villages[k].missions[:remove], villages[k].missions[remove+1:]...)
+					
+					// TODO:  Need to add a journal entry that this mission failed.
+					showPause("Failed mission in " + villages[k].name + ". Political favor has dropped.")
+				}
+			}
+		}
+	} 	
+}
+
+func maybeAddMission() {
+	var die Die
+	chance := 0	
+	count := 0
+	
+	for k := 0; k < len(villages); k++ {
+		if len(villages[k].missions) > 0 {
+			count++;
+		}
+	}
+	
+	chance += (8 - count) * 3
+	chance += game.gameDay
+	
+	if chance < 1 {
+		chance = 1
+	}
+	
+	if (chance > 300 && count < 8) {
+		chance = 300
+	}
+	
+	// random chance to add mission, always add if count is < 1
+	if (die.rollxdx(1, 1000) < chance) || (count < 1) {
+		look := true
+		counter := 0
+		for look {
+			roll := die.rollxdx(1, 8) - 1
+			counter++
+			
+			// look for a village without a mission and add, if we check a few times and can't find an empty one then
+			// add an additional mission to a random village			
+			if (len(villages[roll].missions) < 1) || (counter >= 20) {
+				villages[roll].missions = append(villages[roll].missions, genNewMission(roll))
+				look = false
+			}
+		}
+	}
 }
 
 func unpackMissionBlock(block string) (int, Mission) {
@@ -140,26 +351,27 @@ func unpackMissionBlock(block string) (int, Mission) {
 
 	miss.typeId, _ = strconv.Atoi(bits[1])
 	miss.instanceId, _ = strconv.Atoi(bits[2])
-	miss.monsterType, _ = strconv.Atoi(bits[3])
-	miss.txtIndex, _ = strconv.Atoi(bits[4])	
-	miss.title = ""
-	miss.description = ""
-	miss.phasesTotal, _ = strconv.Atoi(bits[5])
-	miss.currentPhase, _ = strconv.Atoi(bits[6])
-	miss.minimumPhases, _ = strconv.Atoi(bits[7])
-	miss.missionBaseLocation, _ = strconv.Atoi(bits[8])
-	miss.crownReward, _ = strconv.Atoi(bits[9])
-	miss.apprenticeReward, _ = strconv.Atoi(bits[10])
-	miss.apprenticeRewardVariant, _ = strconv.Atoi(bits[11])
-	miss.appenticeRewardName = bits[12]
+	miss.complexity, _ = strconv.Atoi(bits[3])
+	miss.monsterType, _ = strconv.Atoi(bits[4])
+	miss.txtIndex, _ = strconv.Atoi(bits[5])	
+	miss.title = missionDescrips[miss.txtIndex][TITLE]
+	miss.description = missionDescrips[miss.txtIndex][DESC]
+	miss.phasesTotal, _ = strconv.Atoi(bits[6])
+	miss.currentPhase, _ = strconv.Atoi(bits[7])
+	miss.minimumPhases, _ = strconv.Atoi(bits[8])
+	miss.missionBaseLocation, _ = strconv.Atoi(bits[9])
+	miss.crownReward, _ = strconv.Atoi(bits[10])
+	miss.apprenticeReward, _ = strconv.Atoi(bits[11])
+	miss.apprenticeRewardVariant, _ = strconv.Atoi(bits[12])
+	miss.appenticeRewardName = bits[13]
 	
-	miss.startDays, _ = strconv.Atoi(bits[13])
-	miss.completeDays, _ = strconv.Atoi(bits[14])
-	miss.impactDays, _ = strconv.Atoi(bits[15])
-	miss.impactDaysLeft, _ = strconv.Atoi(bits[16])
-	miss.financialImpact, _ = strconv.Atoi(bits[17])	
-	miss.livesImpact, _ = strconv.Atoi(bits[18])	
-	miss.politicalImpact, _ = strconv.Atoi(bits[19])	
+	miss.startDays, _ = strconv.Atoi(bits[14])
+	miss.completeDays, _ = strconv.Atoi(bits[15])
+	miss.impactDays, _ = strconv.Atoi(bits[16])
+	miss.impactDaysLeft, _ = strconv.Atoi(bits[17])
+	miss.financialImpact, _ = strconv.Atoi(bits[18])	
+	miss.livesImpact, _ = strconv.Atoi(bits[19])	
+	miss.politicalImpact, _ = strconv.Atoi(bits[20])	
 
 	miss.phases = make([]Phase, 0, 0)
 	
@@ -180,7 +392,7 @@ func unpackMissionBlock(block string) (int, Mission) {
 		tphase.puzzlePips, _ = strconv.Atoi(pbits[4])
 		tphase.researchPips, _ = strconv.Atoi(pbits[5])
 		tphase.descIndex, _ = strconv.Atoi(pbits[6])
-		tphase.description = ""
+		tphase.description = phaseDescrips[tphase.descIndex]
 		
 		tphase.rewardId, _ = strconv.Atoi(pbits[7])
 		tphase.rewardItemId, _ = strconv.Atoi(pbits[8])

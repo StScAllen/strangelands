@@ -81,4 +81,6 @@ func (log *Log) displayLog() {
 	fmt.Println("--Errors--")
 	fmt.Println(log.errors)
 	showPause("")
+	
+	clearConsole()
 }

@@ -11,9 +11,11 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".08a"
+const VERSION = ".09a"
 
 const DEBUG_ON = true
+
+const BASE_ACTIONS = "[s. status   i. inventory   m. mission   w. world map   h. minutiae]"
 
 type Game struct {
 	gameDay        		int
@@ -46,6 +48,11 @@ func endDay() {
 	game.gameDay++
 	game.dayCounter++
 
+	// remove any missions that expired
+	removeExpiredMissions()
+	// small chance a mission will be added to a random villages bulletin board.
+	maybeAddMission()
+	
 	if game.dayCounter == 7 {
 		game.weekCounter++
 		game.dayCounter = 0
@@ -107,7 +114,7 @@ func main() {
 		keep = createKeep()
 		buildVillages()
 		updateShops()
-		mission = genNewMission()
+		mission = BLANK_MISSION
 		save()
 
 	} else if rsp == "2" {

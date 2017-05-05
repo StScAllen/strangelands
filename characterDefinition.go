@@ -48,6 +48,7 @@ type Character struct {
 	exp                           int
 	turns                         int
 	turnDefense 				  int  // how many turns were used as defense
+	skills						  [7]int
 	alive						  bool
 	handSlots                     [2]Item
 	armorSlots                    [9]Item
@@ -320,6 +321,81 @@ func (c *Character) getAllAvailableItemsForSlot(slot int) ([]Item){
 	return availItems
 }
 
+func (c *Character) chooseSkills() {
+	var flag bool = true
+	var points int = 3
+
+	for j := 0; j < len(skills); j++ {
+		c.skills[j] = 1
+	}
+	
+	for flag {
+		clearConsole()
+		fmt.Println("--- Purchase Skills ---")
+		fmt.Println("XXX A saying here is something Steve must write!")
+		fmt.Println("")
+		for k := 0; k < len(skills); k++ {
+			bit := packSpaceString(fmt.Sprintf("%v. %s: ", k+1, skills[k]), 24)	
+			bit2 := fmt.Sprintf("%v", c.skills[k])
+			val := bit + bit2
+			fmt.Println(val)
+		}
+
+		fmt.Println("")
+		fmt.Println("7. Minutiae (Help)")
+		fmt.Println("8. Reset")
+		fmt.Println("9. Finished")
+		fmt.Println("--------------------")
+		fmt.Printf("Points remaining: %v \n", points)
+		fmt.Println("Choose an attribute to add a point: ")
+		rsp := ""
+		fmt.Scanln(&rsp)
+
+		if rsp == "9" {
+			flag = false
+		} else if rsp == "8" {
+			for j := 0; j < len(skills); j++ {
+				c.skills[j] = 1
+			}
+			points = 3
+		} else if rsp == "7" {
+			showSkillsMinutiae()
+		} else {
+			if points < 1 {
+				rsp2 := ""
+				fmt.Println("No points remain. Press enter to return.")
+				fmt.Scanln(&rsp2)
+			} else {
+
+				switch rsp {
+				case "1":
+					c.skills[0]++ 
+					points -= 1
+				case "2":
+					c.skills[1]++ 
+					points -= 1
+				case "3":
+					c.skills[2]++ 
+					points -= 1
+				case "4":
+					c.skills[3]++ 
+					points -= 1
+				case "5":
+					c.skills[4]++ 
+					points -= 1
+				case "6":
+					c.skills[5]++ 
+					points -= 1
+				case "7":
+					c.skills[6]++ 
+					points -= 1
+				}
+
+			}
+		}
+	}
+}
+
 func (c *Character) purchaseStats() {
 	var flag bool = true
 	var points int = 8
@@ -361,7 +437,7 @@ func (c *Character) purchaseStats() {
 		} else {
 			if points < 1 {
 				rsp2 := ""
-				fmt.Println("No points remain. Press enter to continue.")
+				fmt.Println("No points remain. Press enter to return.")
 				fmt.Scanln(&rsp2)
 			} else {
 
@@ -409,6 +485,7 @@ func createCharacter() Character {
 	character.per = 3
 
 	character.purchaseStats()
+	character.chooseSkills()
 
 	character.lvl = 1
 
@@ -529,15 +606,29 @@ func (character *Character) printCharacter(pause int) {
 	fmt.Printf("Hp: %v / %v  ", character.hp, character.maxhp)
 	fmt.Printf("Soul: %v / %v  ", character.soul, character.maxsoul)
 	fmt.Printf("Encumb: %v / %v  st", character.weight, character.maxweight)
-
 	fmt.Println()
-	fmt.Printf("Per: %v \n", character.per)
-	fmt.Printf("Str: %v \n", character.str)
-	fmt.Printf("Agi: %v \n", character.agi)
-	fmt.Printf("Int: %v \n", character.intl)
-	fmt.Printf("Cha: %v \n", character.cha)
-	fmt.Printf("Gui: %v \n", character.gui)
-
+	fmt.Println()
+	fmt.Println(" -Attributes-")
+	fmt.Printf(" Per: %v \n", character.per)
+	fmt.Printf(" Str: %v \n", character.str)
+	fmt.Printf(" Agi: %v \n", character.agi)
+	fmt.Printf(" Int: %v \n", character.intl)
+	fmt.Printf(" Cha: %v \n", character.cha)
+	fmt.Printf(" Gui: %v \n", character.gui)
+	fmt.Println() 
+	fmt.Println(" -Skills-")
+	pack1 := packSpaceString(fmt.Sprintf(" %s: %v", skills[0], character.skills[0]), 28)
+	pack2 := packSpaceString(fmt.Sprintf("%s: %v", skills[1], character.skills[1]), 28)	
+	fmt.Println(pack1 + pack2)
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[2], character.skills[2]), 28)
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[3], character.skills[3]), 28)	
+	fmt.Println(pack1 + pack2)
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[4], character.skills[4]), 28)
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[5], character.skills[5]), 28)	
+	fmt.Println(pack1 + pack2)
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[6], character.skills[6]), 28)	
+	fmt.Println(pack1)
+	
 	fmt.Println()
 
 	fmt.Printf("\nCrowns: %v", character.crowns)

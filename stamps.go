@@ -5,7 +5,7 @@ package main
 //import "fmt"
 //import "strings"
 
-var PALLETE string = "▓ ▒ ░ ■ ║ ╣ ║ ╝ ╚ ╩ ╠ ╬ ═ ╦ ╔ ╗ │ └ ┘ ┌ ┐ ─ ┴ ├ ┤ ┬ ┼ ╞ ╫ ┴ ╨ ╥ ╖ ╒ ╓ ╙ ╜"
+var PALLETE string = "▓ ▒ ░ ■ ║ ╣ ║ ╝ ╚ ╩ ╠ ╬ ═ ╦ ╔ ╗ │ └ ┘ ┌ ┐ ─ ┴ ├ ┤ ┬ ┼ ╡ ╞ ╫ ┴ ╨ ╥ ╖ ╒ ╓ ╙ ╜"
 var PALLETE2 string = "↨ ↔ ▀ █ ▐ ▲ ► ▼ ◄ « ˄ « ˄ ∞ ⌂ ☼ ♥ ♪ ♫ ± Σ Φ ∩ † • ♥ ♠ ♣ ♦ × ≈"
 
 var worldmap = []string{

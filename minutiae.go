@@ -4,6 +4,48 @@ package main
 
 import "fmt"
 
+func showSkillsMinutiae() {
+
+	clearConsole()
+	var flag bool = true
+	rsp := ""
+
+	for flag {
+		fmt.Println("--- Minutiae: Skills ---")
+		fmt.Println("XXXXX")
+		fmt.Println("")
+		fmt.Println("")
+		
+		fmt.Println("")
+		fmt.Println("[ENTER] to continue.")
+		fmt.Scanln(&rsp)
+		
+		flag = false
+	}
+}
+
+func showTravelMinutiae() {
+
+	clearConsole()
+	var flag bool = true
+	rsp := ""
+
+	for flag {
+		clearConsole()
+		fmt.Println("--- Minutiae: Travel ---")
+		fmt.Println("XXXXX")
+		fmt.Println("")
+		fmt.Println("")
+		
+		fmt.Println("")
+		fmt.Println("[ENTER] to continue.")
+		fmt.Scanln(&rsp)
+		
+		flag = false
+	}
+}
+
+
 func showAttributesMinutiae() {
 
 	clearConsole()
