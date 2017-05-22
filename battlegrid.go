@@ -937,13 +937,7 @@ func (bg *BattleGrid) drawGrid() {
 			if character.hp < 1 {
 				row += "DEAD"
 			} else {
-				for hlth := 0; hlth <= character.maxhp; hlth++ {
-					if hlth > character.hp {
-						row += "-"
-					} else {
-						row += "♥"
-					}
-				}			
+				row += character.getHealthString()
 			}
 
 			row += ")"

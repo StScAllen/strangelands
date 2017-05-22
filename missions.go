@@ -38,11 +38,11 @@ var phaseDescrips = []string 	{
 									"The secret to the fright's power lies somewhere in this tome.",
 								}									
 									
-var BLANK_MISSION = Mission{-1, 0, 0, 0, 0, "", "", 0, 0, 0, []Phase{}, 0, 0, 0, 0, "", 0, 0, 0, 0, 0, 0, 0, STATUS_AVAIL}
+var BLANK_MISSION = Mission{-1, 0, 0, 0, 0, "No Mission", "", 0, 0, 0, []Phase{}, 0, 0, 0, 0, 0, "", 0, 0, 0, 0, 0, 0, 0, STATUS_AVAIL}
 
 var missions = []Mission 	{
-								{0, 0, 1, 1, 1, "", "", 3, 1, 2, []Phase{}, 0, 50, 0, 0, "", 60, 90, 15, 15, 5, 0, 1, STATUS_AVAIL},
-								{1, 0, 1, 2, 2, "", "", 3, 1, 2, []Phase{}, 0, 60, 0, 0, "", 60, 90, 15, 15, 0, 1, 1, STATUS_AVAIL},
+								{0, 0, 1, 1, 1, "", "", 3, 1, 2, []Phase{}, 0, 50, 10, 0, 0, "", 60, 90, 15, 15, 5, 0, 1, STATUS_AVAIL},
+								{1, 0, 1, 2, 2, "", "", 3, 1, 2, []Phase{}, 0, 60, 10, 0, 0, "", 60, 90, 15, 15, 0, 1, 1, STATUS_AVAIL},
 							}
 
 type Mission struct {
@@ -59,6 +59,7 @@ type Mission struct {
 	phases					[]Phase
 	missionBaseLocation		int
 	crownReward				int
+	experienceReward		int
 	apprenticeReward		int		// 1 true
 	apprenticeRewardVariant	int		// id that determines type, (child, adult, girl, boy, etc.)
 	appenticeRewardName		string 	// string name for apprentice reward (character name)
@@ -98,6 +99,28 @@ func (miss * Mission) getDisplayString(detail int) (string) {
 	
 	
 	return dispString
+}
+
+func showMissionComplete() {
+	rsp := ""
+
+	clearConsole()
+	
+	fmt.Println(packSpaceStringCenter("┌─────────────╡ " + packSpaceStringCenter("Mission Complete!", 30) + " ╞─────────────┐", 76))
+	fmt.Println("│ " + packSpaceString(fmt.Sprintf("Gold Earned: %v", mission.crownReward), 58) + " │")
+	fmt.Println("│ " + packSpaceString(fmt.Sprintf("Exp Earned: %v", mission.experienceReward), 58) + " │")
+
+	fmt.Println("└──────────────────────────────────────────────────────────────┘")		
+
+	fmt.Println()
+	fmt.Printf("\nPress enter to exit.")
+	
+	fmt.Scanln(&rsp)
+	
+	character.crowns += mission.crownReward
+	character.exp += mission.experienceReward
+	
+	mission = getBlankMission()
 }
 
 func (miss * Mission) viewMissionStatus() {
@@ -337,6 +360,18 @@ func maybeAddMission() {
 	}
 }
 
+func getBlankMission() (Mission) {
+	var miss Mission 
+	
+	miss = BLANK_MISSION
+	
+	miss.instanceId = 0
+	miss.typeId = -1
+	miss.title = "No Mission"
+	
+	return miss
+}
+
 func unpackMissionBlock(block string) (int, Mission) {
 	var miss Mission
 	
@@ -361,17 +396,18 @@ func unpackMissionBlock(block string) (int, Mission) {
 	miss.minimumPhases, _ = strconv.Atoi(bits[8])
 	miss.missionBaseLocation, _ = strconv.Atoi(bits[9])
 	miss.crownReward, _ = strconv.Atoi(bits[10])
-	miss.apprenticeReward, _ = strconv.Atoi(bits[11])
-	miss.apprenticeRewardVariant, _ = strconv.Atoi(bits[12])
-	miss.appenticeRewardName = bits[13]
+	miss.experienceReward, _ = strconv.Atoi(bits[11])
+	miss.apprenticeReward, _ = strconv.Atoi(bits[12])
+	miss.apprenticeRewardVariant, _ = strconv.Atoi(bits[13])
+	miss.appenticeRewardName = bits[14]
 	
-	miss.startDays, _ = strconv.Atoi(bits[14])
-	miss.completeDays, _ = strconv.Atoi(bits[15])
-	miss.impactDays, _ = strconv.Atoi(bits[16])
-	miss.impactDaysLeft, _ = strconv.Atoi(bits[17])
-	miss.financialImpact, _ = strconv.Atoi(bits[18])	
-	miss.livesImpact, _ = strconv.Atoi(bits[19])	
-	miss.politicalImpact, _ = strconv.Atoi(bits[20])	
+	miss.startDays, _ = strconv.Atoi(bits[15])
+	miss.completeDays, _ = strconv.Atoi(bits[16])
+	miss.impactDays, _ = strconv.Atoi(bits[17])
+	miss.impactDaysLeft, _ = strconv.Atoi(bits[18])
+	miss.financialImpact, _ = strconv.Atoi(bits[19])	
+	miss.livesImpact, _ = strconv.Atoi(bits[20])	
+	miss.politicalImpact, _ = strconv.Atoi(bits[21])	
 
 	miss.phases = make([]Phase, 0, 0)
 	
@@ -419,6 +455,8 @@ func (miss *Mission) getSaveString() string {
 	saveString += fmt.Sprintf("%v,", miss.minimumPhases)
 	saveString += fmt.Sprintf("%v,", miss.missionBaseLocation)
 	saveString += fmt.Sprintf("%v,", miss.crownReward)
+	saveString += fmt.Sprintf("%v,", miss.experienceReward)
+
 	saveString += fmt.Sprintf("%v,", miss.apprenticeReward)
 	saveString += fmt.Sprintf("%v,", miss.apprenticeRewardVariant)
 	saveString += fmt.Sprintf("%s,", miss.appenticeRewardName)

@@ -225,6 +225,8 @@ func doBattle() (string){
 	if result == DIED {
 		showPause("Character died! Game over Man, game over!")
 		return "q"
+	} else if result == FINISHED_MISSION {
+		showMissionComplete()
 	}
 	
 	return ""
@@ -280,7 +282,7 @@ func (village *Village) visitVillage() string {
 	fmt.Println("4. Visit Chirurgeon")
 	fmt.Println("5. Politicks - Curry Favor / Influence")
 	fmt.Println("6. Travel")
-	if mission.typeId != -1 && mission.phases[mission.currentPhase - 1] != PHASE_FIGHT && mission.phases[mission.currentPhase - 1].locationIndex == village.villageIndex {
+	if mission.typeId != -1 && mission.phases[mission.currentPhase - 1].id != PHASE_FIGHT && mission.phases[mission.currentPhase - 1].locationIndex == village.villageIndex {
 		quip := ""
 		if mission.phases[mission.currentPhase - 1].id == PHASE_PUZZLE {
 			quip = "Solve Puzzle"

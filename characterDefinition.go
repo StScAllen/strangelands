@@ -103,6 +103,10 @@ func (char *Character) getTotalDefenseAdjustment() int {
 
 	// TODO: this needs to calc total defense from all sources
 
+	adj += char.turnDefense
+	adj += char.handSlots[LEFT].defense
+	adj += char.handSlots[RIGHT].defense
+	
 	return adj
 }
 
@@ -114,6 +118,21 @@ func (char *Character) getResistanceAt(charBodyIndex int) int {
 	}
 
 	return 2
+}
+
+func (char *Character) getHealthString() (string){
+	
+	healthString := ""
+	
+	for k :=0; k < char.maxhp; k++{
+		if k < char.hp {
+			healthString += "♥"
+		} else {
+			healthString += "-"
+		}
+	}
+	
+	return healthString
 }
 
 // hits - number of hits to assess, charBodyIndex - equip constant

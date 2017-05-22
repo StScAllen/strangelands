@@ -561,6 +561,11 @@ func adventure() (result int) {
 			apprentice.hp = 0
 			currTurns = 0
 			result = DIED
+		} else if strings.Contains(rsp, "kill") {
+			if strings.Contains(rsp2, "-monst") {
+				bg.monster.hp = 0
+				result = FINISHED_MISSION
+			}
 		}
 	}
 	

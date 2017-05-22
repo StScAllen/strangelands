@@ -88,6 +88,10 @@ func (c *Character) getCharSaveBlock() string {
 	saveString += fmt.Sprintf("%v,", c.crowns)
 	saveString += fmt.Sprintf("%v,", c.villageIndex)
 	
+	saveString += fmt.Sprintf("%v,", c.exp)
+	saveString += fmt.Sprintf("%v,", c.lvl)
+
+	
 	for k := 0; k < len(c.skills); k++ {
 		saveString += fmt.Sprintf("%v,", c.skills[k])
 	}
@@ -155,15 +159,18 @@ func unpackCharacterBlock(block string) (int, Character) {
 	char.crowns, _ = strconv.Atoi(bits[15])
 	char.villageIndex, _ = strconv.Atoi(bits[16])
 
-	char.skills[0], _ = strconv.Atoi(bits[17]) 
-	char.skills[1], _ = strconv.Atoi(bits[18]) 
-	char.skills[2], _ = strconv.Atoi(bits[19]) 
-	char.skills[3], _ = strconv.Atoi(bits[20]) 
-	char.skills[4], _ = strconv.Atoi(bits[21]) 
-	char.skills[5], _ = strconv.Atoi(bits[22]) 
-	char.skills[6], _ = strconv.Atoi(bits[23]) 	
+	char.exp, _ = strconv.Atoi(bits[17])	
+	char.lvl, _ = strconv.Atoi(bits[18])
 	
-	inventoryCount, _ := strconv.Atoi(bits[24]) // count of items in backpack
+	char.skills[0], _ = strconv.Atoi(bits[19]) 
+	char.skills[1], _ = strconv.Atoi(bits[20]) 
+	char.skills[2], _ = strconv.Atoi(bits[21]) 
+	char.skills[3], _ = strconv.Atoi(bits[22]) 
+	char.skills[4], _ = strconv.Atoi(bits[23]) 
+	char.skills[5], _ = strconv.Atoi(bits[24]) 
+	char.skills[6], _ = strconv.Atoi(bits[25]) 	
+	
+	inventoryCount, _ := strconv.Atoi(bits[26]) // count of items in backpack
 	
 	// load inventory!
 	char.handSlots[0], _ = restoreSavedItem(lines[1])

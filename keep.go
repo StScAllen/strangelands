@@ -68,9 +68,14 @@ type Keep struct {
 // Ex. Something is eating our children.
 
 // POTIONS are called UNCTURES
+
 // HAND OF GLORY - make some creatures flee (5 fingers, 5 uses)
-// Cross of St Martin - Stun some creatures for a turn
-//
+// Cross of St Martin - Randomly move monster to random grid/loc
+// Splinter of the True Cross - ???
+// Stone Cast at the Lord during the Crucificion - ??
+// ??? - bonus moves
+// ??? - bonus attack
+// ??? - bonus healing
 
 // SPELLS are called LAMENTATIONS
 // "Only the majesty of grief and sorrow separate us from the dark.  The dead never grieve, and the dark knows little of sorrow."

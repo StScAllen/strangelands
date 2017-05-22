@@ -11,7 +11,7 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".09a"
+const VERSION = ".10a"
 
 const DEBUG_ON = true
 
@@ -114,7 +114,7 @@ func main() {
 		keep = createKeep()
 		buildVillages()
 		updateShops()
-		mission = BLANK_MISSION
+		mission = getBlankMission()
 		save()
 
 	} else if rsp == "2" {

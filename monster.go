@@ -322,7 +322,7 @@ func (bg *BattleGrid) doAttack(attackIndex, tgt int) (int){
 				character.hp -= hits
 
 				if hits > 1 {
-					if die.rollxdx(1, 4) < hits {
+					if die.rollxdx(1, 4) <= hits {
 						character.wounds = append(character.wounds, genNewWound(charBodyIndex))
 						showPause("Character has suffered a new wound!")
 					}
