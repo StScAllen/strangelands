@@ -23,6 +23,119 @@ type Village struct {
 	mapX, mapY      int
 }
 
+func (v *Village) getSaveString() (string) {
+	villageBlock := BLOCK_VILLAGE + ","
+
+	villageBlock += fmt.Sprintf("%v,", v.villageIndex)
+	villageBlock += fmt.Sprintf("%v,", v.size)
+	villageBlock += fmt.Sprintf("%v,", v.politicalFavor)
+
+	villageBlock += fmt.Sprintf("%v,", len(v.shopWeapons))
+	villageBlock += fmt.Sprintf("%v,", len(v.shopArmor))
+	villageBlock += fmt.Sprintf("%v,", len(v.shopProvisions))
+	villageBlock += fmt.Sprintf("%v,", len(v.shopApothecary))
+	villageBlock += fmt.Sprintf("%v,", len(v.shopCuriosities))
+	
+	villageBlock += "◄" // line end, now do equip
+	
+	for k := 0; k < len(v.shopWeapons); k++ {
+		villageBlock += v.shopWeapons[k].getSaveString()
+	}
+	
+	for k := 0; k < len(v.shopArmor); k++ {
+		villageBlock += v.shopArmor[k].getSaveString()
+	}
+
+	for k := 0; k < len(v.shopProvisions); k++ {
+		villageBlock += v.shopProvisions[k].getSaveString()
+	}
+
+	for k := 0; k < len(v.shopApothecary); k++ {
+		villageBlock += v.shopApothecary[k].getSaveString()
+	}
+
+	for k := 0; k < len(v.shopCuriosities); k++ {
+		villageBlock += v.shopCuriosities[k].getSaveString()
+	}
+	
+	
+	// finally:
+	villageBlock += "■"
+
+	return villageBlock
+}
+
+func unpackVillageBlock(idx int, block string) (int, Village) {
+	var vill Village
+	
+	lines := strings.Split(block, "◄")
+
+	bits := strings.Split(lines[0], ",")
+
+	if bits[0] == BLOCK_VILLAGE {
+		fmt.Println("Loading " + BLOCK_VILLAGE + "...")
+	} else {
+		log.addError("Cant find VILLAGE block.")
+		fmt.Println("VILLAGE Block not found!")
+		return -1, vill
+	}
+
+	lineCounter := 0
+
+	if (villages[idx].villageIndex != idx) {
+		log.addError("Village indexes mismatch! Corrupt Save file?")
+		fmt.Println("VILLAGE index mismatch! Cannot load save file.")
+		return -1, vill	
+	}
+	
+	vill = villages[idx]
+	
+	vill.size, _ = strconv.Atoi(bits[2])
+	vill.politicalFavor, _ = strconv.Atoi(bits[3])
+	
+	numWeapons, numArmor, numProv, numApoth, numCur := 0,0,0,0,0
+	
+	numWeapons, _ = strconv.Atoi(bits[4])
+	numArmor, _ = strconv.Atoi(bits[5])
+	numProv, _ = strconv.Atoi(bits[6])
+	numApoth, _ = strconv.Atoi(bits[7])
+	numCur, _ = strconv.Atoi(bits[8])
+	
+	lineCounter = 1
+	
+	for k := 0; k < numWeapons; k++ {
+		itm, _ := restoreSavedItem(lines[lineCounter])
+		vill.shopWeapons = append(vill.shopWeapons, itm)
+		lineCounter++
+	}
+	
+	for k := 0; k < numArmor; k++ {
+		itm, _ := restoreSavedItem(lines[lineCounter])
+		vill.shopArmor = append(vill.shopArmor, itm)
+		lineCounter++
+	}
+	
+	for k := 0; k < numProv; k++ {
+		itm, _ := restoreSavedItem(lines[lineCounter])
+		vill.shopProvisions = append(vill.shopProvisions, itm)
+		lineCounter++
+	}
+	
+	for k := 0; k < numApoth; k++ {
+		itm, _ := restoreSavedItem(lines[lineCounter])
+		vill.shopApothecary = append(vill.shopApothecary, itm)
+		lineCounter++
+	}	
+	
+	for k := 0; k < numCur; k++ {
+		itm, _ := restoreSavedItem(lines[lineCounter])
+		vill.shopCuriosities = append(vill.shopCuriosities, itm)
+		lineCounter++
+	}	
+	
+	return 1, vill
+}
+
 func buildVillages() {
 	villages = make([]Village, 8, 8)
 
@@ -62,7 +175,7 @@ func buildVillages() {
 	gould.name = "Gould"
 	gould.distanceToKeep = 2
 	gould.size = 2
-	gould.mapX, gould.mapY = 35, 15
+	gould.mapX, gould.mapY = 32, 18
 	gould.missions = make([]Mission, 0, 0)
 	gould.villageIndex = 3
 	villages[3] = gould
@@ -76,7 +189,7 @@ func buildVillages() {
 	elise.villageIndex = 4
 	villages[4] = elise
 
-	var autumn Village
+	var autumn Village					// Autumn has the orphanage
 	autumn.name = "Autumn"
 	autumn.distanceToKeep = 4
 	autumn.size = 4
@@ -105,6 +218,27 @@ func buildVillages() {
 
 func (village *Village) research() {
 
+}
+
+func (village * Village) visitOrphanage() {
+	exitFlag := false
+	rsp := ""
+
+	
+	for !exitFlag {
+		clearConsole()
+		
+		fmt.Println("+++ Orphanage +++")
+		fmt.Println("------------")
+		fmt.Println("1. Exit  ")
+		
+		fmt.Scanln(&rsp)
+		
+		if rsp == "1" {
+			exitFlag = true
+		}
+	}
+	
 }
 
 func (village *Village) viewBulletinBoard() {
@@ -190,12 +324,12 @@ func (village *Village) visitTavern() {		//
 			showPause("You take in drink and companionship. Your spirits are lifted.")
 			character.giveSoul(2)
 			character.crowns -= 1
-			endDay()
+			endDay(2)
 			save()			
 		} else if rsp == "2" {	
 			showPause("You rest and regather your strength for the long road ahead.")
 			character.crowns -= 3
-			endDay()
+			endDay(3)
 			save()
 		} else if rsp == "3" {
 			
@@ -232,41 +366,184 @@ func doBattle() (string){
 	return ""
 }
 
+func drawPipMap(dice []int) {
+
+	const PUZZLE_TOKEN = "[Φ]"
+	const RESEARCH_TOKEN = "[Σ]"
+
+	if mission.phases[mission.currentPhase - 1].id == PHASE_PUZZLE {
+		diceResults := ""
+		total := 0
+		
+		for i := 0; i < len(dice); i++ {
+			diceResults += fmt.Sprintf(" [%v] ", dice[i])
+			total += dice[i]
+		}	
+	
+		sTotal := fmt.Sprintf("%v", total)
+	
+	//[" + packSpaceStringCenter(sTotal, 4) + "]
+	
+		fmt.Println("┌─────────╡ " + packSpaceStringCenter("Puzzle Required", 19) + " ╞─────────┐   ┌───────── Dice ────────┐ ")
+
+		fmt.Println("  " + packSpaceStringCenter(" ", 39) + "     " + diceResults)
+		
+		pips := "  " 
+		counter := 0
+		rowcount := 0
+		
+		for k := 0; k < mission.phases[mission.currentPhase - 1].puzzlePips; k++ {
+			counter++
+			pips += PUZZLE_TOKEN
+			
+			if counter > 9 {
+				counter = 0
+				rowcount++
+				if rowcount == 1 {
+					pips +=  "     └────────╜" + packSpaceStringCenter(sTotal, 5) + "╙────────┘"			
+				}
+				
+				pips += "\n  "
+			// } else if counter == mission.phases[mission.currentPhase - 1].puzzlePips {
+				// pips = packSpaceString(pips, 25) + "     └────────╜" + packSpaceStringCenter(sTotal, 5) + "╙────────┘"	
+			} else {
+				pips += " "
+			}
+		}
+		
+		fmt.Println(pips)
+	} else if mission.phases[mission.currentPhase - 1].id == PHASE_RESEARCH {
+	
+		diceResults := ""
+		total := 0
+		
+		for i := 0; i < len(dice); i++ {
+			diceResults += fmt.Sprintf(" [%v] ", dice[i])
+			total += dice[i]
+		}	
+		sTotal := fmt.Sprintf("%v", total)
+	
+		fmt.Println("┌─────────╡ " + packSpaceStringCenter("Research Required", 19) + " ╞─────────┐   ┌───────── Dice ────────┐ ")
+		fmt.Println("  " + packSpaceStringCenter(" ", 39) + "     " + diceResults)
+
+		pips := "  " 
+		counter := 0
+		rowcount := 0
+		
+		for k := 0; k < mission.phases[mission.currentPhase - 1].researchPips; k++ {
+			counter++
+			pips += RESEARCH_TOKEN
+			
+			if counter > 9 {
+				counter = 0
+				rowcount++
+				if rowcount == 1 {
+					pips +=  "     └────────╜" + packSpaceStringCenter(sTotal, 5) + "╙────────┘"				
+				}
+				pips += "\n  "
+			} else {
+				pips += " "
+			}
+		}
+		
+		fmt.Println(pips)
+	}
+	fmt.Println("")
+	fmt.Println("└─────────────────────────────────────────┘")
+	fmt.Println("")
+}
+
 func doMissionPhase() {
 	var die Die
+			
+	exitFlag := false
+	rsp := ""
+
+	dice := make([]int, 0, 0)
+
+	rerolls := 1
+	verb := ""
 	
 	if mission.phases[mission.currentPhase - 1].id == PHASE_PUZZLE {
-		val := 0
-		for k := 0; k < character.skills[0]; k++ {
-			val += die.rollxdx(1, 6)
-		}
-		mission.phases[mission.currentPhase - 1].puzzlePips -= val
-		clearConsole()
-		showPause(fmt.Sprintf("You solved %v pips of the puzzle!", val))
-		if mission.phases[mission.currentPhase - 1].puzzlePips < 1 {
-			mission.phases[mission.currentPhase - 1].puzzlePips = 0
-			showPause("Puzzle solved!")
-			mission.currentPhase++
-			mission.viewMissionStatus()
-		}
-			
-	} else if mission.phases[mission.currentPhase - 1].id == PHASE_RESEARCH {
-		val := 0
-		for k := 0; k < character.skills[2]; k++ {
-			val += die.rollxdx(1, 6)
-		}
-		mission.phases[mission.currentPhase - 1].researchPips -= val
-		clearConsole()
-		showPause(fmt.Sprintf("You researched %v pips!", val))
-		if mission.phases[mission.currentPhase - 1].researchPips < 1 {
-			mission.phases[mission.currentPhase - 1].researchPips = 0
-			showPause("Research Complete!")
-			mission.currentPhase++
-			mission.viewMissionStatus()
+		for d := 0; d < character.skills[0]; d++{
+			dice = append(dice, 0)
 		}	
-	} 
+		verb = "Solved!"
+	} else if mission.phases[mission.currentPhase - 1].id == PHASE_RESEARCH {
+		for d := 0; d < character.skills[2]; d++{
+			dice = append(dice, 0)
+		}		
+		verb = "Researched"
+	}
+
+	total := 0	
+	for !exitFlag {
+		clearConsole()
+		drawPipMap(dice)
+		
+		commands := ""
+		if rerolls > 0 {
+			commands = "[r. roll/reroll    e. exit]"
+		} else {
+			commands = "[a. accept]"
+		}
+		
+		//fmt.Println(packSpaceString(diceResults, 40) + fmt.Sprintf("(%v)", total))
+		fmt.Println("")
+		fmt.Println(commands)
+		fmt.Printf("Choose an action: ")
+		
+		fmt.Scanln(&rsp)
+		
+		if rsp == "r" && rerolls > 0 {
+			total = 0
+			for i := 0; i < len(dice); i++ {
+				dice[i] = die.rollxdx(1, 6)
+				total += dice[i]
+			}		
+			
+			rerolls -= 1
+		} else if rsp == "e" {
+			exitFlag = true
+		} else if rsp == "a" {
+			exitFlag = true
+			
+			if total > 0 {
+				endFlag := false
+				for k := 0; k < total; k++ {
+					if mission.phases[mission.currentPhase - 1].id == PHASE_PUZZLE {
+						mission.phases[mission.currentPhase - 1].puzzlePips -= 1
+						if mission.phases[mission.currentPhase - 1].puzzlePips < 1 {
+							endFlag = true
+							mission.phases[mission.currentPhase - 1].complete = 1
+						}
+					} else if  mission.phases[mission.currentPhase - 1].id == PHASE_RESEARCH {
+						mission.phases[mission.currentPhase - 1].researchPips -= 1					
+						if mission.phases[mission.currentPhase - 1].researchPips < 1 {
+							endFlag = true
+							mission.phases[mission.currentPhase - 1].complete = 1
+						}
+					}
+					clearConsole()
+					drawPipMap(dice)
+					time.Sleep(400 * time.Millisecond)
+					if endFlag {
+						break
+					}
+				}
+			}
+			
+			if mission.phases[mission.currentPhase - 1].complete == 0 {
+				showPause(fmt.Sprintf("%v pips %s!", total, verb))
+			} else {
+				showPause(fmt.Sprintf("Phase Complete! (%v experience earned)", mission.phases[mission.currentPhase - 1].rewardExperience))			
+				character.exp += mission.phases[mission.currentPhase - 1].rewardExperience
+				mission.currentPhase++
+			}
+		}
+	}
 	
-	endDay()
+	endDay(1)
 }
 
 func (village *Village) visitVillage() string {
@@ -282,6 +559,11 @@ func (village *Village) visitVillage() string {
 	fmt.Println("4. Visit Chirurgeon")
 	fmt.Println("5. Politicks - Curry Favor / Influence")
 	fmt.Println("6. Travel")
+	
+	if village.villageIndex == 5 {
+		fmt.Println("7. Orphanage")		
+	}
+	
 	if mission.typeId != -1 && mission.phases[mission.currentPhase - 1].id != PHASE_FIGHT && mission.phases[mission.currentPhase - 1].locationIndex == village.villageIndex {
 		quip := ""
 		if mission.phases[mission.currentPhase - 1].id == PHASE_PUZZLE {
@@ -327,6 +609,8 @@ func (village *Village) visitVillage() string {
 		rsp = doBattle()			
 	} else if rsp == "6" {
 		showTravelMenu()
+	} else if rsp == "7" && village.villageIndex == 5 {
+		village.visitOrphanage()		
 	} else if rsp == "s" {
 		character.showStatus()
 		character.printCharacter(1)
@@ -444,6 +728,9 @@ func showTravelMenu() string {
 			drawWorldMap()
 			validSelection = false
 			
+		case "m":
+			mission.viewMissionStatus()
+			
 		case "s":
 			character.showStatus()
 			character.printCharacter(1)		
@@ -490,7 +777,7 @@ func showTimePassageScreen(lapse int) {
 		clearConsole()
 		fmt.Println("Day: ", game.gameDay)
 		fmt.Println("Time Passes...")
-		endDay()
+		endDay(0)
 		tick += " █ █ █"
 		block := ""
 		for k := 0; k < diff-1; k++ {

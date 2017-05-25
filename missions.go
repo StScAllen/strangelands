@@ -110,7 +110,7 @@ func showMissionComplete() {
 	fmt.Println("│ " + packSpaceString(fmt.Sprintf("Gold Earned: %v", mission.crownReward), 58) + " │")
 	fmt.Println("│ " + packSpaceString(fmt.Sprintf("Exp Earned: %v", mission.experienceReward), 58) + " │")
 
-	fmt.Println("└──────────────────────────────────────────────────────────────┘")		
+	fmt.Println("└────────────────────────────────────────────────────────────┘")		
 
 	fmt.Println()
 	fmt.Printf("\nPress enter to exit.")
@@ -245,6 +245,8 @@ func genNewMission(villageIndex int) (Mission) {
 	phase.rewardCrowns	= 25
 	phase.complete = 0
 	
+	tMission.experienceReward += (phase.researchPips + phase.puzzlePips)
+	
 	tMission.phases = make([]Phase, 0, 0)
 	tMission.phases = append(tMission.phases, phase)
 			
@@ -263,6 +265,7 @@ func genNewMission(villageIndex int) (Mission) {
 	phase2.rewardCrowns	= 0
 	phase2.complete = 0	
 	
+	tMission.experienceReward += (phase.researchPips + phase.puzzlePips)
 	tMission.phases = append(tMission.phases, phase2)
 	
 	var phase3 Phase
@@ -476,6 +479,7 @@ func (miss *Mission) getSaveString() string {
 
 		row += fmt.Sprintf("%v,", cphase.id)
 		row += fmt.Sprintf("%v,", cphase.locationIndex)
+		row += fmt.Sprintf("%v,", cphase.itemRequiredId)
 		row += fmt.Sprintf("%v,", cphase.puzzlePips)
 		row += fmt.Sprintf("%v,", cphase.researchPips)
 		row += fmt.Sprintf("%v,", cphase.descIndex)

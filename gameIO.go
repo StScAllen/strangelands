@@ -7,6 +7,8 @@ import "strings"
 import "strconv"
 import "fmt"
 import "os"
+import "bytes"
+import "encoding/gob"
 
 const BLOCK_GAME = "[GAME]"
 const BLOCK_CHAR = "[CHAR]"
@@ -25,6 +27,7 @@ func getGameSaveBlock() string {
 	gameBlock += fmt.Sprintf("%v,", game.weekCounter)
 	gameBlock += fmt.Sprintf("%v,", game.monthCounter)
 	gameBlock += fmt.Sprintf("%v,", game.missionInstanceId)
+	gameBlock += fmt.Sprintf("%v,", game.charInstanceId)
 	
 	gameBlock += "■"
 
@@ -57,6 +60,7 @@ func unpackGameBlock(block string) bool {
 	game.weekCounter, _ = strconv.Atoi(bits[5])
 	game.monthCounter, _ = strconv.Atoi(bits[6])
 	game.missionInstanceId, _ = strconv.Atoi(bits[7])
+	game.charInstanceId, _ = strconv.Atoi(bits[8])
 	
 	fmt.Println("            ...done!")
 
@@ -91,11 +95,13 @@ func (c *Character) getCharSaveBlock() string {
 	saveString += fmt.Sprintf("%v,", c.exp)
 	saveString += fmt.Sprintf("%v,", c.lvl)
 
+	saveString += fmt.Sprintf("%v,", c.instanceId)
 	
 	for k := 0; k < len(c.skills); k++ {
 		saveString += fmt.Sprintf("%v,", c.skills[k])
 	}
 
+	saveString += fmt.Sprintf("%v,", c.subLoc)
 	saveString += fmt.Sprintf("%v,", len(c.inventory)) // save count of backpack items
 
 	saveString += "◄" // end line so we can do equipment, spells, etc on their own line
@@ -162,15 +168,19 @@ func unpackCharacterBlock(block string) (int, Character) {
 	char.exp, _ = strconv.Atoi(bits[17])	
 	char.lvl, _ = strconv.Atoi(bits[18])
 	
-	char.skills[0], _ = strconv.Atoi(bits[19]) 
-	char.skills[1], _ = strconv.Atoi(bits[20]) 
-	char.skills[2], _ = strconv.Atoi(bits[21]) 
-	char.skills[3], _ = strconv.Atoi(bits[22]) 
-	char.skills[4], _ = strconv.Atoi(bits[23]) 
-	char.skills[5], _ = strconv.Atoi(bits[24]) 
-	char.skills[6], _ = strconv.Atoi(bits[25]) 	
+	char.instanceId, _ = strconv.Atoi(bits[19])
 	
-	inventoryCount, _ := strconv.Atoi(bits[26]) // count of items in backpack
+	char.skills[0], _ = strconv.Atoi(bits[20]) 
+	char.skills[1], _ = strconv.Atoi(bits[21]) 
+	char.skills[2], _ = strconv.Atoi(bits[22]) 
+	char.skills[3], _ = strconv.Atoi(bits[23]) 
+	char.skills[4], _ = strconv.Atoi(bits[24]) 
+	char.skills[5], _ = strconv.Atoi(bits[25]) 
+	char.skills[6], _ = strconv.Atoi(bits[26]) 	
+	
+	char.subLoc, _ = strconv.Atoi(bits[27]) // count of items in backpack
+
+	inventoryCount, _ := strconv.Atoi(bits[28]) // count of items in backpack
 	
 	// load inventory!
 	char.handSlots[0], _ = restoreSavedItem(lines[1])
@@ -196,12 +206,17 @@ func unpackCharacterBlock(block string) (int, Character) {
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 func save() {
+	filename := "save.txt"
+	filename2 := "saveenc.txt"
 
-	var filename string
-
-	filename = "save.txt"
-
+//	var chars []Character
+//	var missions []Mission
+	
+//	chars = make([]Character, 0, 0)
+//	missions = make([]Mission, 0, 0)
+	
 	file, err := os.Create(filename)
+	file2, err := os.Create(filename2)
 
 	var saveString string
 
@@ -211,10 +226,26 @@ func save() {
 	saveString += getKeepSaveBlock()
 	saveString += mission.getSaveString()
 
+	for k := 0; k < len(villages); k++ {
+		saveString += villages[k].getSaveString()
+	}
+	
+	
+	
 	if err == nil {
 		defer file.Close()
+		defer file2.Close()
 
 		file.WriteString(saveString)
+		
+		var network bytes.Buffer        
+		enc := gob.NewEncoder(&network) 
+		//dec := gob.NewDecoder(&network) 
+		
+		_ = enc.Encode(saveString)
+		
+		file2.WriteString(network.String())
+		
 		fmt.Println("Game Saved!")
 	}
 }
@@ -243,6 +274,13 @@ func loadGame() int {
 			_, keep = unpackKeepBlock(blocks[3])
 
 			_, mission = unpackMissionBlock(blocks[4])
+			
+			for k := 0; k < len(villages); k++ {
+				villIndx := k + 5
+				
+				_, villages[k] = unpackVillageBlock(k, blocks[villIndx])
+				
+			} 
 			
 			// blocks are broken with ■
 			// blocks are character, keep, village, game

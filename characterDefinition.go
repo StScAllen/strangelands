@@ -38,6 +38,7 @@ const RIGHT = 1
 } */
 
 type Character struct {
+	instanceId					  int
 	agi, str, per, intl, cha, gui int
 	name                          string // max name length for FORMATTING reasons is 23 characters!
 	hp, maxhp                     int
@@ -56,6 +57,52 @@ type Character struct {
 	inventory                     []Item
 	spellbook                     Spellbook
 	villageIndex                  int
+	subLoc						  int 	// better defines where in a village/mission the character can be found (apprentices/npcs)
+}
+
+func getNewBlankCharacter(name string) (Character) {
+	var char Character
+	
+	game.charInstanceId++
+	
+	char.setClearInventory()
+	
+	char.name = name
+	char.instanceId = game.charInstanceId
+
+	char.str = 2
+	char.agi = 2
+	char.intl = 2
+	char.gui = 2
+	char.cha = 2
+	char.per = 2
+
+	for k := 0; k < len(char.skills); k++ {
+		char.skills[k] = 0
+	}
+
+	char.lvl = 1
+
+	char.crowns = 0
+
+	char.hp = character.str
+	char.maxhp = character.hp
+
+	char.soul = character.gui + character.cha
+	char.maxsoul = character.soul
+
+	char.maxweight = character.str * 10
+	char.weight = 0
+
+	char.handSlots[0] = getEmptyItem()
+	char.handSlots[1] = getEmptyItem()
+
+	char.wounds = make([]Wound, 0, 0)
+	char.alive = true
+	
+	char.exp = 0
+	
+	return char
 }
 
 func (char * Character) getPowerBalance() float32 {
@@ -490,11 +537,12 @@ func (c *Character) getTotalStats() int {
 	return c.str + c.agi + c.intl + c.gui + c.cha + c.per
 }
 
-func createCharacter() Character {
+func createPlayerCharacter() Character {
 	var character Character
 
 	character.setClearInventory()
 
+	character.instanceId = 1
 	character.name = getName()
 	character.str = 3
 	character.agi = 3

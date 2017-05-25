@@ -11,7 +11,7 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".10a"
+const VERSION = ".11a"
 
 const DEBUG_ON = true
 
@@ -24,11 +24,13 @@ type Game struct {
 	monthCounter   		int
 	itemInstanceId 		int
 	missionInstanceId	int
+	charInstanceId 		int
 }
 
 func init() {
 	game.gameDay = 1
 	game.itemInstanceId = 1
+	game.charInstanceId = 2
 	log = openLog()
 	dieInit()
 }
@@ -39,12 +41,29 @@ func finalExit() {
 	log.writeToFile()
 }
 
-func endDay() {
-	character.hp += 1
+func endDay(restQuality int) {
+	var die Die
+	
+	clearConsole()
+	showPause("The consuming darkness marks an end to your day's labors...")
+
+	if character.hp == character.maxhp {
+		fmt.Println("... You are healthy.")
+	} else {
+		roll := die.rollxdx(1, 4)
+		if roll <= restQuality {
+			fmt.Println("... Your wounds are healing nicely.")
+			character.hp += 1
+		} else {
+			fmt.Println("... Your wounds show little improvement.")
+		}
+	}
 	if character.hp > character.maxhp {
 		character.hp = character.maxhp
 	}
 
+	showPause("So ends another day. Your toils continue...")
+	
 	game.gameDay++
 	game.dayCounter++
 
@@ -103,7 +122,7 @@ func main() {
 	if rsp == "1" { // new game, make a character
 		rsp = "n"
 		for rsp != "y" && rsp != "Y" {
-			character = createCharacter()
+			character = createPlayerCharacter()
 			character.printCharacter(0)
 
 			fmt.Print("\nUse this character? ")
@@ -118,14 +137,14 @@ func main() {
 		save()
 
 	} else if rsp == "2" {
+		// this needs to be done, before loading saves.
+		buildVillages()
 		err = loadGame()
 		if err == -1 {
 			showPause("Game File is missing or corrupted!")
 			return
 		}
 
-		buildVillages()
-		updateShops()
 		character.printCharacter(1)
 		character.crowns = 800
 	} else if rsp == "3" {

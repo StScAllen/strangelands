@@ -16,6 +16,7 @@ type Keep struct {
 	acres, usedacres int
 	descriptionId    int
 	apprentices      []Character
+	storage			 []Item
 	mapX, mapY       int
 }
 
@@ -30,6 +31,8 @@ type Keep struct {
 // View village status
 // Approve Apprentices
 // Request Assistance - bonus to skill check for mission arch
+// ONE VILLAGE HAS AN ORPHANAGE - Apprentices can be purchased but they are not always available.)
+
 
 // building ideas - each has various levels, land requirements and upgrade prices
 // farmland - "bleeding hands scrape weeds from the earth in hopes of a satiated belly - but funds must be made to pay the taxman"
@@ -55,7 +58,7 @@ type Keep struct {
 // They start with a series of puzzles, each must be solved with a skill roll. CHARM/INVESTIGATE/PUZZLES
 // Player can spend a day researching to gain a clue token, this provides a +1 to whatever skill is needed for that arch
 // Archs can force players to travel between villages for the next puzzle
-// Once an arch is complete, player travels to battlegrid to face the beast.
+// Once all archs are complete, player travels to battlegrid to face the beast.
 //
 // Incomplete missions can have different consequences. Death toll, financial, political
 // the longer the mission is unresolved the larger the impact, death reduces village size, financial
@@ -170,12 +173,13 @@ func (keep *Keep) visitKeep() string {
 		fmt.Printf("Day: %v \n", game.gameDay)
 		fmt.Printf("Acres: %v / %v \n", keep.usedacres, keep.acres)
 		fmt.Println("------------")
-		fmt.Println("1. Rest (End Day)")
+
 		fmt.Println("2. Structures")
 		fmt.Println("3. Apprentices")
 		fmt.Println("4. Keep Storage")
-		fmt.Println("5. Travel")
 		fmt.Println("")
+		fmt.Println("r. Rest (End Day)")		
+		fmt.Println("t. Travel")
 		fmt.Println("q. Exit")
 		fmt.Println("")
 		fmt.Println(BASE_ACTIONS)
@@ -186,8 +190,8 @@ func (keep *Keep) visitKeep() string {
 
 		//const BASE_ACTIONS = "[s. status   i. inventory   m. mission   w. world map   h. minutiae]"
 		
-		if rsp == "1" {
-			endDay()
+		if rsp == "r" {
+			endDay(2)
 			save()
 		} else if rsp == "s" {
 			character.showStatus()
@@ -201,10 +205,10 @@ func (keep *Keep) visitKeep() string {
 		} else if rsp == "h" {	
 			// show keep minutiae	
 			
-		} else if rsp == "5" {
+		} else if rsp == "t" {
 			travel := showTravelMenu()
 			return travel
-		}
+		} 
 	}
 
 	return rsp
