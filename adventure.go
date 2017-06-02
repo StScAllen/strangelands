@@ -10,10 +10,6 @@ const DIED = -1
 
 var mission Mission
 
-func chooseAdventure() {
-	showPause("Mission title is: " + mission.title)
-}
-
 func (bg *BattleGrid) canCharacterCast(char Character, currTurns int) bool {
 	return true
 }
@@ -336,8 +332,23 @@ func (bg *BattleGrid) getAvailableActions(char Character, currTurns int) string 
 	return actions
 }
 
-func adventure() (result int) {
-	var bg = buildBattleGrid(mission.typeId)
+
+func chooseAdventure(random bool) (int) {
+	rslt := 0
+	
+	if !random {
+		showPause("Mission title is: " + mission.title)	
+		rslt = adventure(mission.typeId)
+	} else {
+		showPause("Mission title is: " + "Accosted on the roadside.")	
+		rslt = adventure(-1)		
+	}
+	
+	return rslt
+}
+
+func adventure(mid int) (result int) {
+	var bg = buildBattleGrid(mid)
 	rsp := ""
 	rsp2 := ""
 	rsp3 := ""

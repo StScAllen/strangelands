@@ -1,7 +1,59 @@
 --Info--
-Game loaded.
-
+Monster Placed
+Showing loot for idx 0
+Monster Placed
 --Warnings--
 --AI--
-Time at start: 1495742576106324900
+Time at start: 1496339458650304100
+Monster Spotted!
+Character Spotted!
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=false) %!s(bool=false)
+(+) Adding a move attack behavior
+Bandit move: From: 16 : 5 (0) To: 11 : 5 (0)
+Plan interrupted by character move.
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=true) %!s(bool=false)
+(+) Adding a Cowering behavior
+Monster Defends: +1
+Bandit move: From: 11 : 5 (0) To: 7 : 5 (0)
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=true) %!s(bool=false)
+(+) Adding a Cowering behavior
+Bandit move: From: 7 : 5 (0) To: 3 : 5 (0)
+Monster Spotted!
+Character Spotted!
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=false) %!s(bool=false)
+(+) Adding a move attack behavior
+Bandit move: From: 20 : 3 (0) To: 15 : 3 (0)
+Bandit move: From: 15 : 3 (0) To: 9 : 3 (0)
+Plan interrupted by character move.
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=true) %!s(bool=false)
+Adding a direct attack behavior
+Monster attacks Josef with Weapon
+Monster attacks Josef with Weapon
+Bandit move: From: 9 : 3 (0) To: 9 : 3 (0)
+Monster attacks Josef with Weapon
+Monster attacks Josef with Weapon
+Bandit move: From: 9 : 3 (0) To: 9 : 3 (0)
+Monster attacks Josef with Weapon
+Monster attacks Josef with Weapon
+Bandit move: From: 9 : 3 (0) To: 9 : 3 (0)
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=true) %!s(bool=false)
+Adding a direct attack behavior
+Monster attacks Josef with Weapon
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=true) %!s(bool=false)
+Adding a direct attack behavior
+Character Visible: Trying to get path...
+Char/App Adj: %!s(bool=true) %!s(bool=false)
+Adding a direct attack behavior
+Bandit move: From: 9 : 3 (0) To: 9 : 3 (0)
+Monster attacks Josef with Weapon
+Monster attacks Josef with Weapon
+Bandit move: From: 9 : 3 (0) To: 9 : 3 (0)
+Monster attacks Josef with Weapon
 --Errors--

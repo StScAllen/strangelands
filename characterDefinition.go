@@ -5,6 +5,11 @@ import "fmt"
 import "strings"
 import "strconv"
 
+var femaleNames = []string{"Sarah", "Donna", "Kathryn", "Sheila", "Clarissa", "Coral", "Elizabeth"}
+var maleNames = []string{"Sam", "Richard", "Mason", "Hunter", "Conner", "Bentley", "Garriot"}
+
+var lastNames = []string{"Snow", "Smith", "Unknown", "Peters", "Matthew", "Vague", "Mason"} 
+
 var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery"}
 var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
 
@@ -85,13 +90,13 @@ func getNewBlankCharacter(name string) (Character) {
 
 	char.crowns = 0
 
-	char.hp = character.str
-	char.maxhp = character.hp
+	char.hp = char.str
+	char.maxhp = char.hp
 
-	char.soul = character.gui + character.cha
-	char.maxsoul = character.soul
+	char.soul = char.gui + char.cha
+	char.maxsoul = char.soul
 
-	char.maxweight = character.str * 10
+	char.maxweight = char.str * 10
 	char.weight = 0
 
 	char.handSlots[0] = getEmptyItem()
@@ -123,6 +128,8 @@ func (char * Character) getPowerBalance() float32 {
 // can have special items to increase moves
 func (char *Character) getCharacterMoves() int {
 	totalMoves := char.agi
+	
+	totalMoves += 3
 	
 	// TODO: add equipment, other buffs
 	
@@ -182,6 +189,75 @@ func (char *Character) getHealthString() (string){
 	return healthString
 }
 
+// a slightly sexist random character generator
+func getRandomApprentice() (Character) {
+	var die Die
+	female := false
+	
+	if die.rollxdx(1, 4) > 2 {
+		female = true
+	}
+	
+	randomApprentice := getNewBlankCharacter("")
+	if female {
+		roll1 := die.rollxdx(1, len(femaleNames)) - 1
+		roll2 := die.rollxdx(1, len(lastNames)) - 1
+		
+		randomApprentice.name = femaleNames[roll1] + " " + lastNames[roll2]
+	} else {
+		roll1 := die.rollxdx(1, len(maleNames)) - 1
+		roll2 := die.rollxdx(1, len(lastNames)) - 1
+		
+		randomApprentice.name = maleNames[roll1] + " " + lastNames[roll2]	
+	}
+	
+	// give them a random skill and attribute pt based on gender (sexist, huh?)
+	if female {
+		roll := die.rollxdx(1, 3)
+	
+		if roll == 1 {
+			randomApprentice.intl++
+		} else if roll == 2 {
+			randomApprentice.cha++
+		} else if roll == 3 {
+			randomApprentice.gui++
+		}
+	
+	} else {
+		roll := die.rollxdx(1, 3)	
+	
+		if roll == 1 {
+			randomApprentice.agi++
+		} else if roll == 2 {
+			randomApprentice.str++
+		} else if roll == 3 {
+			randomApprentice.per++
+		}
+	}
+	
+	roll := die.rollxdx(1, 7) - 1
+	
+	randomApprentice.skills[roll]++
+	
+	// TODO: Add a cool random interesting thing to each character (maybe minus an att, or give them an item, 'er something)
+	
+	randomApprentice.hp = randomApprentice.str
+	randomApprentice.maxhp = randomApprentice.hp
+
+	randomApprentice.soul = randomApprentice.gui + randomApprentice.cha
+	randomApprentice.maxsoul = randomApprentice.soul
+
+	randomApprentice.maxweight = randomApprentice.str * 10
+	randomApprentice.weight = 0
+	
+	return randomApprentice
+}
+
+func (char * Character) train() {
+	fmt.Println(fmt.Sprintf("%s trains!", char.name))
+	showPause("Todo: Training!")
+}
+
 // hits - number of hits to assess, charBodyIndex - equip constant
 func (char *Character) soakHits(hits, charBodyIndex int) {
 	char.armorSlots[charBodyIndex].shields -= hits
@@ -223,7 +299,7 @@ func (char *Character) recalcCharacterWeight() {
 		weight += char.armorSlots[k].weight
 	}
 
-	for k := 0; k < len(character.inventory); k++ {
+	for k := 0; k < len(char.inventory); k++ {
 		weight += char.inventory[k].weight
 	}
 
@@ -538,45 +614,45 @@ func (c *Character) getTotalStats() int {
 }
 
 func createPlayerCharacter() Character {
-	var character Character
+	var char Character
 
-	character.setClearInventory()
+	char.setClearInventory()
 
-	character.instanceId = 1
-	character.name = getName()
-	character.str = 3
-	character.agi = 3
-	character.intl = 3
-	character.gui = 3
-	character.cha = 3
-	character.per = 3
+	char.instanceId = 1
+	char.name = getName()
+	char.str = 3
+	char.agi = 3
+	char.intl = 3
+	char.gui = 3
+	char.cha = 3
+	char.per = 3
 
-	character.purchaseStats()
-	character.chooseSkills()
+	char.purchaseStats()
+	char.chooseSkills()
 
-	character.lvl = 1
+	char.lvl = 1
 
-	character.crowns = 32
+	char.crowns = 32
 
-	character.hp = character.str
-	character.maxhp = character.hp
+	char.hp = char.str
+	char.maxhp = char.hp
 
-	character.soul = character.gui + character.cha
-	character.maxsoul = character.soul
+	char.soul = char.gui + char.cha
+	char.maxsoul = char.soul
 
-	character.maxweight = character.str * 10
-	character.weight = 0
+	char.maxweight = char.str * 10
+	char.weight = 0
 
-	character.handSlots[0] = getEmptyItem()
-	character.handSlots[1] = getEmptyItem()
+	char.handSlots[0] = getEmptyItem()
+	char.handSlots[1] = getEmptyItem()
 
-	character.wounds = make([]Wound, 0, 0)
-	character.alive = true
+	char.wounds = make([]Wound, 0, 0)
+	char.alive = true
 	
-	character.exp = 0
-	character.villageIndex = 0
+	char.exp = 0
+	char.villageIndex = 0
 
-	return character
+	return char
 }
 
 func (char *Character) getArmorStringForSlot(slot int) string {
@@ -661,44 +737,44 @@ func (char *Character) showStatus() {
 	fmt.Scanln(&rsp)
 }
 
-func (character *Character) printCharacter(pause int) {
+func (char *Character) printCharacter(pause int) {
 
 	clearConsole()
 
-	fmt.Printf("Name: %s    ", character.name)
-	fmt.Printf("Level: %v    ", character.lvl)
-	fmt.Printf("Exp: %v    ", character.exp)
+	fmt.Printf("Name: %s    ", char.name)
+	fmt.Printf("Level: %v    ", char.lvl)
+	fmt.Printf("Exp: %v    ", char.exp)
 
 	fmt.Println()
-	fmt.Printf("Hp: %v / %v  ", character.hp, character.maxhp)
-	fmt.Printf("Soul: %v / %v  ", character.soul, character.maxsoul)
-	fmt.Printf("Encumb: %v / %v  st", character.weight, character.maxweight)
+	fmt.Printf("Hp: %v / %v  ", char.hp, char.maxhp)
+	fmt.Printf("Soul: %v / %v  ", char.soul, char.maxsoul)
+	fmt.Printf("Encumb: %v / %v  st", char.weight, char.maxweight)
 	fmt.Println()
 	fmt.Println()
 	fmt.Println(" -Attributes-")
-	fmt.Printf(" Per: %v \n", character.per)
-	fmt.Printf(" Str: %v \n", character.str)
-	fmt.Printf(" Agi: %v \n", character.agi)
-	fmt.Printf(" Int: %v \n", character.intl)
-	fmt.Printf(" Cha: %v \n", character.cha)
-	fmt.Printf(" Gui: %v \n", character.gui)
+	fmt.Printf(" Per: %v \n", char.per)
+	fmt.Printf(" Str: %v \n", char.str)
+	fmt.Printf(" Agi: %v \n", char.agi)
+	fmt.Printf(" Int: %v \n", char.intl)
+	fmt.Printf(" Cha: %v \n", char.cha)
+	fmt.Printf(" Gui: %v \n", char.gui)
 	fmt.Println() 
 	fmt.Println(" -Skills-")
-	pack1 := packSpaceString(fmt.Sprintf(" %s: %v", skills[0], character.skills[0]), 28)
-	pack2 := packSpaceString(fmt.Sprintf("%s: %v", skills[1], character.skills[1]), 28)	
+	pack1 := packSpaceString(fmt.Sprintf(" %s: %v", skills[0], char.skills[0]), 28)
+	pack2 := packSpaceString(fmt.Sprintf("%s: %v", skills[1], char.skills[1]), 28)	
 	fmt.Println(pack1 + pack2)
-	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[2], character.skills[2]), 28)
-	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[3], character.skills[3]), 28)	
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[2], char.skills[2]), 28)
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[3], char.skills[3]), 28)	
 	fmt.Println(pack1 + pack2)
-	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[4], character.skills[4]), 28)
-	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[5], character.skills[5]), 28)	
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[4], char.skills[4]), 28)
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[5], char.skills[5]), 28)	
 	fmt.Println(pack1 + pack2)
-	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[6], character.skills[6]), 28)	
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[6], char.skills[6]), 28)	
 	fmt.Println(pack1)
 	
 	fmt.Println()
 
-	fmt.Printf("\nCrowns: %v", character.crowns)
+	fmt.Printf("\nCrowns: %v", char.crowns)
 
 	if pause > 0 {
 		rsp := "n"
@@ -866,7 +942,7 @@ func (char *Character) equipScreen() {
 
 }
 
-func (character *Character) showInventory() {
+func (char *Character) showInventory() {
 	cont := true
 	
 	for cont {
@@ -875,40 +951,40 @@ func (character *Character) showInventory() {
 		seg1 := ""
 		seg2 := ""
 
-		fmt.Printf("Encumb: %v / %v  (stone) \n", character.weight, character.maxweight)
+		fmt.Printf("Encumb: %v / %v  (stone) \n", char.weight, char.maxweight)
 
 		fmt.Println("")
 		fmt.Println("--Hands--")
 
-		seg1 = packSpaceString("Left Hand: ", 14) + character.handSlots[LEFT].getInvDisplayString()
-		seg2 = packSpaceString("Right Hand: ", 14) + character.handSlots[RIGHT].getInvDisplayString()
+		seg1 = packSpaceString("Left Hand: ", 14) + char.handSlots[LEFT].getInvDisplayString()
+		seg2 = packSpaceString("Right Hand: ", 14) + char.handSlots[RIGHT].getInvDisplayString()
 		fmt.Println(seg1)
 		fmt.Println(seg2)
 
 		fmt.Println("")
 		fmt.Println("--Armor--")
-		seg1 = packSpaceString("Head: ", 14) + character.armorSlots[EQUIP_HEAD].getInvDisplayString()
-		seg2 = packSpaceString("Neck: ", 14) + character.armorSlots[EQUIP_NECK].getInvDisplayString()
+		seg1 = packSpaceString("Head: ", 14) + char.armorSlots[EQUIP_HEAD].getInvDisplayString()
+		seg2 = packSpaceString("Neck: ", 14) + char.armorSlots[EQUIP_NECK].getInvDisplayString()
 		fmt.Println(seg1)
 		fmt.Println(seg2)
-		seg1 = packSpaceString("Chest: ", 14) + character.armorSlots[EQUIP_CHEST].getInvDisplayString()
-		seg2 = packSpaceString("Arms: ", 14) + character.armorSlots[EQUIP_ARMS].getInvDisplayString()
+		seg1 = packSpaceString("Chest: ", 14) + char.armorSlots[EQUIP_CHEST].getInvDisplayString()
+		seg2 = packSpaceString("Arms: ", 14) + char.armorSlots[EQUIP_ARMS].getInvDisplayString()
 		fmt.Println(seg1)
 		fmt.Println(seg2)
-		seg1 = packSpaceString("Legs: ", 14) + character.armorSlots[EQUIP_LEG].getInvDisplayString()
-		seg2 = packSpaceString("Feet: ", 14) + character.armorSlots[EQUIP_FEET].getInvDisplayString()
+		seg1 = packSpaceString("Legs: ", 14) + char.armorSlots[EQUIP_LEG].getInvDisplayString()
+		seg2 = packSpaceString("Feet: ", 14) + char.armorSlots[EQUIP_FEET].getInvDisplayString()
 		fmt.Println(seg1)
 		fmt.Println(seg2)
-		seg1 = packSpaceString("Cloak: ", 14) + character.armorSlots[EQUIP_CLOAK].getInvDisplayString()
-		seg2 = packSpaceString("Ring: ", 14) + character.armorSlots[EQUIP_RING].getInvDisplayString()
+		seg1 = packSpaceString("Cloak: ", 14) + char.armorSlots[EQUIP_CLOAK].getInvDisplayString()
+		seg2 = packSpaceString("Ring: ", 14) + char.armorSlots[EQUIP_RING].getInvDisplayString()
 		fmt.Println(seg1)
 		fmt.Println(seg2)
 
 		fmt.Println("")
 		fmt.Println("--Bags--")
 		count := 0
-		for k := 0; k < len(character.inventory); k++ {
-			fmt.Printf("%s", packSpaceString(character.inventory[k].name, 23))
+		for k := 0; k < len(char.inventory); k++ {
+			fmt.Printf("%s", packSpaceString(char.inventory[k].name, 23))
 			count++
 			if count == 3 {
 				count = 0
@@ -924,7 +1000,7 @@ func (character *Character) showInventory() {
 		fmt.Scanln(&rsp)	
 		
 		if rsp == "eq" {
-			character.equipScreen()
+			char.equipScreen()
 		} else if rsp == "ex" {
 			cont = false
 		}

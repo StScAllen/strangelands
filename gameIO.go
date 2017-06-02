@@ -28,6 +28,7 @@ func getGameSaveBlock() string {
 	gameBlock += fmt.Sprintf("%v,", game.monthCounter)
 	gameBlock += fmt.Sprintf("%v,", game.missionInstanceId)
 	gameBlock += fmt.Sprintf("%v,", game.charInstanceId)
+	gameBlock += fmt.Sprintf("%v,", game.darkness)
 	
 	gameBlock += "■"
 
@@ -61,6 +62,7 @@ func unpackGameBlock(block string) bool {
 	game.monthCounter, _ = strconv.Atoi(bits[6])
 	game.missionInstanceId, _ = strconv.Atoi(bits[7])
 	game.charInstanceId, _ = strconv.Atoi(bits[8])
+	game.darkness, _ = strconv.Atoi(bits[9])
 	
 	fmt.Println("            ...done!")
 

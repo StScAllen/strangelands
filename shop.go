@@ -108,6 +108,38 @@ func showArmor(armor Item) {
 
 }
 
+func giveToWho() int {
+	if apprentice.instanceId < 1 {
+		return 0	// character
+	}
+
+	exitFlag := false
+
+	for !exitFlag {
+		clearConsole()
+		fmt.Println(fmt.Sprintf("1. %s ", character.name))
+		fmt.Println(fmt.Sprintf("2. %s (Apprentice)", apprentice.name))
+		fmt.Println("")		
+		fmt.Println("[i. inventory]")
+		fmt.Println("")	
+		fmt.Println("Show should receive the item? ")	
+
+		rsp := ""
+		fmt.Scanln(&rsp)
+		
+		if rsp == "1" {
+			return 0
+		} else if rsp == "2" {
+			return 1
+		} else if rsp == "i" {
+			character.showInventory()
+			apprentice.showInventory()
+		}
+	}
+	
+	return 0
+}
+
 func (village *Village) buyWeaponScreen() {
 	shopWeapons := village.shopWeapons
 	exitFlag := false
@@ -148,13 +180,25 @@ func (village *Village) buyWeaponScreen() {
 					showPause("Not enough crowns!")
 					village.buyWeaponScreen()
 				} else {
-					item := shopWeapons[num]
-					if character.giveCharacterItem(item) {
-						character.crowns -= item.value
-						shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
-						village.shopWeapons = shopWeapons
-					} else {
-						showPause("Character weight exceeded! Purchase not made!")
+					item := shopWeapons[num]					
+					ret := giveToWho()
+					
+					if ret == 0 {
+						if character.giveCharacterItem(item) {
+							character.crowns -= item.value
+							shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
+							village.shopWeapons = shopWeapons
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					} else if ret == 1 {
+						if apprentice.giveCharacterItem(item) {
+							character.crowns -= item.value
+							shopWeapons = append(shopWeapons[:num], shopWeapons[num+1:]...)
+							village.shopWeapons = shopWeapons
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
 					}
 				}
 			}
@@ -162,6 +206,9 @@ func (village *Village) buyWeaponScreen() {
 			exitFlag = true
 		} else if rsp == "i" {
 			character.showInventory()
+			if apprentice.instanceId > 0 {
+				apprentice.showInventory()
+			}
 		}
 	}
 
@@ -196,9 +243,9 @@ func (village *Village) buyArmorScreen() {
 		fmt.Scanln(&rsp)
 
 		if len(rsp) > 0 && rsp != "x" && rsp != "n" && rsp != "i" {
-			num, err := strconv.Atoi(rsp)
+			num, _ := strconv.Atoi(rsp)
 			showArmor(shopArmor[num])
-			fmt.Println(fmt.Sprintf("Buy %s? %v", shopArmor[num].name, err))
+			fmt.Println(fmt.Sprintf("Buy %s?", shopArmor[num].name))
 			fmt.Scanln(&rsp)
 
 			if rsp == "y" {
@@ -206,19 +253,35 @@ func (village *Village) buyArmorScreen() {
 					showPause("Not enough crowns!")
 				} else {
 					item := shopArmor[num]
-					if character.giveCharacterItem(item) {
-						character.crowns -= item.value
-						shopArmor = append(shopArmor[:num], shopArmor[num+1:]...)
-						village.shopArmor = shopArmor
-					} else {
-						showPause("Character weight exceeded! Purchase not made!")
+					ret := giveToWho()
+					
+					if ret == 0 {
+						if character.giveCharacterItem(item) {
+							character.crowns -= item.value
+							shopArmor = append(shopArmor[:num], shopArmor[num+1:]...)
+							village.shopArmor = shopArmor
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					} else if ret == 1 {
+						if apprentice.giveCharacterItem(item) {
+							character.crowns -= item.value
+							shopArmor = append(shopArmor[:num], shopArmor[num+1:]...)
+							village.shopArmor = shopArmor
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
 					}
+
 				}
 			}
 		} else if rsp == "x" {
 			exitFlag = true
 		}  else if rsp == "i" {
 			character.showInventory()
+			if apprentice.instanceId > 0 {
+				apprentice.showInventory()
+			}
 		}
 	}
 

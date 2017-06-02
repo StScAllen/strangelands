@@ -7,7 +7,7 @@ import "strings"
 import "strconv"
 
 var keepDescriptions = []string{
-	"It's cold and dark here. Shadows from my waning fire dance across the vacant \nexpanse.",
+	"It's cold and dark here. Shadows from my waning fire dance across the\n vacant expanse.",
 	"It's empty and barren, but it's mine.",
 }
 
@@ -163,6 +163,188 @@ func unpackKeepBlock(block string) (int, Keep) {
 	return 1, keep
 }
 
+func (keep *Keep) addApprenticeToKeep() {
+	keep.apprentices = append(keep.apprentices, apprentice)
+}
+func (keep *Keep) addNewApprenticeToKeep(app Character) {
+	keep.apprentices = append(keep.apprentices, app)
+}
+
+func (keep *Keep) manageApprentices() {
+	rsp := ""
+	
+	for rsp != "x" {
+		clearConsole()
+		fmt.Println("╔ Manage Apprentices ╗")
+		fmt.Println("")	
+		fmt.Println("1. Select Companion")	
+		fmt.Println("2. Assign Position")	
+		fmt.Println("")
+		fmt.Println("x. Exit")
+		fmt.Println("")
+		fmt.Printf("Select an Option:  ")
+
+		fmt.Scanln(&rsp)
+		showPause(fmt.Sprintf("App instance id is %v ",  apprentice.instanceId))
+
+		if rsp == "1" {
+			ret := keep.selectApprentice()		
+			if ret > -1 {
+				if ret != 99 {	// 99 signifies current companion
+					if apprentice.instanceId > 0 {
+						keep.addApprenticeToKeep()
+						apprentice = keep.apprentices[ret]
+						if len(keep.apprentices) > 1 {
+							keep.apprentices = append(keep.apprentices[:ret], keep.apprentices[ret+1:]...)
+						} else {
+							keep.apprentices = make([]Character, 0, 0)
+						}
+					} else {	// no current companion, just assign
+						apprentice = keep.apprentices[ret]
+						if len(keep.apprentices) > 1 {
+							keep.apprentices = append(keep.apprentices[:ret], keep.apprentices[ret+1:]...)
+						} else {
+							keep.apprentices = make([]Character, 0, 0)
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	
+}
+		
+func (keep *Keep) selectApprentice() int {
+	rsp := ""
+	result := -1
+	count := 0
+	companion := false
+	
+	for rsp != "x" {
+		clearConsole()
+		fmt.Println("╔ Choose Apprentice ╗")
+		fmt.Println("")		
+		if apprentice.instanceId > 0 {
+			count++
+			row := fmt.Sprintf("%v. %s", count, apprentice.name)
+			fmt.Println(row)
+			companion = true
+		}
+		for k := 0; k < len(keep.apprentices); k++ {
+			count++
+			row := fmt.Sprintf("%v. %s", count, keep.apprentices[k].name)
+			fmt.Println(row)
+		}
+		
+		if count == 0 {
+			fmt.Println("No Apprentices Available")				
+		}
+		
+		fmt.Println("")
+		fmt.Println("x. Exit")
+		fmt.Println("")
+		fmt.Printf("Select an Option:  ")
+
+		fmt.Scanln(&rsp)	
+		
+		if rsp == "1" {
+			if companion && apprentice.instanceId > 0 {
+				return 99
+			} else if companion && apprentice.instanceId < 1 {
+				result = -1
+			} else if !companion {
+				if len(keep.apprentices) > 0 {
+					return 0
+				} else {
+					result = -1					
+				}
+			}
+			showPause("Not a valid option.")
+		} else if rsp == "2" {
+			if len(keep.apprentices) > 1 {
+				return 1	
+			}
+			showPause("Not a valid option.")	
+		} else if rsp == "3" {
+			if len(keep.apprentices) > 2 {
+				return 2	
+			}
+			showPause("Not a valid option.")	
+		} else if rsp == "4" {
+			if len(keep.apprentices) > 3 {
+				return 3	
+			}
+			showPause("Not a valid option.")
+		} else if rsp == "5" {
+			if len(keep.apprentices) > 4 {
+				return 4	
+			}
+			showPause("Not a valid option.")
+
+		} else if rsp == "6" {
+			if len(keep.apprentices) > 5 {
+				return 5	
+			}
+			showPause("Not a valid option.")	
+		} else if rsp == "7" {
+			if len(keep.apprentices) > 6 {
+				return 6	
+			}
+			showPause("Not a valid option.")	
+		} else if rsp == "8" {
+			if len(keep.apprentices) > 7 {
+				return 7	
+			}
+			showPause("Not a valid option.")	
+		} else if rsp == "8" {
+			if len(keep.apprentices) > 7 {
+				return 7	
+			}
+			showPause("Not a valid option.")	
+		}
+	}
+	
+	return result
+}
+
+func (keep *Keep) train() {
+	rsp := ""
+
+	for rsp != "x" {
+		clearConsole()
+		fmt.Println("╔ Training ╗")	
+		fmt.Println("1. Train Character")
+		fmt.Println("2. Train Apprentice")
+		fmt.Println("")
+		fmt.Println("x. Exit")
+		fmt.Println("")
+		fmt.Printf("Select an Option:  ")
+
+		fmt.Scanln(&rsp)
+		
+		if rsp == "1" {
+			character.train()
+		} else if rsp == "2" {
+			appCode := keep.selectApprentice()
+			
+			if appCode == 99 {
+				keep.addApprenticeToKeep()
+				var blankApp Character
+				blankApp.instanceId = 0
+				blankApp.name = ""
+				apprentice = blankApp
+				apprentice.train()
+			} else if appCode > -1 {
+				keep.apprentices[appCode].train()
+			}
+		} else if rsp != "x" {
+			showPause("Invalid selection!")
+		}
+	}
+
+}
+
 func (keep *Keep) visitKeep() string {
 	rsp := ""
 
@@ -174,9 +356,10 @@ func (keep *Keep) visitKeep() string {
 		fmt.Printf("Acres: %v / %v \n", keep.usedacres, keep.acres)
 		fmt.Println("------------")
 
-		fmt.Println("2. Structures")
-		fmt.Println("3. Apprentices")
-		fmt.Println("4. Keep Storage")
+		fmt.Println("1. Structures")
+		fmt.Println("2. Apprentices")
+		fmt.Println("3. Keep Storage")
+		fmt.Println("4. Train")
 		fmt.Println("")
 		fmt.Println("r. Rest (End Day)")		
 		fmt.Println("t. Travel")
@@ -191,23 +374,37 @@ func (keep *Keep) visitKeep() string {
 		//const BASE_ACTIONS = "[s. status   i. inventory   m. mission   w. world map   h. minutiae]"
 		
 		if rsp == "r" {
-			endDay(2)
+			endDay(2, true)
 			save()
 		} else if rsp == "s" {
-			character.showStatus()
 			character.printCharacter(1)
+			character.showStatus()
+			if apprentice.instanceId > 0 {
+				apprentice.printCharacter(1)
+				apprentice.showStatus()
+			}
 		} else if rsp == "m" {	
 			mission.viewMissionStatus()
 		} else if rsp == "i" {	
 			character.showInventory()
+			if apprentice.instanceId > 0 {
+				apprentice.showInventory()
+			}
 		} else if rsp == "w" {	
 			drawWorldMap()	
 		} else if rsp == "h" {	
-			// show keep minutiae	
-			
+			// show keep minutiae		
 		} else if rsp == "t" {
 			travel := showTravelMenu()
 			return travel
+		} else if rsp == "1" {	
+			// TODO
+		} else if rsp == "2" {	
+			keep.manageApprentices()
+		} else if rsp == "3" {	
+			// TODO		
+		} else if rsp == "4" {	
+			keep.train()
 		} 
 	}
 

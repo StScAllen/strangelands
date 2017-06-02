@@ -250,7 +250,7 @@ func (bg *BattleGrid) findPath(sx int, sy int, ex int, ey int, gid int) (int, []
 		
 		newTicks = time.Now().Unix()
 		
-		if (newTicks - ticks) > 4 {
+		if (newTicks - ticks) > 2 {
 			// time out
 			log.addWarn("AI timed out finding path.")
 			endFlag = -2

@@ -11,7 +11,7 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".11a"
+const VERSION = ".12a"
 
 const DEBUG_ON = true
 
@@ -25,12 +25,14 @@ type Game struct {
 	itemInstanceId 		int
 	missionInstanceId	int
 	charInstanceId 		int
+	darkness			int		// value of total darkness, impacts encounters, missions, etc.
 }
 
 func init() {
 	game.gameDay = 1
 	game.itemInstanceId = 1
 	game.charInstanceId = 2
+	game.darkness = 0
 	log = openLog()
 	dieInit()
 }
@@ -41,28 +43,34 @@ func finalExit() {
 	log.writeToFile()
 }
 
-func endDay(restQuality int) {
-	var die Die
-	
+func showEndDayDetails(details string) {
 	clearConsole()
-	showPause("The consuming darkness marks an end to your day's labors...")
+	
+	fmt.Println(details)
+	
+	showPause("So ends another day. Your toils continue...");
+}
+
+func endDay(restQuality int, showDetails bool) {
+	var die Die
+	details := ""
+	
+	details += "The consuming darkness marks an end to your day's labors...\n"
 
 	if character.hp == character.maxhp {
-		fmt.Println("... You are healthy.")
+		details += "... You are healthy.\n"
 	} else {
 		roll := die.rollxdx(1, 4)
 		if roll <= restQuality {
-			fmt.Println("... Your wounds are healing nicely.")
+			details += "... Your wounds are healing nicely.\n"
 			character.hp += 1
 		} else {
-			fmt.Println("... Your wounds show little improvement.")
+			details += "... Your wounds show little improvement.\n"
 		}
 	}
 	if character.hp > character.maxhp {
 		character.hp = character.maxhp
 	}
-
-	showPause("So ends another day. Your toils continue...")
 	
 	game.gameDay++
 	game.dayCounter++
@@ -85,6 +93,10 @@ func endDay(restQuality int) {
 		}
 	} else {
 		//		showDayEnd()
+	}
+	
+	if showDetails {
+		showEndDayDetails(details)
 	}
 }
 
@@ -134,6 +146,7 @@ func main() {
 		buildVillages()
 		updateShops()
 		mission = getBlankMission()
+		buildOrphanage()
 		save()
 
 	} else if rsp == "2" {
@@ -144,9 +157,14 @@ func main() {
 			showPause("Game File is missing or corrupted!")
 			return
 		}
-
+		// TEMP!!! REMOVE!!!
+		buildOrphanage()
+		//////////////////////////////
 		character.printCharacter(1)
-		character.crowns = 800
+		if apprentice.instanceId > 0 {
+			apprentice.printCharacter(1)
+		}
+
 	} else if rsp == "3" {
 		return
 	}

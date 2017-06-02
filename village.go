@@ -8,6 +8,8 @@ import "time"
 import "strings"
 import "strconv"
 
+var orphanage []Character
+
 type Village struct {
 	name            string
 	distanceToKeep  int
@@ -220,22 +222,72 @@ func (village *Village) research() {
 
 }
 
+func buildOrphanage() {
+	var die Die
+	
+	orphanage = make([]Character, 0, 0)
+	
+	for k := 0; k < die.rollxdx(1, 3) + 1; k++ {
+		appr := getRandomApprentice()
+		orphanage = append(orphanage, appr)
+	}
+}
+
 func (village * Village) visitOrphanage() {
 	exitFlag := false
 	rsp := ""
-
+	counter := 0
 	
 	for !exitFlag {
 		clearConsole()
 		
 		fmt.Println("+++ Orphanage +++")
+		fmt.Println(makeDialogString("The following children are all left handed..."))		
+		fmt.Println(makeDialogString("...a strange request to be sure but so long as you have the"))			
+		fmt.Println(makeDialogString("adoption fee, which is, of course, the usual 25 crowns..."))			
 		fmt.Println("------------")
-		fmt.Println("1. Exit  ")
+		if len(orphanage) < 1 {
+			fmt.Println("No left handed children available.")
+		} else {
+			counter = 0
+			for k := 0; k < len(orphanage); k++ {
+				counter++
+				row := fmt.Sprintf("%v. %s", counter, orphanage[k].name)
+				fmt.Println(row)
+			}		
+		}
+
+		fmt.Println("")		
+		fmt.Println("x. Exit  ")
 		
 		fmt.Scanln(&rsp)
 		
-		if rsp == "1" {
+		if rsp == "x" {
 			exitFlag = true
+		} else {
+			num, err := strconv.Atoi(rsp)
+		
+			if err == nil {
+				if num-1 < len(orphanage) {
+					if character.crowns >= 25 {
+						orphanage[num-1].printCharacter(0)
+						
+						adopt := getResponse("\n\nDo you wish to adopt?")
+
+						if adopt == "y" || adopt == "Y" {
+							character.crowns -= 25
+							indx := num-1
+							showPause(fmt.Sprintf("Congrats! %s has been sent to your keep to get settled in.", orphanage[indx].name))
+							keep.addNewApprenticeToKeep(orphanage[indx])
+							orphanage = append(orphanage[:indx], orphanage[indx+1:]...)
+						}
+					} else {
+						showPause("Not enough crowns to adopt!")		
+					}
+				} else {
+					showPause("Invalid selection.")
+				}			
+			}
 		}
 	}
 	
@@ -324,12 +376,12 @@ func (village *Village) visitTavern() {		//
 			showPause("You take in drink and companionship. Your spirits are lifted.")
 			character.giveSoul(2)
 			character.crowns -= 1
-			endDay(2)
+			endDay(2, true)
 			save()			
 		} else if rsp == "2" {	
 			showPause("You rest and regather your strength for the long road ahead.")
 			character.crowns -= 3
-			endDay(3)
+			endDay(3, true)
 			save()
 		} else if rsp == "3" {
 			
@@ -352,15 +404,16 @@ func (village *Village) politicks() {
 
 }
 
-func doBattle() (string){
-	chooseAdventure()
-	result := adventure()
+func doBattle(random bool) (string){
+	result := chooseAdventure(random)
 	
 	if result == DIED {
 		showPause("Character died! Game over Man, game over!")
 		return "q"
-	} else if result == FINISHED_MISSION {
+	} else if random == false && result == FINISHED_MISSION {
 		showMissionComplete()
+	} else if random && result == FINISHED_MISSION {
+		showPause("You defeat the bandits and continue your journey...")
 	}
 	
 	return ""
@@ -543,7 +596,7 @@ func doMissionPhase() {
 		}
 	}
 	
-	endDay(1)
+	endDay(1, true)
 }
 
 func (village *Village) visitVillage() string {
@@ -561,7 +614,7 @@ func (village *Village) visitVillage() string {
 	fmt.Println("6. Travel")
 	
 	if village.villageIndex == 5 {
-		fmt.Println("7. Orphanage")		
+		fmt.Println("7. Visit Orphanage")		
 	}
 	
 	if mission.typeId != -1 && mission.phases[mission.currentPhase - 1].id != PHASE_FIGHT && mission.phases[mission.currentPhase - 1].locationIndex == village.villageIndex {
@@ -606,18 +659,25 @@ func (village *Village) visitVillage() string {
 	} else if rsp == "r" && canInvestigate {
 		doMissionPhase()	
 	} else if rsp == "f" && canBattle {
-		rsp = doBattle()			
+		rsp = doBattle(false)			
 	} else if rsp == "6" {
-		showTravelMenu()
+		rsp = showTravelMenu()
 	} else if rsp == "7" && village.villageIndex == 5 {
 		village.visitOrphanage()		
 	} else if rsp == "s" {
-		character.showStatus()
 		character.printCharacter(1)
+		character.showStatus()
+		if apprentice.instanceId > 0 {
+			apprentice.printCharacter(1)
+			apprentice.showStatus()
+		}
 	} else if rsp == "m" {	
 		mission.viewMissionStatus()
 	} else if rsp == "i" {	
 		character.showInventory()
+		if apprentice.instanceId > 0 {
+			apprentice.showInventory()
+		}
 	} else if rsp == "w" {	
 		drawWorldMap()			
 	} else if rsp == "h" {
@@ -732,15 +792,21 @@ func showTravelMenu() string {
 			mission.viewMissionStatus()
 			
 		case "s":
-			character.showStatus()
-			character.printCharacter(1)		
+			character.printCharacter(1)	
+			character.showStatus()	
+			if apprentice.instanceId > 0 {
+				apprentice.printCharacter(1)
+				apprentice.showStatus()
+			}
 			
 		case "h":
 			showTravelMinutiae()
 		
 		case "i":
 			character.showInventory()	
-			
+			if apprentice.instanceId > 0 {
+				apprentice.showInventory()
+			}
 		case "x":
 			validSelection = true
 			dist = 0
@@ -748,14 +814,36 @@ func showTravelMenu() string {
 	}
 
 	if dist > 0 {
-
 		confirm := ""
 		fmt.Printf("\nAre you sure you wish to travel to " + destination + "? ")
 		fmt.Scanln(&confirm)
-
+		
 		if confirm == "y" {
+		
+			// check to see if we are attacked by bandits on the road...
+			var die Die
+			attacked := false
+			
+			for j := 0; j < dist; j++ {
+				if die.rollxdx(1, 100) > 93 {
+					// attacked by bandits
+					showPause("You have been attacked by bandits during your travel!")
+					attacked = true
+					break;
+				}
+			}
+			
+			if attacked {
+				atk := doBattle(true)
+				
+				if atk == "q" {
+					// character died, exit
+					return "q"
+				}
+			}
+		
 			showTimePassageScreen(dist)
-			fmt.Println("Arrived in "+destination+". After ", dist, " days of travel.")
+			fmt.Println("Arrived in " + destination + ". After ", dist, " days of travel.")
 			fmt.Println("Press any key to continue.")
 			tgt := ""
 			fmt.Scanln(&tgt)
@@ -777,7 +865,7 @@ func showTimePassageScreen(lapse int) {
 		clearConsole()
 		fmt.Println("Day: ", game.gameDay)
 		fmt.Println("Time Passes...")
-		endDay(0)
+		endDay(0, false)
 		tick += " █ █ █"
 		block := ""
 		for k := 0; k < diff-1; k++ {

@@ -360,10 +360,6 @@ func (bg *BattleGrid) isTileObscured(x, y, gridid int) bool {
 		return true
 	}
 
-	//check := fmt.Sprintf("is tile obscured? %v, %v", x, y, gridid)
-	//fmt.Println(check)
-	//log.addInfo(check)
-
 	checkGrid := bg.getEntityGrid(gridid)
 	hidden := false
 
@@ -418,28 +414,37 @@ func (bg *BattleGrid) isTileObscured(x, y, gridid int) bool {
 				}
 			}
 		}
+	} else {
+		hidden = true
 	}
 
+	// if apprentice is on grid, only update to non-hidden as appropriate
 	if bg.hasApprentice && gridid == bg.appGridId {
-		xdiff := bg.appXLoc - x
-		ydiff := bg.appYLoc - y
+		xdiff := x - bg.appXLoc
+		ydiff := y - bg.appYLoc
 
 		if xdiff > 0 {
 			if ydiff > 0 {
 				if !bg.isSeeThrough(checkGrid.grid[y-1][x-1]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
 			} else if ydiff < 0 {
 				if !bg.isSeeThrough(checkGrid.grid[y+1][x-1]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
 			} else {
 				if !bg.isSeeThrough(checkGrid.grid[y][x-1]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
@@ -447,19 +452,25 @@ func (bg *BattleGrid) isTileObscured(x, y, gridid int) bool {
 		} else if xdiff < 0 {
 			if ydiff > 0 {
 				if !bg.isSeeThrough(checkGrid.grid[y-1][x+1]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
 			} else if ydiff < 0 {
 				if !bg.isSeeThrough(checkGrid.grid[y+1][x+1]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
 			} else {
 				if !bg.isSeeThrough(checkGrid.grid[y][x+1]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
@@ -467,13 +478,17 @@ func (bg *BattleGrid) isTileObscured(x, y, gridid int) bool {
 		} else {
 			if ydiff > 0 {
 				if !bg.isSeeThrough(checkGrid.grid[y-1][x]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
 			} else if ydiff < 0 {
 				if !bg.isSeeThrough(checkGrid.grid[y+1][x]) {
-					hidden = true
+					if hidden {
+						hidden = true					
+					}
 				} else {
 					hidden = false
 				}
@@ -502,7 +517,7 @@ func (bg *BattleGrid) isGate(turn int) bool {
 	} else if turn == APP_TURN {
 		xloc = bg.appXLoc
 		yloc = bg.appYLoc
-		gridId = bg.charGridId
+		gridId = bg.appGridId
 		
 	} else if turn == MONST_TURN {
 		xloc = bg.monsterXLoc
@@ -961,9 +976,9 @@ func (bg *BattleGrid) drawGrid() {
 			}
 		} else if i == 8 {
 			if bg.hasApprentice {
-				row += packSpaceString("    Left: "+apprentice.handSlots[LEFT].name, 24) + packSpaceString("  Right: "+apprentice.handSlots[RIGHT].name, 24)
+				row += packSpaceString("   Left: "+apprentice.handSlots[LEFT].name, 23) + packSpaceString("  Right: "+apprentice.handSlots[RIGHT].name, 22)
 			}
-		} else if i == 9 {
+		} else if i == 10 {
 			row += "  " + bg.monster.name + " Health: ["
 			if bg.monster.hp < 1 {
 				row += "DEAD]"
@@ -1097,7 +1112,12 @@ func buildBattleGrid(id int) BattleGrid {
 	grid.weather = CLEAR  // default
 	grid.turn = CHAR_TURN // default
 	grid.numGrids = 4     // default
-	grid.hasApprentice = false
+	
+	if apprentice.instanceId > 0 && apprentice.hp > 0{
+		grid.hasApprentice = true	
+	} else {
+		grid.hasApprentice = false
+	}
 
 	if id == 0 { // cemetary
 		grid.numGrids = 4
@@ -1160,6 +1180,46 @@ func buildBattleGrid(id int) BattleGrid {
 
 		grid.monster = monster
 		grid.locationName = "Cemetary"
+
+		grid.charXLoc = 1
+		grid.charYLoc = 1
+		grid.charGridId = 0
+
+		grid.appXLoc = 2
+		grid.appYLoc = 1
+		grid.appGridId = 0
+
+		grid.characterSpotted = false
+		grid.monsterSpotted = false
+		grid.apprenticeSpotted = false
+		grid.turnCounter = 0
+
+		grid.placeMonster()
+		
+		grid.writeGridsToFile()	
+
+	} else if id == -1 {
+		// Travel encounter, 2 grid pattern, monster on character grid to start
+		grid.numGrids = 2
+		// for random, done after number of grids is assigned!
+
+		for k := 0; k < grid.numGrids; k++ {
+			g1 := createSquareGrid(16, 32)
+			g1.addCemetaryDecorations()
+			g1.id = k
+			g1.used = true
+			g1.gridName = fmt.Sprintf("%v", k)
+			grid.allGrids[k] = g1
+			grid.setRandomStamp(g1.maxX, g1.maxY, k)
+		}
+
+		grid.createGridPattern()
+
+		grid.currGrid = 0
+		monster = createMonster(-1)
+
+		grid.monster = monster
+		grid.locationName = "Roadside"
 
 		grid.charXLoc = 1
 		grid.charYLoc = 1

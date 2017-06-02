@@ -141,7 +141,29 @@ func (m *Monster) getTotalStats() int {
 func createMonster(id int) Monster {
 	var monster Monster
 
-	if id == 1 {
+	if id == -1 {
+		// highway bandit
+		monster.name = "Bandit"
+		monster.str = 5
+		monster.agi = 6
+		monster.per = 5
+		monster.cha = 3
+		monster.gui = 3
+		monster.intl = 3
+
+		monster.bits = person_bits
+
+		monster.disturbance1 = "A murderous voice calls out from the %v"
+		monster.disturbance2 = "Somewhere near, sticks snap beneath footfall."
+
+		monster.targets = HUMAN_TARGETS
+		monster.body = HUMAN_STRING
+		monster.resistance = []int{12, 12, 12, 12, 12, 12, 12, 12, 12, 12}
+		monster.attacks = []MonsterAttack{WEAPON, WEAPON}
+		monster.powerBalance = 14.0
+		monster.invisible = false	
+	
+	} else if id == 1 {
 		monster.name = "Will-O-Wisp"
 		monster.str = 4
 		monster.agi = 8
@@ -203,7 +225,11 @@ func (grid *BattleGrid) placeMonster() {
 
 	var dice Die
 	monsterNotPlaced := true
-	grid.monsterGridId = dice.rollxdx(1, grid.numGrids-1)
+	if grid.numGrids > 2 {
+		grid.monsterGridId = dice.rollxdx(1, grid.numGrids-1)	
+	} else { // random roadside encounters may only be 1 grid
+		grid.monsterGridId = 0
+	}
 
 	entityGrid := grid.getEntityGrid(grid.monsterGridId)
 

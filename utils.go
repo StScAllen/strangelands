@@ -24,6 +24,13 @@ func showPause(messge string) {
 	fmt.Scanln(&rsp)
 }
 
+func getResponse(question string) string{
+	fmt.Println(question)
+	rsp := ""
+	fmt.Scanln(&rsp)
+	return rsp
+}
+
 func debugPause(messge string) {
 	if DEBUG_ON {
 		fmt.Println(messge)
