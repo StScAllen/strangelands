@@ -825,7 +825,7 @@ func showTravelMenu() string {
 			attacked := false
 			
 			for j := 0; j < dist; j++ {
-				if die.rollxdx(1, 100) > 93 {
+				if die.rollxdx(1, 100) > 97 {
 					// attacked by bandits
 					showPause("You have been attacked by bandits during your travel!")
 					attacked = true
