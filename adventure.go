@@ -93,7 +93,79 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 		}
 		
 	} else {
+		adj := apprentice.getTotalAttackAdjustment(hand)
+		atkRoll := die.rollxdx(1, 20)
+		atkTotal := adj + atkRoll
 
+		def := bg.monster.getTotalDefenseAdjustment()
+		defRoll := die.rollxdx(1, 20)
+		defTotal := def + defRoll
+
+		fmt.Println(fmt.Sprintf("Apprentice rolls %v + %v = [%v]", atkRoll, adj, atkTotal))
+		fmt.Println(fmt.Sprintf("Monster rolls %v + %v = [%v]", defRoll, def, defTotal))
+
+		if atkTotal > defTotal {
+			showPause("Apprentice hits!")
+		} else {
+			showPause("Apprentice misses!")
+			return
+		}
+
+		apprentice.handSlots[hand].durability -= 1
+		
+		diff := atkTotal - defTotal
+		tBonus := 0
+		for ; diff >= 5; diff -= 5 {
+			tBonus++
+		}
+
+		fmt.Println(fmt.Sprintf("Bonus is %v", getSigned(tBonus)))
+		targetRoll := die.rollxdx(1, 10)
+		totalTarget := targetRoll + tBonus
+		if totalTarget > 10 {
+			totalTarget = 10
+		}
+
+		fmt.Println(fmt.Sprintf("Target is %v + %v = %v", targetRoll, tBonus, totalTarget))
+		crits := ""
+		hits := 1
+		if totalTarget == 10 {
+			hits++
+			for totalTarget == 10 {
+				crits += "[Crit!]"
+				targetRoll = die.rollxdx(1, 10)
+				totalTarget = targetRoll + tBonus
+				if totalTarget >= 10 {
+					totalTarget = 10
+					hits++
+				}
+			}
+			fmt.Println(crits)
+		}
+		showPause("Hit on " + bg.monster.body[totalTarget-1])
+
+		penetrationBonus := 0
+		diff = atkTotal - defTotal
+		for ; diff >= 2; diff -= 2 {
+			penetrationBonus++
+		}
+		fmt.Println(fmt.Sprintf("Penetration bonus is %v", penetrationBonus))
+		penetrationRoll := die.rollxdx(1, 20)
+		totalPenetration := penetrationBonus + penetrationRoll
+
+		fmt.Println(fmt.Sprintf("Penetration Roll: %v + %v = [%v]", penetrationRoll, penetrationBonus, totalPenetration))
+		fmt.Println(fmt.Sprintf("Resistance is %v", bg.monster.resistance[targetRoll-1]))
+
+		if totalPenetration > bg.monster.resistance[targetRoll-1] {
+			showPause(fmt.Sprintf("Attack penetrates! Monster takes %v hits!", hits))
+			bg.monster.hp -= hits
+		} else {
+			showPause("Monster soaks the attack.")
+		}
+		
+		if apprentice.handSlots[hand].isBroken() {
+			showPause(apprentice.handSlots[hand].name + " has broken!")
+		}
 	}
 }
 
@@ -194,6 +266,11 @@ func (bg *BattleGrid) showFoundLoot(idx int) string {
 			character.crowns += loot.crowns
 			bg.getEntityGrid(bg.currGrid).loot[idx].crowns = 0
 
+			if len(bg.getEntityGrid(bg.currGrid).loot[idx].items) < 1 {
+				loot.empty = true
+				loop = false
+			}
+			
 		} else if rsp == "ta" {
 			loop = false
 			if !loot.empty {
@@ -211,10 +288,8 @@ func (bg *BattleGrid) showFoundLoot(idx int) string {
 							} else {
 								bg.getEntityGrid(bg.currGrid).loot[idx].items = make([]Item, 0, 0)
 							}
-
 						}
 					}
-
 				} else {
 					for k := 0; len(bg.getEntityGrid(bg.currGrid).loot[idx].items) > 0; {
 						addOK := apprentice.giveCharacterItem(loot.items[k])
@@ -324,6 +399,13 @@ func (bg *BattleGrid) getAvailableActions(char Character, currTurns int) string 
 
 		if currTurns > 0 {
 			actions += " (Defend) (Search) (Wait)"
+			
+			npcs := bg.getAdjacentNPCs()
+			
+			if len(npcs) > 0 {
+				actions += " (Talk)"
+			}
+			
 		}
 
 		actions += "\n(Inventory) (Status) (End Turn) (Help) (Exit) \n\nAction: "
@@ -440,6 +522,11 @@ func adventure(mid int) (result int) {
 		} else if strings.Contains(rsp, "wait") {
 			showPause("You cower in the darkness...")
 			currTurns -= 1
+			
+		} else if strings.Contains(rsp, "talk") {
+			showPause("TODO: Talk to NPCs, if they exist, otherwise talk to yourself. Shut up.")
+			currTurns -= 1
+			
 		} else if strings.Contains(rsp, "defend") {
 			if currTurns < 1 {
 				fmt.Println("No turns remain. You need at least one turn available to defend. End your turn.")
@@ -462,7 +549,7 @@ func adventure(mid int) (result int) {
 				fmt.Scanln(&rsp3)
 			} else {
 				if bg.turn == CHAR_TURN {
-					if bg.hasApprentice {
+					if bg.hasApprentice && apprentice.isAlive() {
 						bg.turn = APP_TURN
 						bg.currGrid = bg.appGridId
 						currTurns = apprentice.getCharacterMoves()
@@ -499,12 +586,9 @@ func adventure(mid int) (result int) {
 							rsp = "exit"
 							result = DIED						
 						}
-
-						// character has died!
-						// if character dies, and they have an apprentice, the apprentice becomes the new character
-						// assuming the apprentice lives
 					}  else if rslt ==  APPRENTICE_KILLED {
 						// apprentice has died!
+						// TODO: show a death notice
 					}
 				}
 			}

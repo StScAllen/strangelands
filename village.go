@@ -60,7 +60,6 @@ func (v *Village) getSaveString() (string) {
 		villageBlock += v.shopCuriosities[k].getSaveString()
 	}
 	
-	
 	// finally:
 	villageBlock += "■"
 
@@ -228,7 +227,7 @@ func buildOrphanage() {
 	orphanage = make([]Character, 0, 0)
 	
 	for k := 0; k < die.rollxdx(1, 3) + 1; k++ {
-		appr := getRandomApprentice()
+		appr := getRandomApprentice(0)
 		orphanage = append(orphanage, appr)
 	}
 }
@@ -683,7 +682,7 @@ func (village *Village) visitVillage() string {
 	} else if rsp == "h" {
 		openTownMinutiae()
 		
-	} else if strings.Contains(rsp, "%give") && strings.Contains(rsp2, "money"){
+	} else if strings.Contains(rsp, "give") && strings.Contains(rsp2, "-money"){
 		showPause("Money received!")
 		character.crowns += 200
 	} 

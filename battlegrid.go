@@ -60,10 +60,19 @@ type Grid struct {
 	loot       []Loot
 }
 
+type NPC struct {
+	char 			Character
+	gridId			int
+	xloc, yloc		int
+	disposition 	int 		// codes:  1- potential apprentice, 2- tradable, 3- talk, etc.
+	static 			bool 		// moves or not
+}
+
 type BattleGrid struct {
 	allGrids                             [32]Grid
 	gates                                [200]Gate
 	gridPattern                          [8][8]int
+	npcs								 []NPC
 	numGrids                             int
 	turnCounter							 int
 	monster                              Monster
@@ -160,6 +169,23 @@ func (gd *Grid) getNearbyLootStrings(charX, charY int, bg *BattleGrid) []string 
 	}
 
 	return lootStrings
+}
+
+func (bg *BattleGrid) getNearbyNPCStrings(charX, charY, gridid int) []string {
+	npcStrings := make([]string, 0, 0)
+
+	for k := 0; k < len(bg.npcs); k++ {
+		if bg.npcs[k].gridId == gridid {
+			if (charX+1 == bg.npcs[k].xloc || charX-1 == bg.npcs[k].xloc || charX == bg.npcs[k].xloc){
+				if (charY+1 == bg.npcs[k].yloc || charY-1 == bg.npcs[k].yloc || charY == bg.npcs[k].yloc){
+					npcstr := "NPC: " + bg.npcs[k].char.name 
+					npcStrings = append(npcStrings, npcstr)
+				}
+			}
+		}
+	}
+
+	return npcStrings
 }
 
 func (bg *BattleGrid) isActorAdjacent(whoFlag, targetFlag int) bool {
@@ -750,6 +776,57 @@ func convertCardinalStringToInt(cardinal string) int {
 	}
 }
 
+func (bg *BattleGrid) hasNPC(id int) (bool) {
+	for k := 0; k < len(bg.npcs); k++ {
+		if bg.npcs[k].gridId == id {
+			return true
+		}
+	}
+	
+	return false;
+}
+
+func (bg *BattleGrid) getAdjacentNPCs() ([]NPC) {
+	npcs := make([]NPC, 0, 0)
+	
+	var id, xloc, yloc int
+	
+	if bg.turn == CHAR_TURN {
+		id = bg.charGridId
+		xloc = bg.charXLoc
+		yloc = bg.charYLoc
+	} else if bg.turn == APP_TURN {
+		id = bg.appGridId
+		xloc = bg.appXLoc
+		yloc = bg.appYLoc
+	}
+	
+	for k := 0; k < len(bg.npcs); k++ {
+		if bg.npcs[k].gridId == id {
+			if bg.npcs[k].xloc + 1 >= xloc && bg.npcs[k].xloc - 1 <= xloc {
+				if bg.npcs[k].yloc + 1 >= yloc && bg.npcs[k].yloc - 1 <= yloc {
+					npcs = append(npcs, bg.npcs[k])
+				}						
+			}			
+		}
+	}
+	
+	return npcs
+
+}
+
+func (bg *BattleGrid) getNPCsForGrid(id int) ([]NPC){
+	var lnpc = make([]NPC, 0, 0)
+	
+	for k := 0; k < len(bg.npcs); k++ {
+		if bg.npcs[k].gridId == id {
+			lnpc = append(lnpc, bg.npcs[k])
+		}
+	}
+	
+	return lnpc;
+}
+
 func (grid *BattleGrid) inViewRange(x int, y int, charX int, charY int, charPer int) bool {
 
 	var vRange int = 0
@@ -808,39 +885,69 @@ func (bg *BattleGrid) drawGrid() {
 	var grid Grid
 	var id, xloc, yloc int
 	var lootStrings []string
-
+	var npcStrings []string
+	
 	if bg.turn == CHAR_TURN {
 		id = bg.charGridId
 		grid = bg.getEntityGrid(id)
 		xloc = bg.charXLoc
 		yloc = bg.charYLoc
 		lootStrings = grid.getNearbyLootStrings(xloc, yloc, bg)
+		npcStrings = bg.getNearbyNPCStrings(xloc, yloc, id)
 	} else if bg.turn == APP_TURN {
 		id = bg.appGridId
 		grid = bg.getEntityGrid(id)
 		xloc = bg.appXLoc
 		yloc = bg.appYLoc
 		lootStrings = grid.getNearbyLootStrings(xloc, yloc, bg)
+		npcStrings = bg.getNearbyNPCStrings(xloc, yloc, id)
 	} else {
 		id = bg.monsterGridId
 		grid = bg.getEntityGrid(id)
 		xloc = bg.monsterXLoc
 		yloc = bg.monsterYLoc
 		lootStrings = make([]string, 0, 0)
+		npcStrings = make([]string, 0, 0)
 	}
 
+	if len(npcStrings) > 0 {
+		for k := 0; k < len(npcStrings); k++ {
+			lootStrings = append(lootStrings, npcStrings[k])
+		}
+	}
+	
 	fmt.Println("Map - " + bg.locationName + " - " + grid.gridName + " - " + bg.monster.name + " - " + times[bg.time] + " - " + weather[bg.weather])
 	fmt.Println("------------------------------------------")
 
+	hasNPC := bg.hasNPC(id)
+	lstNpc := bg.getNPCsForGrid(id) 
+	
 	row := ""
 	for i := 0; i < len(grid.grid); i++ {
 		for t := 0; t < len(grid.grid[i]); t++ {
 			if bg.charGridId == grid.id && i == bg.charYLoc && t == bg.charXLoc {
-				row += "C"
+				if character.isAlive() {
+					row += "C"			
+				} else {
+					row += "d"
+				}
+
 				continue
 			} else if bg.hasApprentice && bg.appGridId == grid.id && i == bg.appYLoc && t == bg.appXLoc {
-				row += "a"
+				if apprentice.isAlive() {
+					row += "a"
+				} else {
+					row += "d"
+				}
+
 				continue
+			} else if hasNPC {
+				for z := 0; z < len(lstNpc); z++ {
+					if lstNpc[z].xloc == t && lstNpc[z].yloc == i {
+						row += "N"
+						continue
+					}
+				}				
 			} else if (bg.monsterGridId == grid.id) && (i == bg.monsterYLoc) && (t == bg.monsterXLoc) {
 				if !bg.isPassable(grid.grid[i][t]) {
 					log.addAi("Monster is stuck! (" + grid.grid[i][t] + ")")
@@ -906,6 +1013,7 @@ func (bg *BattleGrid) drawGrid() {
 			if len(lootStrings) > 0 {
 				row += "      " + lootStrings[0]
 			}
+
 		} else if i == 2 {
 			if bg.directionValid(xloc, yloc, 6, cgid) {
 				row += "  W  "
@@ -920,6 +1028,7 @@ func (bg *BattleGrid) drawGrid() {
 			if len(lootStrings) > 1 {
 				row += "      " + lootStrings[1]
 			}
+
 		} else if i == 3 {
 			if bg.directionValid(xloc, yloc, 5, cgid) {
 				row += "  SW "
@@ -960,19 +1069,14 @@ func (bg *BattleGrid) drawGrid() {
 			row += packSpaceString("   Left: "+character.handSlots[LEFT].name, 23) + packSpaceString("  Right: "+character.handSlots[RIGHT].name, 22)
 		} else if i == 7 {
 			if bg.hasApprentice {
-				row += "  " + apprentice.name + " Health: ["
-				if apprentice.hp < 1 {
+				row += "  " + apprentice.name + " Health: ("
+				if character.hp < 1 {
 					row += "DEAD"
 				} else {
-					for hlth := 0; hlth <= apprentice.maxhp; hlth++ {
-						if hlth > apprentice.hp {
-							row += "-"
-						} else {
-							row += "♥"
-						}
-					}			
+					row += apprentice.getHealthString()
 				}
-				row += "]"
+
+				row += ")"
 			}
 		} else if i == 8 {
 			if bg.hasApprentice {
@@ -1100,6 +1204,42 @@ func createSquareGrid(height int, width int) Grid {
 	return retGrid
 }
 
+func (grid *BattleGrid) placeNPC(idx int){
+	var dice Die
+	npcNotPlaced := true
+	
+	if grid.numGrids > 1 {
+		roll := dice.rollxdx(1, grid.numGrids) - 1
+		for ; roll == grid.monsterGridId; {
+			roll = dice.rollxdx(1, grid.numGrids) - 1 
+		}
+		
+		grid.npcs[idx].gridId = roll
+	} 
+
+	entityGrid := grid.getEntityGrid(grid.npcs[idx].gridId)
+
+	for npcNotPlaced == true {
+
+		grid.npcs[idx].xloc = dice.rollxdx(1, 30)
+		grid.npcs[idx].yloc = dice.rollxdx(1, 14)
+
+		if entityGrid.grid[grid.npcs[idx].yloc][grid.npcs[idx].xloc] == " " {
+			npcNotPlaced = false
+			log.addInfo("NPC Placed")
+
+		} else {
+			log.addInfo("Cannot place NPC")
+		}
+	}
+}
+
+func (grid *BattleGrid) placeNPCs() {
+	for k:= 0; k < len(grid.npcs); k++ {
+		grid.placeNPC(k)
+	}
+}
+
 func buildBattleGrid(id int) BattleGrid {
 
 	var grid BattleGrid
@@ -1113,12 +1253,27 @@ func buildBattleGrid(id int) BattleGrid {
 	grid.turn = CHAR_TURN // default
 	grid.numGrids = 4     // default
 	
+	grid.npcs = make([]NPC, 0, 0)
+	
 	if apprentice.instanceId > 0 && apprentice.hp > 0{
 		grid.hasApprentice = true	
 	} else {
 		grid.hasApprentice = false
 	}
 
+	if mission.apprenticeReward == 1 {
+		tchar := getRandomApprentice(mission.apprenticeRewardVariant);
+		tchar.name = mission.apprenticeRewardName
+		var tapp NPC
+		tapp.char = tchar
+		tapp.gridId = -1
+		tapp.xloc = -1
+		tapp.yloc = -1
+		tapp.static = true
+		tapp.disposition = 1
+		grid.npcs = append(grid.npcs, tapp)
+	}
+	
 	if id == 0 { // cemetary
 		grid.numGrids = 4
 		// for random, done after number of grids is assigned!
@@ -1156,6 +1311,7 @@ func buildBattleGrid(id int) BattleGrid {
 		
 		//grid.addGates()
 		grid.placeMonster()
+		grid.placeNPCs()
 		
 		grid.writeGridsToFile()
 
@@ -1195,9 +1351,50 @@ func buildBattleGrid(id int) BattleGrid {
 		grid.turnCounter = 0
 
 		grid.placeMonster()
-		
+		grid.placeNPCs()
+
 		grid.writeGridsToFile()	
 
+	} else if id == 2 {
+		grid.numGrids = 6
+		// for random, done after number of grids is assigned!
+
+		for k := 0; k < grid.numGrids; k++ {
+			g1 := createSquareGrid(16, 32)
+			g1.addCemetaryDecorations()
+			g1.id = k
+			g1.used = true
+			g1.gridName = fmt.Sprintf("%v", k)
+			grid.allGrids[k] = g1
+			grid.setRandomStamp(g1.maxX, g1.maxY, k)
+		}
+
+		grid.createGridPattern()
+
+		grid.currGrid = 0
+		monster = createMonster(mission.monsterType)
+
+		grid.monster = monster
+		grid.locationName = "Cemetary"
+
+		grid.charXLoc = 1
+		grid.charYLoc = 1
+		grid.charGridId = 0
+
+		grid.appXLoc = 2
+		grid.appYLoc = 1
+		grid.appGridId = 0
+
+		grid.characterSpotted = false
+		grid.monsterSpotted = false
+		grid.apprenticeSpotted = false
+		grid.turnCounter = 0
+
+		grid.placeMonster()
+		grid.placeNPCs()
+
+		grid.writeGridsToFile()	
+		
 	} else if id == -1 {
 		// Travel encounter, 2 grid pattern, monster on character grid to start
 		grid.numGrids = 2
@@ -1235,6 +1432,7 @@ func buildBattleGrid(id int) BattleGrid {
 		grid.turnCounter = 0
 
 		grid.placeMonster()
+		grid.placeNPCs()
 		
 		grid.writeGridsToFile()	
 		

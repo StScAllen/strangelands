@@ -204,6 +204,27 @@ func createMonster(id int) Monster {
 		monster.attacks = []MonsterAttack{WEAPON, WEAPON}
 		monster.powerBalance = 14.0
 		monster.invisible = false
+		
+	} else if id == 3 {
+		monster.name = "Minstrel Piper"
+		monster.str = 4
+		monster.agi = 6
+		monster.per = 5
+		monster.cha = 5
+		monster.gui = 3
+		monster.intl = 4
+
+		monster.bits = person_bits
+
+		monster.disturbance1 = "The low hum of a flute haunts the air."
+		monster.disturbance2 = "The wind urges you to the XX"
+
+		monster.targets = HUMAN_TARGETS
+		monster.body = HUMAN_STRING
+		monster.resistance = []int{14, 14, 14, 14, 14, 14, 14, 14, 14, 14}
+		monster.attacks = []MonsterAttack{WEAPON, WEAPON}
+		monster.powerBalance = 14.0
+		monster.invisible = false
 	}
 
 	monster.moves = monster.agi
@@ -245,7 +266,6 @@ func (grid *BattleGrid) placeMonster() {
 		} else {
 			log.addInfo("Cannot place monster at " + entityGrid.grid[grid.monsterYLoc][grid.monsterXLoc])
 		}
-
 	}
 }
 

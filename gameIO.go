@@ -104,6 +104,8 @@ func (c *Character) getCharSaveBlock() string {
 	}
 
 	saveString += fmt.Sprintf("%v,", c.subLoc)
+	saveString += fmt.Sprintf("%v,", c.gender)
+
 	saveString += fmt.Sprintf("%v,", len(c.inventory)) // save count of backpack items
 
 	saveString += "◄" // end line so we can do equipment, spells, etc on their own line
@@ -181,8 +183,9 @@ func unpackCharacterBlock(block string) (int, Character) {
 	char.skills[6], _ = strconv.Atoi(bits[26]) 	
 	
 	char.subLoc, _ = strconv.Atoi(bits[27]) // count of items in backpack
+	char.gender, _ = strconv.Atoi(bits[28]) // count of items in backpack
 
-	inventoryCount, _ := strconv.Atoi(bits[28]) // count of items in backpack
+	inventoryCount, _ := strconv.Atoi(bits[29]) // count of items in backpack
 	
 	// load inventory!
 	char.handSlots[0], _ = restoreSavedItem(lines[1])
@@ -301,6 +304,42 @@ func loadGame() int {
 	}
 
 	return 1
+}
+
+func testRandom(){
+	var filename string
+	var die Die
+	var nums []int = make([]int, 20, 20)
+	
+	filename = "random.txt"
+
+	file, err := os.Create(filename)
+
+	saveString := ""
+	counter := 0
+	for k:= 0; k < 10000; k++ {
+		val := die.rollxdx(1, 20)-1
+		nums[val]++
+		saveString += fmt.Sprintf("%v, ", val)
+		counter++
+		
+		if counter >= 10 {
+			counter = 0
+			saveString += "\n"
+		}
+	}
+	
+	saveString += "\n\n"
+	
+	for k:= 0; k < 20; k++ {
+		saveString += fmt.Sprintf("%v : %v \n", k, nums[k])
+	}
+	
+	if err == nil {
+		defer file.Close()
+
+		file.WriteString(saveString)
+	}	
 }
 
 func (bg *BattleGrid) writeGridsToFile() {

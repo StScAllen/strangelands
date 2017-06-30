@@ -22,13 +22,14 @@ const STATUS_FAILED = 3		// mission failed	(killed by monster)
 const STATUS_COMPLETE = 99
 
 var monsterNames = []string {
-								"Will-O-Wisp", "Revenant Corpse",
+								"Will-O-Wisp", "Revenant Corpse", "Minstrel Piper",
 							}
 
 var missionDescrips = [][]string	{
 										{"None", "None"},
 										{"Corpse Candle Haunts the Bog.", "A corpse candle draws our sheep into the bog to drown."},
 										{"Hung the wrong man.", "Now his corpse lingers in the cemetary!"},
+										{"Missing Child", "My child has been lured into the woods by a minstrel piper."},										
 									}
 
 var phaseDescrips = []string 	{
@@ -43,6 +44,7 @@ var BLANK_MISSION = Mission{-1, 0, 0, 0, 0, "No Mission", "", 0, 0, 0, []Phase{}
 var missions = []Mission 	{
 								{0, 0, 1, 1, 1, "", "", 3, 1, 2, []Phase{}, 0, 50, 10, 0, 0, "", 60, 90, 15, 15, 5, 0, 1, STATUS_AVAIL},
 								{1, 0, 1, 2, 2, "", "", 3, 1, 2, []Phase{}, 0, 60, 10, 0, 0, "", 60, 90, 15, 15, 0, 1, 1, STATUS_AVAIL},
+								{2, 0, 1, 3, 3, "", "", 3, 1, 2, []Phase{}, 0, 60, 10, 1, 0, "", 60, 90, 15, 15, 0, 1, 1, STATUS_AVAIL},
 							}
 
 type Mission struct {
@@ -61,8 +63,8 @@ type Mission struct {
 	crownReward				int
 	experienceReward		int
 	apprenticeReward		int		// 1 true
-	apprenticeRewardVariant	int		// id that determines type, (child, adult, girl, boy, etc.)
-	appenticeRewardName		string 	// string name for apprentice reward (character name)
+	apprenticeRewardVariant	int		// id that determines type, (child, adult, girl, boy, etc.) boy = 1, girl = 2
+	apprenticeRewardName		string 	// string name for apprentice reward (character name)
 	startDays				int		// how many days mission is available to accept
 	completeDays			int		// how many days until mission must be completed
 	impactDays 				int 	// how many days until the village receives an impact from the quest being unsolved
@@ -141,7 +143,11 @@ func (miss * Mission) viewMissionStatus() {
 		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
 		pack1 := packSpaceString("  Start Village: " + villages[miss.missionBaseLocation].name, 36)
 		pack2 := fmt.Sprintf("Reward: %v", miss.crownReward)
-		fmt.Println("│ " + packSpaceString(pack1 + pack2, 72) + " │")		
+		pack3 := ""
+		if miss.apprenticeReward == 1 {
+			pack3 = "  [Potential Apprentice]"
+		}
+		fmt.Println("│ " + packSpaceString(pack1 + pack2 + pack3, 72) + " │")		
 		fmt.Println("│ " + packSpaceString(" ", 72) + " │")
 		fmt.Println("│ " + packSpaceString(fmt.Sprintf("  Phase: %v / %v", miss.currentPhase, miss.phasesTotal), 72) + " │")
 		fmt.Println("│ " + packSpaceString(fmt.Sprintf("  Days Remaining: %v ", miss.completeDays), 72) + " │")	
@@ -229,6 +235,14 @@ func genNewMission(villageIndex int) (Mission) {
 	
 	game.missionInstanceId++	
 	tMission.instanceId = game.missionInstanceId
+	
+	if tMission.apprenticeReward == 1 {
+		gender := die.rollxdx(1, 2)
+		tempChar := getRandomApprentice(gender)
+		
+		tMission.apprenticeRewardName = tempChar.name
+		tMission.apprenticeRewardVariant = tempChar.gender
+	}
 	
 	var phase Phase
 	
@@ -402,7 +416,7 @@ func unpackMissionBlock(block string) (int, Mission) {
 	miss.experienceReward, _ = strconv.Atoi(bits[11])
 	miss.apprenticeReward, _ = strconv.Atoi(bits[12])
 	miss.apprenticeRewardVariant, _ = strconv.Atoi(bits[13])
-	miss.appenticeRewardName = bits[14]
+	miss.apprenticeRewardName = bits[14]
 	
 	miss.startDays, _ = strconv.Atoi(bits[15])
 	miss.completeDays, _ = strconv.Atoi(bits[16])
@@ -462,7 +476,7 @@ func (miss *Mission) getSaveString() string {
 
 	saveString += fmt.Sprintf("%v,", miss.apprenticeReward)
 	saveString += fmt.Sprintf("%v,", miss.apprenticeRewardVariant)
-	saveString += fmt.Sprintf("%s,", miss.appenticeRewardName)
+	saveString += fmt.Sprintf("%s,", miss.apprenticeRewardName)
 	saveString += fmt.Sprintf("%v,", miss.startDays)
 	saveString += fmt.Sprintf("%v,", miss.completeDays)
 	saveString += fmt.Sprintf("%v,", miss.impactDays)

@@ -5,10 +5,10 @@ import "fmt"
 import "strings"
 import "strconv"
 
-var femaleNames = []string{"Sarah", "Donna", "Kathryn", "Sheila", "Clarissa", "Coral", "Elizabeth"}
-var maleNames = []string{"Sam", "Richard", "Mason", "Hunter", "Conner", "Bentley", "Garriot"}
+var femaleNames = []string{"Sarah", "Donna", "Kathryn", "Sheila", "Clarissa", "Coral", "Elizabeth", "Ailla", "Elaine", "Halley"}
+var maleNames = []string{"Sam", "Richard", "Mason", "Hunter", "Conner", "Bentley", "Garriot", "Tanner", "Seth", "Bentley", "Robert"}
 
-var lastNames = []string{"Snow", "Smith", "Unknown", "Peters", "Matthew", "Vague", "Mason"} 
+var lastNames = []string{"Snow", "Smith", "Unknown", "Peters", "Matthew", "Vague", "Mason", "Haston", "Carpathia", "Lennox"} 
 
 var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery"}
 var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
@@ -63,6 +63,7 @@ type Character struct {
 	spellbook                     Spellbook
 	villageIndex                  int
 	subLoc						  int 	// better defines where in a village/mission the character can be found (apprentices/npcs)
+	gender						  int  // 1 - boy, 2 - girl
 }
 
 func getNewBlankCharacter(name string) (Character) {
@@ -174,6 +175,10 @@ func (char *Character) getResistanceAt(charBodyIndex int) int {
 	return 2
 }
 
+func (char *Character) isAlive() (bool) {
+	return char.hp > 0
+}
+
 func (char *Character) getHealthString() (string){
 	
 	healthString := ""
@@ -189,26 +194,53 @@ func (char *Character) getHealthString() (string){
 	return healthString
 }
 
-// a slightly sexist random character generator
-func getRandomApprentice() (Character) {
+func getRandomName(gender int) (string) {
 	var die Die
-	female := false
+	name := ""
 	
-	if die.rollxdx(1, 4) > 2 {
-		female = true
+	if gender == 1 {	// boy
+		roll1 := die.rollxdx(1, len(maleNames)) - 1
+		roll2 := die.rollxdx(1, len(lastNames)) - 1	
+		
+		name = maleNames[roll1] + " " + lastNames[roll2]
+	} else {	// girl
+		roll1 := die.rollxdx(1, len(femaleNames)) - 1
+		roll2 := die.rollxdx(1, len(lastNames)) - 1
+		name = femaleNames[roll1] + " " + lastNames[roll2]
 	}
 	
+	return name
+}
+
+// a slightly sexist random character generator
+func getRandomApprentice(genderbias int) (Character) {
+	var die Die
+	female := false
 	randomApprentice := getNewBlankCharacter("")
+	
+	if genderbias == 0 {	// dont care
+		if die.rollxdx(1, 4) > 2 {
+			female = true
+		}	
+	} else {
+		if genderbias == 1 {
+			female = false
+		} else {
+			female = true
+		}
+	}
 	if female {
 		roll1 := die.rollxdx(1, len(femaleNames)) - 1
 		roll2 := die.rollxdx(1, len(lastNames)) - 1
 		
 		randomApprentice.name = femaleNames[roll1] + " " + lastNames[roll2]
+		randomApprentice.gender = 2
 	} else {
 		roll1 := die.rollxdx(1, len(maleNames)) - 1
 		roll2 := die.rollxdx(1, len(lastNames)) - 1
 		
 		randomApprentice.name = maleNames[roll1] + " " + lastNames[roll2]	
+		randomApprentice.gender = 1
 	}
 	
 	// give them a random skill and attribute pt based on gender (sexist, huh?)
@@ -438,6 +470,33 @@ func getName() string {
 	return rsp
 }
 
+func getGender() int {
+
+	clearConsole()
+	var flag bool = true
+	rsp := ""
+
+	for flag {
+		fmt.Println("--- Choose Gender  ---")
+		fmt.Println("Meaningless in the long run, but everyone needs something to derive a name.")
+		fmt.Println("")
+		fmt.Println("1. Male")
+		fmt.Println("2. Female")
+
+		fmt.Scanln(&rsp)
+
+		if rsp == "1" {
+			flag = false
+			return 1
+		} else if rsp == "2" {
+			flag = false
+			return 2
+		}		
+	}
+
+	return -1
+}
+
 func (c *Character) getAllAvailableItemsForSlot(slot int) ([]Item){
 	availItems := make([]Item, 0, 0,)
 	
@@ -620,6 +679,8 @@ func createPlayerCharacter() Character {
 
 	char.instanceId = 1
 	char.name = getName()
+	char.gender = getGender()
+	
 	char.str = 3
 	char.agi = 3
 	char.intl = 3
