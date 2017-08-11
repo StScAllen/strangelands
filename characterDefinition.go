@@ -194,6 +194,8 @@ func (char *Character) getHealthString() (string){
 	return healthString
 }
 
+
+
 func getRandomName(gender int) (string) {
 	var die Die
 	name := ""
@@ -496,6 +498,51 @@ func getGender() int {
 
 	return -1
 }
+
+func (c *Character) getListOfPossessions() []Item {
+	allPossessions := make([]Item, 0)
+	
+	if c.handSlots[0].id > 0 {
+		allPossessions = append(allPossessions, c.handSlots[0])
+	}
+	if c.handSlots[1].id > 0 {
+		allPossessions = append(allPossessions, c.handSlots[1])
+	}
+	
+	if c.armorSlots[0].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[0])
+	}
+	if c.armorSlots[1].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[1])
+	}
+	if c.armorSlots[2].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[2])
+	}	
+	if c.armorSlots[3].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[3])
+	}
+	if c.armorSlots[4].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[4])
+	}	
+	if c.armorSlots[5].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[5])
+	}
+	if c.armorSlots[6].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[6])
+	}
+	if c.armorSlots[7].id > 0 {
+		allPossessions = append(allPossessions, c.armorSlots[7])
+	}
+	
+	for k := range c.inventory {
+		if c.inventory[k].id > 0 {
+			allPossessions = append(allPossessions, c.inventory[k])
+		}
+	}	
+	
+	return allPossessions;				
+}
+
 
 func (c *Character) getAllAvailableItemsForSlot(slot int) ([]Item){
 	availItems := make([]Item, 0, 0,)
@@ -1000,7 +1047,81 @@ func (char *Character) equipScreen() {
 			char.chooseItemForSlot(rsp)	
 		}
 	}
+}
 
+func tradeItems(direction int) {
+		
+	allPossessions := make([]Item, 0)
+	charString := ""
+	
+	if direction == 0 {
+		allPossessions = character.getListOfPossessions()
+		charString = apprentice.name
+	} else {
+		allPossessions = apprentice.getListOfPossessions()
+		charString = character.name
+	}
+	
+	exitFlag := false
+
+	for !exitFlag {
+		clearConsole()
+		rsp := ""
+
+		fmt.Println("What item do you wish to give  " + charString + "?")
+		fmt.Println("-----------------------------------------------------------------")
+		
+		if len(allPossessions) < 1 {
+			fmt.Println("Nothing available")
+		} else {
+			counter := 0
+			for k := range allPossessions {
+				pack1 := packSpaceString(fmt.Sprintf("%v.  %s", counter, allPossessions[k].name), 36)
+				fmt.Println(pack1)
+				counter++
+			}
+		}
+		
+		fmt.Println("")		
+		fmt.Println("e. Exit")		
+		fmt.Println("--------------------------")	
+		
+		fmt.Scanln(&rsp)
+
+		if len(rsp) > 0 && rsp != "e" {
+			num, err := strconv.Atoi(rsp)
+			
+			if err == nil {
+				if num < len(allPossessions) {
+					item := allPossessions[num]
+					
+					if direction == 0 {
+						giveOK := apprentice.giveCharacterItem(item)	
+
+						if giveOK {
+							character.removeItemFromCharacter(item)
+							allPossessions = character.getListOfPossessions()
+							showPause(fmt.Sprintf("%s given to %s!", item.name, charString))							
+						}						
+					
+					} else if direction == 1 {
+						giveOK := character.giveCharacterItem(item)	
+
+						if giveOK {
+							apprentice.removeItemFromCharacter(item)
+							allPossessions = apprentice.getListOfPossessions()
+							showPause(fmt.Sprintf("%s given to %s!", item.name, charString))							
+						}			
+					}					
+				}
+			}
+			
+		} else if rsp == "e" {
+			exitFlag = true
+		} 
+	}
+	
+	
 }
 
 func (char *Character) showInventory() {
@@ -1054,7 +1175,7 @@ func (char *Character) showInventory() {
 		}
 
 		fmt.Println("")
-		fmt.Println("(eq. equip) (r. remove) (ex. exit)")
+		fmt.Println("(eq. equip) (r. remove) (g. give) (ex. exit)")
 		fmt.Println("")
 		fmt.Printf("Choose an option: ")
 		rsp := ""
@@ -1064,6 +1185,16 @@ func (char *Character) showInventory() {
 			char.equipScreen()
 		} else if rsp == "ex" {
 			cont = false
+		} else if rsp == "g" {
+			if apprentice.instanceId > 0 {
+				if char.instanceId == character.instanceId {
+					tradeItems(0)	// character to apprentice
+				} else {
+					tradeItems(1)	// apprentice to character				
+				}		
+			} else {
+				showPause("No apprentice to trade with.")
+			}
 		}
 	}
 
