@@ -133,7 +133,6 @@ func giveToWho() int {
 			return 1
 		} else if rsp == "i" {
 			character.showInventory()
-			apprentice.showInventory()
 		}
 	}
 	
@@ -206,9 +205,6 @@ func (village *Village) buyWeaponScreen() {
 			exitFlag = true
 		} else if rsp == "i" {
 			character.showInventory()
-			if apprentice.instanceId > 0 {
-				apprentice.showInventory()
-			}
 		}
 	}
 
@@ -279,9 +275,6 @@ func (village *Village) buyArmorScreen() {
 			exitFlag = true
 		}  else if rsp == "i" {
 			character.showInventory()
-			if apprentice.instanceId > 0 {
-				apprentice.showInventory()
-			}
 		}
 	}
 
@@ -296,18 +289,58 @@ func (village *Village) buyProvisions() {
 		clearConsole()
 		rsp := ""
 
+		provisions := getAllProvisions()
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Provisions      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
-		fmt.Println("Nothing available")
+
+		fmt.Println("   Item                    \tWgt \tCost")
+
+		for i := 0; i < len(provisions); i++ {
+			fmt.Printf("%v. %s \t%v \t%v \n", i, packSpaceString(provisions[i].name, 24), provisions[i].weight, provisions[i].value)
+		}
+
+		fmt.Println("")
+		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
-
+		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" {
+			num, _ := strconv.Atoi(rsp)
+			// showProvision()
+			fmt.Println(fmt.Sprintf("Buy %s?", provisions[num].name))
+			fmt.Scanln(&rsp)
+			
+			if rsp == "y" {
+				if character.crowns < provisions[num].value {
+					showPause("Not enough crowns!")
+				} else {
+					item := genGeneralItem(provisions[num])
+					ret := giveToWho()
+					
+					if ret == 0 {
+						if character.giveCharacterItem(item) {
+							character.crowns -= item.value
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					} else if ret == 1 {
+						if apprentice.giveCharacterItem(item) {
+							character.crowns -= item.value
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					}
+				}
+			}
+			
 		} else if rsp == "x" {
 			exitFlag = true
+		}  else if rsp == "i" {
+			character.showInventory()
 		}
 	}
 }
@@ -319,18 +352,58 @@ func (village *Village) buyApothecary() {
 		clearConsole()
 		rsp := ""
 
+		ingredients := getAllApothecary()
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
-		fmt.Println("Curiosities      Crowns:  " + charString)
+		fmt.Println("Apothecary      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
-		fmt.Println("Nothing available")
+
+		fmt.Println("   Item                    \tWgt \tCost")
+
+		for i := 0; i < len(ingredients); i++ {
+			fmt.Printf("%v. %s \t%v \t%v \n", i, packSpaceString(ingredients[i].name, 24), ingredients[i].weight, ingredients[i].value)
+		}
+
+		fmt.Println("")
+		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
-
+		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" {
+			num, _ := strconv.Atoi(rsp)
+			// showIngredient()
+			fmt.Println(fmt.Sprintf("Buy %s?", ingredients[num].name))
+			fmt.Scanln(&rsp)
+			
+			if rsp == "y" {
+				if character.crowns < ingredients[num].value {
+					showPause("Not enough crowns!")
+				} else {
+					item := genGeneralItem(ingredients[num])
+					ret := giveToWho()
+					
+					if ret == 0 {
+						if character.giveCharacterItem(item) {
+							character.crowns -= item.value
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					} else if ret == 1 {
+						if apprentice.giveCharacterItem(item) {
+							character.crowns -= item.value
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					}
+				}
+			}
+			
 		} else if rsp == "x" {
 			exitFlag = true
+		}  else if rsp == "i" {
+			character.showInventory()
 		}
 	}
 }

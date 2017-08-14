@@ -15,8 +15,9 @@ type Keep struct {
 	name             string
 	acres, usedacres int
 	descriptionId    int
+	maxStorage 		 int	// max number of items storage can hold
 	apprentices      []Character
-	storage			 []Item
+	storage			 []Item		
 	mapX, mapY       int
 }
 
@@ -126,11 +127,15 @@ func getKeepSaveBlock() string {
 	keepBlock += fmt.Sprintf("%v,", keep.descriptionId)
 	keepBlock += fmt.Sprintf("%v,", keep.mapX)
 	keepBlock += fmt.Sprintf("%v,", keep.mapY)
-
-	// add new lines
-	//	keepBlock += "◄"
-	//	keepBlock += fmt.Sprintf("%v,", -1)
-
+	keepBlock += fmt.Sprintf("%v,", keep.maxStorage)
+	keepBlock += fmt.Sprintf("%v,", len(keep.storage))
+	
+	// add new lines for each storage item
+	keepBlock += "◄"
+	for k := 0; k < len(keep.storage); k++ {
+		keepBlock += keep.storage[k].getSaveString()
+	}
+	
 	keepBlock += "■"
 
 	return keepBlock
@@ -141,7 +146,9 @@ func unpackKeepBlock(block string) (int, Keep) {
 
 	lines := strings.Split(block, "◄")
 	bits := strings.Split(lines[0], ",")
-
+	lineCounter := 0
+	storageCount := 0
+	
 	if bits[0] == BLOCK_KEEP {
 		fmt.Println("Loading Keep Block...")
 	} else {
@@ -157,6 +164,15 @@ func unpackKeepBlock(block string) (int, Keep) {
 	keep.descriptionId, _ = strconv.Atoi(bits[4])
 	keep.mapX, _ = strconv.Atoi(bits[5])
 	keep.mapY, _ = strconv.Atoi(bits[6])
+	keep.maxStorage, _ = strconv.Atoi(bits[7])
+
+	storageCount, _ = strconv.Atoi(bits[8])
+	lineCounter = 1
+	for k :=0 ; k < storageCount; k++ {
+		itm, _ := restoreSavedItem(lines[lineCounter])
+		keep.storage = append(keep.storage, itm)
+		lineCounter++
+	}
 
 	fmt.Println("            ...done!")
 
@@ -170,6 +186,51 @@ func (keep *Keep) addNewApprenticeToKeep(app Character) {
 	keep.apprentices = append(keep.apprentices, app)
 }
 
+func (keep *Keep) getApprenticeList() ([]Character) {
+	
+	var apprentices = make([]Character, 0, 0)
+	
+	if apprentice.instanceId > 1 {
+		apprentices = append(apprentices, apprentice)
+	}
+	
+	for k := 0; k < len(keep.apprentices); k++ {
+		apprentices = append(apprentices, keep.apprentices[k])
+	} 
+	
+	return apprentices
+}
+
+func (keep *Keep) rolodexViewApprentices() {
+	rsp := ""
+	
+	apprentices := keep.getApprenticeList()
+	
+	if len(apprentices) < 1 {
+		showPause("No Apprentices Available")
+		return
+	}
+
+	index := 0	
+	for rsp != "x" {
+		apprentices[index].printCharacter(0)
+		fmt.Println("")
+		fmt.Println("(s. status) (i. inventory) (n. next) (x. exit)")
+		fmt.Scanln(&rsp)
+		
+		if rsp == "n" && index + 1 < len(apprentices) {
+			index++
+		} else if rsp == "n" {
+			index = 0
+		} else if rsp == "i" {
+			apprentices[index].showInventoryChar(false)
+		} else if rsp == "s" {
+			apprentices[index].showStatus()
+		}
+	}	
+		
+}
+
 func (keep *Keep) manageApprentices() {
 	rsp := ""
 	
@@ -178,7 +239,8 @@ func (keep *Keep) manageApprentices() {
 		fmt.Println("╔ Manage Apprentices ╗")
 		fmt.Println("")	
 		fmt.Println("1. Select Companion")	
-		fmt.Println("2. Assign Position")	
+		fmt.Println("2. Assign Position")
+		fmt.Println("3. Rolodex")	
 		fmt.Println("")
 		fmt.Println("x. Exit")
 		fmt.Println("")
@@ -209,10 +271,12 @@ func (keep *Keep) manageApprentices() {
 					}
 				}
 			}
-		}
-		
+		} else if rsp == "2" {
+			// TODO: manage work in keep	
+		} else if rsp == "3" {
+			keep.rolodexViewApprentices()
+		}	
 	}
-	
 }
 		
 func (keep *Keep) selectApprentice() int {
@@ -297,9 +361,9 @@ func (keep *Keep) selectApprentice() int {
 				return 7	
 			}
 			showPause("Not a valid option.")	
-		} else if rsp == "8" {
-			if len(keep.apprentices) > 7 {
-				return 7	
+		} else if rsp == "9" {
+			if len(keep.apprentices) > 8 {
+				return 8	
 			}
 			showPause("Not a valid option.")	
 		}
@@ -345,6 +409,93 @@ func (keep *Keep) train() {
 
 }
 
+func (keep *Keep) showStorage() {
+	const ITEMS_PER_PAGE = 20
+	rsp := ""
+	
+	range1 := 0
+	range2 := ITEMS_PER_PAGE
+	pages := 0
+	page := 0
+	
+	for rsp != "x" {
+		clearConsole()
+		fmt.Println("╔ Storage ╗")		
+		
+		pages = 1
+		if len(keep.storage) > ITEMS_PER_PAGE {
+			for j := len(keep.storage); j > ITEMS_PER_PAGE; j -= ITEMS_PER_PAGE {
+				pages++
+			} 
+		}
+		
+		fmt.Println(fmt.Sprintf("%v of %v used.", len(keep.storage), keep.maxStorage))
+		fmt.Println("")
+		fmt.Println("")
+		
+		range1 = page * ITEMS_PER_PAGE
+		range2 = range1 + ITEMS_PER_PAGE
+
+		if range2 > len(keep.storage) {
+			range2 = len(keep.storage)
+		}
+
+		for k := range1; k < range2; k++ {
+			fmt.Println(fmt.Sprintf("%v. %s ", k, keep.storage[k].name))
+		}
+		
+		if pages > 1 {
+			fmt.Println("[n. next page]")	
+		} else {
+			fmt.Println("")		
+		}
+		
+		fmt.Println("--------------------")			
+		choices := "(#. Take Item) (x. Exit)"
+		fmt.Println(choices)
+		fmt.Println("")		
+		fmt.Printf("Choose an option: ")
+
+		fmt.Scanln(&rsp)	
+	
+		if rsp == "x" {
+
+		} else if rsp == "n" && pages > 1 {
+			page++
+			if page >= pages {
+				page = 0
+			}			
+		} else {
+			num, err := strconv.Atoi(rsp)
+
+			if err == nil {
+				selection := (page * 12) + num
+				storeItem := keep.storage[selection]
+				
+				tgt := giveToWho()
+				
+				if tgt == 0 {
+					if character.giveCharacterItem(storeItem) {
+						showPause(fmt.Sprintf("%s given to %s!", storeItem.name, character.name))							
+						keep.storage = append(keep.storage[:selection], keep.storage[selection+1:]...)
+					} else {
+						showPause(character.name + " cannot hold this item (over-encumbered).")
+					}
+				} else {
+					if apprentice.giveCharacterItem(storeItem) {
+						showPause(fmt.Sprintf("%s given to %s!", storeItem.name, apprentice.name))							
+						keep.storage = append(keep.storage[:selection], keep.storage[selection+1:]...)						
+					} else {
+						showPause(apprentice.name + " cannot hold this item (over-encumbered).")					
+					}					
+				}				
+			} else {
+				showPause("Invalid selection.")
+			}
+		}				
+	}
+}
+
 func (keep *Keep) visitKeep() string {
 	rsp := ""
 
@@ -358,7 +509,7 @@ func (keep *Keep) visitKeep() string {
 
 		fmt.Println("1. Structures")
 		fmt.Println("2. Apprentices")
-		fmt.Println("3. Keep Storage")
+		fmt.Println("3. Storage")
 		fmt.Println("4. Train")
 		fmt.Println("")
 		fmt.Println("r. Rest (End Day)")		
@@ -387,9 +538,6 @@ func (keep *Keep) visitKeep() string {
 			mission.viewMissionStatus()
 		} else if rsp == "i" {	
 			character.showInventory()
-			if apprentice.instanceId > 0 {
-				apprentice.showInventory()
-			}
 		} else if rsp == "w" {	
 			drawWorldMap()	
 		} else if rsp == "h" {	
@@ -402,7 +550,7 @@ func (keep *Keep) visitKeep() string {
 		} else if rsp == "2" {	
 			keep.manageApprentices()
 		} else if rsp == "3" {	
-			// TODO		
+			keep.showStorage() 		
 		} else if rsp == "4" {	
 			keep.train()
 		} 
@@ -419,6 +567,7 @@ func createKeep() Keep {
 	keep.name = "Campground"
 	keep.descriptionId = 0
 	keep.mapX, keep.mapY = 23, 12
-
+	keep.maxStorage = 50
+	
 	return keep
 }

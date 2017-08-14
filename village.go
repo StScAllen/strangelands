@@ -226,7 +226,7 @@ func buildOrphanage() {
 	
 	orphanage = make([]Character, 0, 0)
 	
-	for k := 0; k < die.rollxdx(1, 3) + 1; k++ {
+	for k := 0; k < die.rollxdx(10, 12) + 1; k++ {
 		appr := getRandomApprentice(0)
 		orphanage = append(orphanage, appr)
 	}
@@ -242,7 +242,7 @@ func (village * Village) visitOrphanage() {
 		
 		fmt.Println("+++ Orphanage +++")
 		fmt.Println(makeDialogString("The following children are all left handed..."))		
-		fmt.Println(makeDialogString("...a strange request to be sure but so long as you have the"))			
+		fmt.Println(makeDialogString("-a strange request to be sure- but so long as you have the"))			
 		fmt.Println(makeDialogString("adoption fee, which is, of course, the usual 25 crowns..."))			
 		fmt.Println("------------")
 		if len(orphanage) < 1 {
@@ -674,9 +674,6 @@ func (village *Village) visitVillage() string {
 		mission.viewMissionStatus()
 	} else if rsp == "i" {	
 		character.showInventory()
-		if apprentice.instanceId > 0 {
-			apprentice.showInventory()
-		}
 	} else if rsp == "w" {	
 		drawWorldMap()			
 	} else if rsp == "h" {
@@ -803,9 +800,6 @@ func showTravelMenu() string {
 		
 		case "i":
 			character.showInventory()	
-			if apprentice.instanceId > 0 {
-				apprentice.showInventory()
-			}
 		case "x":
 			validSelection = true
 			dist = 0

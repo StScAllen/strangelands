@@ -199,6 +199,12 @@ func (itm *Item) isBroken() bool {
 	return false
 }
 
+func genGeneralItem(item Item) (Item) {
+	item.id = game.itemInstanceId
+	game.itemInstanceId++
+	return item
+}
+
 func genGameWeapon(weapon Weapon, qual string, mat string) Item {
 	var item Item
 
@@ -262,7 +268,7 @@ func genGameWeapon(weapon Weapon, qual string, mat string) Item {
 		item.weight = 1
 	}
 
-	game.itemInstanceId += 1
+	game.itemInstanceId++
 	return item
 }
 
@@ -312,8 +318,56 @@ func genGameArmor(armor Armor, qual string) Item {
 		item.weight = 1
 	}
 
-	game.itemInstanceId += 1
+	game.itemInstanceId++
 	return item
+}
+
+func getAllProvisions() ([]Item) {
+	allProvisions := make([]Item, 0, 0)
+	
+	for k := 0; k < len(common); k++ {
+		if common[k].typeCode == ITEM_TYPE_EQUIPMENT {
+			allProvisions = append(allProvisions, common[k])
+		}
+	}
+	
+	for k := 0; k < len(uncommon); k++ {
+		if uncommon[k].typeCode == ITEM_TYPE_EQUIPMENT {
+			allProvisions = append(allProvisions, uncommon[k])
+		}
+	}
+		
+	for k := 0; k < len(rare); k++ {
+		if rare[k].typeCode == ITEM_TYPE_EQUIPMENT {
+			allProvisions = append(allProvisions, rare[k])
+		}
+	}	
+	
+	return allProvisions
+}
+
+func getAllApothecary() ([]Item) {
+	allApothecary := make([]Item, 0, 0)
+	
+	for k := 0; k < len(common); k++ {
+		if common[k].typeCode == ITEM_TYPE_INGREDIENT {
+			allApothecary = append(allApothecary, common[k])
+		}
+	}
+	
+	for k := 0; k < len(uncommon); k++ {
+		if uncommon[k].typeCode == ITEM_TYPE_INGREDIENT {
+			allApothecary = append(allApothecary, uncommon[k])
+		}
+	}
+		
+	for k := 0; k < len(rare); k++ {
+		if rare[k].typeCode == ITEM_TYPE_INGREDIENT {
+			allApothecary = append(allApothecary, rare[k])
+		}
+	}	
+	
+	return allApothecary
 }
 
 func getRandomWeapon(weight int) Item {

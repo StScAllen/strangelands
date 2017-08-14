@@ -11,7 +11,7 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".12a"
+const VERSION = ".13a"
 
 const DEBUG_ON = true
 

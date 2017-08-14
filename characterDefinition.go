@@ -5,9 +5,9 @@ import "fmt"
 import "strings"
 import "strconv"
 
+// *** be pragmatic and keep first and last names < 11 characters each ***
 var femaleNames = []string{"Sarah", "Donna", "Kathryn", "Sheila", "Clarissa", "Coral", "Elizabeth", "Ailla", "Elaine", "Halley"}
-var maleNames = []string{"Sam", "Richard", "Mason", "Hunter", "Conner", "Bentley", "Garriot", "Tanner", "Seth", "Bentley", "Robert"}
-
+var maleNames = []string{"Sam", "Richard", "Mason", "Hunter", "Conner", "Bentley", "Garriot", "Tanner", "Norris", "Robert"}
 var lastNames = []string{"Snow", "Smith", "Unknown", "Peters", "Matthew", "Vague", "Mason", "Haston", "Carpathia", "Lennox"} 
 
 var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery"}
@@ -376,7 +376,18 @@ func (char *Character) removeItemFromCharacter(item Item) {
 				}
 			}
 		}
-	} else {
+	} else if item.equip == EQUIP_NONE {
+		idx := 0
+		for k := 0; k < len(char.inventory); k++ {
+			if char.inventory[k].id == item.id {
+				idx = k
+				break
+			}
+		}	
+		
+		char.inventory = append(char.inventory[:idx], char.inventory[idx+1:]...)
+		
+	} else {	// armor
 		if char.armorSlots[item.equip].id == item.id {
 			char.armorSlots[item.equip] = getEmptyItem()
 		} else {
@@ -1120,11 +1131,116 @@ func tradeItems(direction int) {
 			exitFlag = true
 		} 
 	}
+}
+
+func (char *Character) storeItems() {
+	if len(keep.storage) >= keep.maxStorage {
+		showPause("Keep storage is maxed out. Build larger storage facilities or clean the dump up! Fucking pack rat.")
+		return
+	}
 	
+	const ITEMS_PER_PAGE = 12
 	
+	cont := true
+	rsp := ""
+	
+	range1 := 0
+	range2 := ITEMS_PER_PAGE
+	pages := 0
+	page := 0
+	
+	for cont {
+		clearConsole()
+		
+		items := char.getListOfPossessions()
+		
+		pages = 1
+		if len(items) > ITEMS_PER_PAGE {
+			for j := len(items); j > ITEMS_PER_PAGE; j -= ITEMS_PER_PAGE {
+				pages++
+			} 
+		}
+		
+		fmt.Println("-- Keep Storage: " + fmt.Sprintf("%v of %v used.", len(keep.storage), keep.maxStorage))
+		fmt.Println("")
+		fmt.Println("")
+		
+		fmt.Println(fmt.Sprintf("-- Character Inventory --  [Page %v : %v]", page+1, pages))
+
+		range1 = page * ITEMS_PER_PAGE
+		range2 = range1 + ITEMS_PER_PAGE
+
+		if range2 > len(items) {
+			range2 = len(items)
+		}
+
+		for k := range1; k < range2; k++ {
+			fmt.Println(fmt.Sprintf("%v. %s ", k, items[k].name))
+		}
+		
+		if pages > 1 {
+			fmt.Println("[n. next page]")	
+		} else {
+			fmt.Println("")		
+		}
+		
+		fmt.Println("--------------------")	
+		choices := "(#. Store Item) (a. Store All) (u. Store Unequiped) (x. Exit)"
+		fmt.Println(choices)
+		fmt.Println("")		
+		fmt.Printf("Choose an option: ")
+
+		fmt.Scanln(&rsp)	
+	
+		if rsp == "x" {
+			cont = false
+		} else if rsp == "a" {
+			
+		} else if rsp == "u" {
+
+		} else if rsp == "n" && pages > 1 {
+			page++
+			if page >= pages {
+				page = 0
+			}			
+		} else {
+			num, err := strconv.Atoi(rsp)
+
+			if err == nil {
+				selection := (page * 12) + num
+				storeItem := items[selection]
+				
+				char.removeItemFromCharacter(storeItem)
+				keep.storage = append(keep.storage, storeItem)
+				
+				showPause(storeItem.name + " stored in Keep!")
+				
+			} else {
+				showPause("Invalid selection.")
+			}
+		}
+	}		
 }
 
 func (char *Character) showInventory() {
+
+	rsp, _ := char.showInventoryChar(true)
+	id := char.instanceId
+	
+	for rsp != "x" {
+		if rsp == "n" {
+			if id == character.instanceId && apprentice.instanceId > 1 {
+				rsp, id = apprentice.showInventoryChar(true)
+			} else {
+				rsp, id = character.showInventoryChar(true)
+			} 	
+		} else {
+			rsp = "x"
+		}	
+	}
+}
+
+func (char *Character) showInventoryChar(canTransfer bool) (string, int)  {
 	cont := true
 	
 	for cont {
@@ -1133,7 +1249,8 @@ func (char *Character) showInventory() {
 		seg1 := ""
 		seg2 := ""
 
-		fmt.Printf("Encumb: %v / %v  (stone) \n", char.weight, char.maxweight)
+		weightStr := fmt.Sprintf("Encumb: %v / %v  (stone)", char.weight, char.maxweight);
+		fmt.Println(packSpaceString(char.name, 22) + "  " + weightStr)
 
 		fmt.Println("")
 		fmt.Println("--Hands--")
@@ -1175,17 +1292,34 @@ func (char *Character) showInventory() {
 		}
 
 		fmt.Println("")
-		fmt.Println("(eq. equip) (r. remove) (g. give) (ex. exit)")
+		choices := "(e. equip) (r. remove) "
+		
+		if canTransfer && char.instanceId == character.instanceId && apprentice.instanceId > 1 {
+			choices += "(g. give) (n. apprentice) "
+		} else if canTransfer && apprentice.instanceId > 1 && apprentice.instanceId == char.instanceId {
+			choices += "(g. give) (n. character) "			
+		}
+		
+		if char.villageIndex == 99 {
+			choices += "(s. store) "
+		}
+		
+		choices += "(x. exit)"
+		
+		fmt.Println(choices)
 		fmt.Println("")
 		fmt.Printf("Choose an option: ")
 		rsp := ""
 		fmt.Scanln(&rsp)	
 		
-		if rsp == "eq" {
+		if rsp == "e" {
 			char.equipScreen()
-		} else if rsp == "ex" {
+		} else if rsp == "x" {
 			cont = false
-		} else if rsp == "g" {
+		} else if canTransfer && rsp == "n" {
+			cont = false	
+			return rsp, char.instanceId
+		} else if canTransfer && rsp == "g" {
 			if apprentice.instanceId > 0 {
 				if char.instanceId == character.instanceId {
 					tradeItems(0)	// character to apprentice
@@ -1195,7 +1329,10 @@ func (char *Character) showInventory() {
 			} else {
 				showPause("No apprentice to trade with.")
 			}
+		} else if char.villageIndex == 99 && rsp == "s" {
+			char.storeItems()	// if in keep, we can store inventory items
 		}
 	}
 
+	return "x", -1
 }

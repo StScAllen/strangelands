@@ -9,7 +9,14 @@ import "fmt"
 *	++ Invisibility
 *   ++ Chamoflage
 *
-*  Spirit monsters can be drained for soul points.
+*  Monster facts:
+*  - Its about knowing your enemy, completing mission archs can grant knowledge, research also grants knowledge
+*  - Knowledge can be learned from npcs.  The more knowledge the character has about the enemy the more their expertise
+*  - increases which can grant combat bonuses. (Each monster has 10 facts, character can learn them and gain expertise on
+*  - a x / 10 scale.  10 is expert and grants specific bonuses.
+*
+*  Other:
+*  - Spirit monsters can be drained for soul points.
 */
 
 // behaviour constants
