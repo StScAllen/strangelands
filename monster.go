@@ -113,6 +113,21 @@ func (mon *Monster) getTotalDefenseAdjustment() int {
 	return 0
 }
 
+func (monst *Monster) getHealthString() (string){
+	
+	healthString := ""
+	
+	for k :=0; k < monst.maxhp; k++{
+		if k < monst.hp {
+			healthString += "♥"
+		} else {
+			healthString += "-"
+		}
+	}
+	
+	return healthString
+}
+
 func (mon *Monster) getMonsterStealthModifier() int {
 	stealth := 0
 
@@ -425,7 +440,7 @@ func (bg *BattleGrid) getAttack() (int, int) {
 	var attacksAvailable = make([]MonsterAttack, 0, 0)
 
 	for k := range bg.monster.attacks {
-		// get attacks that can be done withing the amount of available turns
+		// get attacks that can be done within the amount of available turns
 		if bg.monster.attacks[k].atkTurns <= bg.monster.moves {
 			// add if there is a target within range
 			if bg.getActorInAttackRange(bg.monster.attacks[k].wRange) > -1 {
@@ -527,7 +542,7 @@ func (bg *BattleGrid) doMonsterActivity() int {
 		}
 	}
 
-	for bg.monster.moves > 0 {
+	for bg.monster.moves > 0 {		
 		// get the next step from the monster plan
 		step := bg.monster.plan.steps[bg.monster.plan.nextStep]
 

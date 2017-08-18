@@ -11,7 +11,7 @@ var villages []Village
 
 var log Log
 
-const VERSION = ".13a"
+const VERSION = ".14a"
 
 const DEBUG_ON = true
 
@@ -72,6 +72,23 @@ func endDay(restQuality int, showDetails bool) {
 		character.hp = character.maxhp
 	}
 	
+	if apprentice.exists() {
+		if apprentice.hp == apprentice.maxhp {
+			details += "... Your apprentice is healthy.\n"
+		} else {
+			roll := die.rollxdx(1, 4)
+			if roll <= restQuality {
+				details += "... Your apprentice's wounds are healing nicely.\n"
+				apprentice.hp += 1
+			} else {
+				details += "... Your apprentice's wounds show little improvement.\n"
+			}
+		}
+		if apprentice.hp > apprentice.maxhp {
+			apprentice.hp = apprentice.maxhp
+		}
+	}
+		
 	game.gameDay++
 	game.dayCounter++
 
@@ -80,11 +97,20 @@ func endDay(restQuality int, showDetails bool) {
 	// small chance a mission will be added to a random villages bulletin board.
 	maybeAddMission()
 	
+	keep.endDay()  // do keep maintenance
+	
+	// update villages
+	for k := 0; k < len(villages); k++ {
+		villages[k].endDay()
+	}
+	
+	// do end of week stuff
 	if game.dayCounter == 7 {
 		game.weekCounter++
 		game.dayCounter = 0
 		//		showWeekEnd()
 
+		// do end of month stuff
 		if game.weekCounter == 4 {
 			game.monthCounter++
 			updateShops()
@@ -161,7 +187,7 @@ func main() {
 		buildOrphanage()
 		//////////////////////////////
 		character.printCharacter(1)
-		if apprentice.instanceId > 0 {
+		if apprentice.exists() {
 			apprentice.printCharacter(1)
 		}
 

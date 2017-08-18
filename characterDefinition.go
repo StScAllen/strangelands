@@ -10,8 +10,8 @@ var femaleNames = []string{"Sarah", "Donna", "Kathryn", "Sheila", "Clarissa", "C
 var maleNames = []string{"Sam", "Richard", "Mason", "Hunter", "Conner", "Bentley", "Garriot", "Tanner", "Norris", "Robert"}
 var lastNames = []string{"Snow", "Smith", "Unknown", "Peters", "Matthew", "Vague", "Mason", "Haston", "Carpathia", "Lennox"} 
 
-var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery"}
-var weaponSkills = []string{"Knife", "Sword", "Crossbow", "Polearm", "Axe", "Mace"}
+var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery", "-UNUSED-"}
+var weaponSkills = []string{"Blades", "Crossbow", "Polearms", "Blunt"}
 
 const NUM_SKILLS = 9
 const LEFT = 0
@@ -54,7 +54,7 @@ type Character struct {
 	exp                           int
 	turns                         int
 	turnDefense 				  int  // how many turns were used as defense
-	skills						  [7]int
+	skills						  [8]int
 	alive						  bool
 	handSlots                     [2]Item
 	armorSlots                    [9]Item
@@ -175,8 +175,26 @@ func (char *Character) getResistanceAt(charBodyIndex int) int {
 	return 2
 }
 
+// check to make sure actor is alive
 func (char *Character) isAlive() (bool) {
 	return char.hp > 0
+}
+
+// check to make sure actor exists
+func (char *Character) exists() (bool) {
+	if char.instanceId > 0 {
+		return true
+	}
+	return false
+}
+
+// actor exists & is still living, an actionable actor
+// status effects could impact this later
+func (char *Character) isMotile() (bool) {
+	if char.exists() && char.isAlive() {
+		return true
+	}
+	return false
 }
 
 func (char *Character) getHealthString() (string){
@@ -340,6 +358,7 @@ func (char *Character) recalcCharacterWeight() {
 	char.weight = weight
 }
 
+
 func (char *Character) setClearInventory() {
 
 	char.handSlots[0] = getEmptyItem()
@@ -458,15 +477,18 @@ func getName() string {
 
 	clearConsole()
 	var flag bool = true
+	name1 := ""
+	name2 := ""
 	rsp := ""
-
+	
 	for flag {
 		fmt.Println("--- Choose a Character Name ---")
 		fmt.Println("A name is nothing more than a tool. Don't forget that.")
 		fmt.Println("")
 		fmt.Println("Enter a name: ")
 
-		fmt.Scanln(&rsp)
+		fmt.Scanln(&name1, &name2)
+		rsp = name1 + " " + name2
 
 		if len(strings.Trim(rsp, " ")) > 0 {
 			rsp2 := ""
@@ -749,7 +771,7 @@ func createPlayerCharacter() Character {
 	char.purchaseStats()
 	char.chooseSkills()
 
-	char.lvl = 1
+	char.lvl = 3
 
 	char.crowns = 32
 
@@ -1135,11 +1157,11 @@ func tradeItems(direction int) {
 
 func (char *Character) storeItems() {
 	if len(keep.storage) >= keep.maxStorage {
-		showPause("Keep storage is maxed out. Build larger storage facilities or clean the dump up! Fucking pack rat.")
+		showPause("Keep storage is maxed out. Build larger storage facilities or clean the dump up! Ya fucking pack rat.")
 		return
 	}
 	
-	const ITEMS_PER_PAGE = 12
+	const ITEMS_PER_PAGE = 16
 	
 	cont := true
 	rsp := ""
@@ -1163,7 +1185,6 @@ func (char *Character) storeItems() {
 		
 		fmt.Println("-- Keep Storage: " + fmt.Sprintf("%v of %v used.", len(keep.storage), keep.maxStorage))
 		fmt.Println("")
-		fmt.Println("")
 		
 		fmt.Println(fmt.Sprintf("-- Character Inventory --  [Page %v : %v]", page+1, pages))
 
@@ -1178,6 +1199,7 @@ func (char *Character) storeItems() {
 			fmt.Println(fmt.Sprintf("%v. %s ", k, items[k].name))
 		}
 		
+		fmt.Println("")	
 		if pages > 1 {
 			fmt.Println("[n. next page]")	
 		} else {
@@ -1222,6 +1244,123 @@ func (char *Character) storeItems() {
 	}		
 }
 
+func (char *Character) getFilteredInventoryList(filters []bool) ([]Item){
+	filteredList := make([]Item, 0, 0)
+	allList := char.getListOfPossessions()
+	
+	for k := 0; k < len(allList); k++ {
+		itm := allList[k]
+		
+		if itm.typeCode == ITEM_TYPE_WEAPON && filters[0] {
+			filteredList = append(filteredList, itm)
+		} else if itm.typeCode == ITEM_TYPE_ARMOR && filters[1] {
+			filteredList = append(filteredList, itm)	
+		} else if itm.typeCode == ITEM_TYPE_UNCTURE && filters[2] {
+			filteredList = append(filteredList, itm)	
+		} else if itm.typeCode == ITEM_TYPE_INGREDIENT && filters[3] {
+			filteredList = append(filteredList, itm)		
+		} else if itm.typeCode == ITEM_TYPE_EQUIPMENT && filters[4] {
+			filteredList = append(filteredList, itm)								
+		} else if itm.typeCode == ITEM_TYPE_SPECIAL && filters[5] {
+			filteredList = append(filteredList, itm)										
+		}
+	}
+	
+	return filteredList
+}
+
+
+func (char *Character) showInventoryFilteredList() {
+	const ITEMS_PER_PAGE = 18
+	rsp := ""
+	range1 := 0
+	range2 := ITEMS_PER_PAGE
+	pages := 0
+	page := 0
+	
+	filters := make([]bool, 6, 6)
+	for k := 0; k < 6; k++ {
+		filters[k] = true
+	}
+		
+	dispFilters := "☼ ⌂ ♥ ♣ ♦ ∞"
+	
+	for rsp != "x" {
+		
+		filteredList := char.getFilteredInventoryList(filters)
+		dispFilters = getDisplayFilters(filters)
+		
+		clearConsole()
+		fmt.Println("╔═══════════════════════ Inventory ═══════════════════════╗")		
+		
+		pages = 1
+		if len(keep.storage) > ITEMS_PER_PAGE {
+			for j := len(filteredList); j > ITEMS_PER_PAGE; j -= ITEMS_PER_PAGE {
+				pages++
+			} 
+		}
+		
+		dispStr := packSpaceStringCenter(fmt.Sprintf("  %v :: %v ", char.weight, char.maxweight), 24)
+		dispStr += "            Filters: " + dispFilters
+		
+		fmt.Println(dispStr)
+		fmt.Println("  ─────────────────────             ─────────────────────")
+		fmt.Println("")
+		
+		range1 = page * ITEMS_PER_PAGE
+		range2 = range1 + ITEMS_PER_PAGE
+
+		if range2 > len(filteredList) {
+			range2 = len(filteredList)
+		}
+
+		for k := range1; k < range2; k++ {
+			numBit := fmt.Sprintf("   %v.", k)
+			numBit = packSpaceString(numBit, 8)
+			fmt.Println(numBit + filteredList[k].name)
+		}
+		
+		
+		fmt.Println("")	
+		fmt.Println("  ─────────────────────────────────────────────────────")		
+
+		commands := ""	
+		if pages > 1 {
+			commands += "  [n. next]"			    
+		}  
+		commands += "  [f. filters]  [#. View]  [x. Exit]"
+		commands = packSpaceString(commands, 46)
+
+		fmt.Println(commands)
+		fmt.Println("╚═══════════════════════════════════════════════════════╝")			
+		fmt.Println("")		
+		fmt.Printf("Choose an option: ")
+
+		fmt.Scanln(&rsp)	
+	
+		if rsp == "f" {
+			setFilters(filters)
+		} else if rsp == "n" && pages > 1 {
+			page++
+			if page >= pages {
+				page = 0
+			}			
+		} else if rsp != "x" {
+			num, err := strconv.Atoi(rsp)
+
+			if err == nil {
+				selection := (page * ITEMS_PER_PAGE) + num
+				storeItem := filteredList[selection]
+				show(storeItem)
+				showPause("Press Enter to continue.")
+				// TODO: View the item		
+			} else {
+				showPause("Invalid selection.")
+			}
+		}				
+	}
+}
+
 func (char *Character) showInventory() {
 
 	rsp, _ := char.showInventoryChar(true)
@@ -1229,7 +1368,7 @@ func (char *Character) showInventory() {
 	
 	for rsp != "x" {
 		if rsp == "n" {
-			if id == character.instanceId && apprentice.instanceId > 1 {
+			if id == character.instanceId && apprentice.exists() {
 				rsp, id = apprentice.showInventoryChar(true)
 			} else {
 				rsp, id = character.showInventoryChar(true)
@@ -1294,15 +1433,17 @@ func (char *Character) showInventoryChar(canTransfer bool) (string, int)  {
 		fmt.Println("")
 		choices := "(e. equip) (r. remove) "
 		
-		if canTransfer && char.instanceId == character.instanceId && apprentice.instanceId > 1 {
+		if canTransfer && char.instanceId == character.instanceId && apprentice.exists() {
 			choices += "(g. give) (n. apprentice) "
-		} else if canTransfer && apprentice.instanceId > 1 && apprentice.instanceId == char.instanceId {
+		} else if canTransfer && apprentice.exists() && apprentice.instanceId == char.instanceId {
 			choices += "(g. give) (n. character) "			
 		}
 		
 		if char.villageIndex == 99 {
 			choices += "(s. store) "
 		}
+		
+		choices += "(l. list) "
 		
 		choices += "(x. exit)"
 		
@@ -1314,13 +1455,15 @@ func (char *Character) showInventoryChar(canTransfer bool) (string, int)  {
 		
 		if rsp == "e" {
 			char.equipScreen()
+		} else if rsp == "l" {
+			char.showInventoryFilteredList()	
 		} else if rsp == "x" {
 			cont = false
 		} else if canTransfer && rsp == "n" {
 			cont = false	
 			return rsp, char.instanceId
 		} else if canTransfer && rsp == "g" {
-			if apprentice.instanceId > 0 {
+			if apprentice.exists() {
 				if char.instanceId == character.instanceId {
 					tradeItems(0)	// character to apprentice
 				} else {

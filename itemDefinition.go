@@ -10,15 +10,18 @@ var qualities = []string{"Crude", "Stand", "Crafts", "Master"}
 var materials = []string{"Oak", "Bone", "Stone", "Iron", "Steel", "Silver"}
 var equipStrings = []string{"Head", "Neck", "Arms", "Chest", "Leg", "Feet", "Ring", "Cloak", "Hand", "Any", "None"}
 var containers = []string{"Chest", "Bag", "Satchel", "Skeleton", "Debris", "Corpse", "Barrel", "Crate"}
+var filterIcons = []string{"☼", "⌂", "♥", "♣", "♦", "∞"}
+var typeCodeStrings = []string{"NONE", "WEAPON", "ARMOR", "UNCTURE", "INGREDIENT", "EQUIPMENT", "UNUSED", "UNUSED", "UNUSED", "SPECIAL"}
+
 
 // TYPE constants
-const ITEM_TYPE_UNSET = 0 //item struct will zeroize on init to this
-const ITEM_TYPE_WEAPON = 1
-const ITEM_TYPE_ARMOR = 2
-const ITEM_TYPE_UNCTURE = 3
-const ITEM_TYPE_INGREDIENT = 4
-const ITEM_TYPE_EQUIPMENT = 5
-const ITEM_TYPE_SPECIAL = 9
+const ITEM_TYPE_UNSET = 0 		//item struct will zeroize on init to this
+const ITEM_TYPE_WEAPON = 1			//	"☼"
+const ITEM_TYPE_ARMOR = 2			//	"⌂"
+const ITEM_TYPE_UNCTURE = 3			//	"♥"
+const ITEM_TYPE_INGREDIENT = 4		//	"♣"
+const ITEM_TYPE_EQUIPMENT = 5		//	"♦"
+const ITEM_TYPE_SPECIAL = 9			//	"∞"
 
 const RARITY_LOW = 0
 const RARITY_MED = 1
@@ -64,66 +67,68 @@ var qualBonuses = [][]int{
 	{2, 2, 1, -2, 1, 3, 3, 4, -1, 2}, // master
 }
 
-var weapons = []Weapon{ //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag, vsPad, vsLeath, vsChain, rarity
-	{"Club", 1, 1, 4, 0, 0, 9, 12, 5, 1, 3, 0, 0, 1, 1, RARITY_LOW},
-	{"Knife", 1, 2, 4, 0, 0, 4, 30, 7, 1, 2, 0, 1, 0, -1, RARITY_LOW},
-	{"Hatchet", 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0, 0, 0, 0, RARITY_LOW},
-	{"Dagger", 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0, 1, 0, -1, RARITY_LOW},
-	{"Short Sword", 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0, 1, 0, -1, RARITY_MED},
-	{"Light Mace", 1, 3, 6, 0, 0, 8, 38, 15, 1, 3, 0, -1, 1, 1, RARITY_MED},
-	{"Lt Crossbow", 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1, 0, 0, 0, RARITY_MED},
+var weapons = []Weapon{ //name, code, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns, noMaterial flag, vsPad, vsLeath, vsChain, rarity
+	{"Club", 36, 1, 1, 4, 0, 0, 9, 12, 5, 1, 3, 0, 0, 1, 1, RARITY_LOW},
+	{"Knife", 37, 1, 2, 4, 0, 0, 4, 30, 7, 1, 2, 0, 1, 0, -1, RARITY_LOW},
+	{"Hatchet", 38, 1, 2, 5, 0, 0, 7, 25, 8, 1, 3, 0, 0, 0, 0, RARITY_LOW},
+	{"Dagger", 39, 1, 3, 4, 0, 0, 5, 36, 8, 1, 2, 0, 1, 0, -1, RARITY_LOW},
+	{"Short Sword", 40, 1, 3, 5, 0, 0, 7, 32, 9, 1, 3, 0, 1, 0, -1, RARITY_MED},
+	{"Light Mace", 41, 1, 3, 6, 0, 0, 8, 38, 15, 1, 3, 0, -1, 1, 1, RARITY_MED},
+	{"Lt Crossbow", 42, 2, 1, 3, 0, -1, 9, 26, 12, 3, 4, 1, 0, 0, 0, RARITY_MED},
 }
 
-var armors = []Armor{ // name, shields, defense, resistance, weight, value, slot, rarity (0-2)
-	{"Cloth Shirt", 1, 0, 4, 0, 0, EQUIP_CHEST, RARITY_LOW},
-	{"Thick Cloth Coat", 1, 0, 6, 4, 5, EQUIP_CHEST, RARITY_LOW},
-	{"Padded Jerkin", 2, 1, 8, 7, 12, EQUIP_CHEST, RARITY_MED},
-	{"Soft Leather Jerkin", 2, 1, 9, 10, 25, EQUIP_CHEST, RARITY_MED},
-	{"Hard Leather Jerkin", 3, 1, 10, 14, 36, EQUIP_CHEST, RARITY_MED},
-	{"Studded Leather Jerkin", 4, 2, 11, 16, 48, EQUIP_CHEST, RARITY_HIGH},
-	{"Chain Shirt", 5, 2, 14, 24, 60, EQUIP_CHEST, RARITY_HIGH},
+var armors = []Armor{ // name, code, shields, defense, resistance, weight, value, slot, rarity (0-2)
+	{"Cloth Shirt", 14, 1, 0, 4, 0, 0, EQUIP_CHEST, RARITY_LOW},
+	{"Thick Cloth Coat", 15, 1, 0, 6, 4, 5, EQUIP_CHEST, RARITY_LOW},
+	{"Padded Jerkin", 16, 2, 1, 8, 7, 12, EQUIP_CHEST, RARITY_MED},
+	{"Soft Leather Jerkin", 17, 2, 1, 9, 10, 25, EQUIP_CHEST, RARITY_MED},
+	{"Hard Leather Jerkin", 18, 3, 1, 10, 14, 36, EQUIP_CHEST, RARITY_MED},
+	{"Studded Leather Jerkin", 19, 4, 2, 11, 16, 48, EQUIP_CHEST, RARITY_HIGH},
+	{"Chain Shirt", 20, 5, 2, 14, 24, 60, EQUIP_CHEST, RARITY_HIGH},
 
-	{"Padded Sleeves", 1, 1, 8, 1, 2, EQUIP_ARMS, RARITY_LOW},
-	{"Leather Sleeves", 2, 1, 9, 2, 2, EQUIP_ARMS, RARITY_MED},
-	{"Chain Sleeves", 4, 2, 14, 4, 2, EQUIP_ARMS, RARITY_HIGH},
+	{"Padded Sleeves", 21, 1, 1, 8, 1, 2, EQUIP_ARMS, RARITY_LOW},
+	{"Leather Sleeves", 22, 2, 1, 9, 2, 2, EQUIP_ARMS, RARITY_MED},
+	{"Chain Sleeves", 23, 4, 2, 14, 4, 2, EQUIP_ARMS, RARITY_HIGH},
 
-	{"Padded Coif", 1, 0, 8, 1, 2, EQUIP_HEAD, RARITY_LOW},
-	{"Leather Coif", 2, 1, 9, 2, 2, EQUIP_HEAD, RARITY_MED},
-	{"Chain Coif", 3, 1, 14, 4, 2, EQUIP_HEAD, RARITY_HIGH},
+	{"Padded Coif", 24, 1, 0, 8, 1, 2, EQUIP_HEAD, RARITY_LOW},
+	{"Leather Coif", 25, 2, 1, 9, 2, 2, EQUIP_HEAD, RARITY_MED},
+	{"Chain Coif", 26, 3, 1, 14, 4, 2, EQUIP_HEAD, RARITY_HIGH},
 
-	{"Cloth Pants", 1, 0, 4, 0, 0, EQUIP_LEG, RARITY_LOW},
-	{"Padded Greeves", 1, 1, 8, 1, 2, EQUIP_LEG, RARITY_LOW},
-	{"Leather Greeves", 2, 1, 9, 1, 2, EQUIP_LEG, RARITY_MED},
-	{"Chain Greeves", 4, 2, 14, 7, 2, EQUIP_LEG, RARITY_HIGH},
+	{"Cloth Pants", 27, 1, 0, 4, 0, 0, EQUIP_LEG, RARITY_LOW},
+	{"Padded Greeves", 28, 1, 1, 8, 1, 2, EQUIP_LEG, RARITY_LOW},
+	{"Leather Greeves", 29, 2, 1, 9, 1, 2, EQUIP_LEG, RARITY_MED},
+	{"Chain Greeves", 30, 4, 2, 14, 7, 2, EQUIP_LEG, RARITY_HIGH},
 
-	{"Leather Boots", 2, 0, 9, 2, 2, EQUIP_FEET, RARITY_LOW},
-	{"Hard Leather Boots", 3, 0, 10, 3, 7, EQUIP_FEET, RARITY_MED},
-	{"Chain Boots", 4, 1, 14, 3, 7, EQUIP_FEET, RARITY_HIGH},
+	{"Leather Boots", 31, 2, 0, 9, 2, 2, EQUIP_FEET, RARITY_LOW},
+	{"Hard Leather Boots", 32, 3, 0, 10, 3, 7, EQUIP_FEET, RARITY_MED},
+	{"Chain Boots", 33, 4, 1, 14, 3, 7, EQUIP_FEET, RARITY_HIGH},
 
-	{"Light Cape", 1, 1, 0, 1, 1, EQUIP_CLOAK, RARITY_MED},
-	{"Wood Shield", 3, 3, 10, 2, 2, EQUIP_HAND, RARITY_MED},
+	{"Light Cape", 34, 1, 1, 0, 1, 1, EQUIP_CLOAK, RARITY_MED},
+	{"Wood Shield", 35, 3, 3, 10, 2, 2, EQUIP_HAND, RARITY_MED},
 }
 
 var common = []Item{
-	{0, "Torch", ITEM_TYPE_EQUIPMENT, 1, 1, 3, 3, EQUIP_HAND, 1, 2, "", "", 5, 0, 0, 0, 1, -2, 3, 0, 0, 0, 0, 1, 2, -1, 1},
-	{0, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 4, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Iron Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 9, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Rope", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 7, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Bandage", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 8, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
-	{0, "Junk", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 2, "", "", 0, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
+	{0, 1, "Torch", ITEM_TYPE_EQUIPMENT, 1, 1, 3, 3, EQUIP_HAND, 1, 2, "", "", 5, 0, 0, 0, 1, -2, 3, 0, 0, 0, 0, 1, 2, -1, 1},
+	{0, 2, "Cobbler Weed", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 4, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 3, "Grave Mold", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 6, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 4, "Iron Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 9, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 5, "Rope", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 7, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 6, "Bandage", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 8, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
+	{0, 7, "Junk", ITEM_TYPE_EQUIPMENT, 1, 1, 1, 1, EQUIP_NONE, 1, 2, "", "", 0, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
 }
 
 var uncommon = []Item{
-	{0, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 16, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Copper Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 24, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Salve", ITEM_TYPE_UNCTURE, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 20, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
+	{0, 8, "Hollow Rose", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 18, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 9, "Finger Bone", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 16, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 10, "Copper Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 24, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 11, "Salve", ITEM_TYPE_UNCTURE, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 20, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},	
 }
 
 var rare = []Item{
-	{0, "Lantern", ITEM_TYPE_EQUIPMENT, 99, 99, 9, 9, EQUIP_HAND, 1, 7, "", "", 56, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
-	{0, "Silver Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 48, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 12, "Lantern", ITEM_TYPE_EQUIPMENT, 99, 99, 9, 9, EQUIP_HAND, 1, 7, "", "", 56, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 13, "Silver Bar", ITEM_TYPE_INGREDIENT, 1, 1, 1, 1, EQUIP_NONE, 1, 5, "", "", 48, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 43, "Splinter from the True Cross", ITEM_TYPE_SPECIAL, 1, 1, 1, 1, EQUIP_NONE, 1, 1, "", "", 112, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
+	{0, 44, "Hand of Glory", ITEM_TYPE_SPECIAL, 5, 5, 1, 1, EQUIP_NONE, 1, 1, "", "", 88, 0, 0, 0, 0, -4, 4, 0, 0, 0, 0, 1, -3, -3, -3},
 }
 
 type Loot struct {
@@ -137,6 +142,7 @@ type Loot struct {
 
 type Item struct { // regular items
 	id                        int    // instance code
+	code					  int	// item code (specifier id)
 	name                      string // name of item
 	typeCode                  int    // ITEM_TYPE_* constants
 	uses, maxuses             int    // uses is for unctures/items
@@ -165,6 +171,7 @@ type Item struct { // regular items
 //name, hands, dmgmin, dmgmax, acc, def, weight, durab, value, range, atkTurns
 type Weapon struct {
 	name                            	string
+	code								int
 	hands                           	int
 	dmgMin                          	int
 	dmgMax                          	int
@@ -183,6 +190,7 @@ type Weapon struct {
 // name, shields, defense, weight, value, equip
 type Armor struct {
 	name       string
+	code	   int
 	shields    int
 	defense    int
 	resistance int
@@ -350,24 +358,48 @@ func getAllApothecary() ([]Item) {
 	allApothecary := make([]Item, 0, 0)
 	
 	for k := 0; k < len(common); k++ {
-		if common[k].typeCode == ITEM_TYPE_INGREDIENT {
+		if common[k].typeCode == ITEM_TYPE_INGREDIENT || common[k].typeCode == ITEM_TYPE_UNCTURE {
 			allApothecary = append(allApothecary, common[k])
 		}
 	}
 	
 	for k := 0; k < len(uncommon); k++ {
-		if uncommon[k].typeCode == ITEM_TYPE_INGREDIENT {
+		if uncommon[k].typeCode == ITEM_TYPE_INGREDIENT || uncommon[k].typeCode == ITEM_TYPE_UNCTURE{
 			allApothecary = append(allApothecary, uncommon[k])
 		}
 	}
 		
 	for k := 0; k < len(rare); k++ {
-		if rare[k].typeCode == ITEM_TYPE_INGREDIENT {
+		if rare[k].typeCode == ITEM_TYPE_INGREDIENT || rare[k].typeCode == ITEM_TYPE_UNCTURE{
 			allApothecary = append(allApothecary, rare[k])
 		}
 	}	
 	
 	return allApothecary
+}
+
+func getAllCuriosities() ([]Item) {
+	allProvisions := make([]Item, 0, 0)
+	
+	for k := 0; k < len(common); k++ {
+		if common[k].typeCode == ITEM_TYPE_SPECIAL {
+			allProvisions = append(allProvisions, common[k])
+		}
+	}
+	
+	for k := 0; k < len(uncommon); k++ {
+		if uncommon[k].typeCode == ITEM_TYPE_SPECIAL {
+			allProvisions = append(allProvisions, uncommon[k])
+		}
+	}
+		
+	for k := 0; k < len(rare); k++ {
+		if rare[k].typeCode == ITEM_TYPE_SPECIAL {
+			allProvisions = append(allProvisions, rare[k])
+		}
+	}	
+	
+	return allProvisions
 }
 
 func getRandomWeapon(weight int) Item {
@@ -428,35 +460,36 @@ func restoreSavedItem(line string) (Item, int) {
 
 	itm.id, _ = strconv.Atoi(bits[1])
 	itm.name = bits[2]
-	itm.typeCode, _ = strconv.Atoi(bits[3])
+	itm.code, _ = strconv.Atoi(bits[3])	
+	itm.typeCode, _ = strconv.Atoi(bits[4])
 
-	itm.uses, _ = strconv.Atoi(bits[4])
-	itm.maxuses, _ = strconv.Atoi(bits[5])
-	itm.durability, _ = strconv.Atoi(bits[6])
-	itm.maxDurability, _ = strconv.Atoi(bits[7])
-	itm.equip, _ = strconv.Atoi(bits[8])
-	itm.hands, _ = strconv.Atoi(bits[9])
-	itm.weight, _ = strconv.Atoi(bits[10])
+	itm.uses, _ = strconv.Atoi(bits[5])
+	itm.maxuses, _ = strconv.Atoi(bits[6])
+	itm.durability, _ = strconv.Atoi(bits[7])
+	itm.maxDurability, _ = strconv.Atoi(bits[8])
+	itm.equip, _ = strconv.Atoi(bits[9])
+	itm.hands, _ = strconv.Atoi(bits[10])
+	itm.weight, _ = strconv.Atoi(bits[11])
 
-	itm.material = bits[11]
-	itm.quality = bits[12]
+	itm.material = bits[12]
+	itm.quality = bits[13]
 
-	itm.value, _ = strconv.Atoi(bits[13])
-	itm.magical, _ = strconv.Atoi(bits[14])
-	itm.dmgMin, _ = strconv.Atoi(bits[15])
-	itm.dmgMax, _ = strconv.Atoi(bits[16])
-	itm.wRange, _ = strconv.Atoi(bits[17])
-	itm.accuracy, _ = strconv.Atoi(bits[18])
-	itm.atkTurns, _ = strconv.Atoi(bits[19])
+	itm.value, _ = strconv.Atoi(bits[14])
+	itm.magical, _ = strconv.Atoi(bits[15])
+	itm.dmgMin, _ = strconv.Atoi(bits[16])
+	itm.dmgMax, _ = strconv.Atoi(bits[17])
+	itm.wRange, _ = strconv.Atoi(bits[18])
+	itm.accuracy, _ = strconv.Atoi(bits[19])
+	itm.atkTurns, _ = strconv.Atoi(bits[20])
 
-	itm.defense, _ = strconv.Atoi(bits[20])
-	itm.shields, _ = strconv.Atoi(bits[21])
-	itm.maxShields, _ = strconv.Atoi(bits[22])
-	itm.resistance, _ = strconv.Atoi(bits[23])
-	itm.noMaterialFlag, _ = strconv.Atoi(bits[24])
-	itm.paddedMod, _ = strconv.Atoi(bits[25])
-	itm.leatherMod, _ = strconv.Atoi(bits[26])
-	itm.chainMod, _ = strconv.Atoi(bits[27])
+	itm.defense, _ = strconv.Atoi(bits[21])
+	itm.shields, _ = strconv.Atoi(bits[22])
+	itm.maxShields, _ = strconv.Atoi(bits[23])
+	itm.resistance, _ = strconv.Atoi(bits[24])
+	itm.noMaterialFlag, _ = strconv.Atoi(bits[25])
+	itm.paddedMod, _ = strconv.Atoi(bits[26])
+	itm.leatherMod, _ = strconv.Atoi(bits[27])
+	itm.chainMod, _ = strconv.Atoi(bits[28])
 
 	return itm, 1
 }
@@ -466,6 +499,7 @@ func (itm *Item) getSaveString() string {
 
 	saveString += fmt.Sprintf("%v,", itm.id)
 	saveString += itm.name + ","
+	saveString += fmt.Sprintf("%v,", itm.code)	
 	saveString += fmt.Sprintf("%v,", itm.typeCode)
 	saveString += fmt.Sprintf("%v,", itm.uses)
 	saveString += fmt.Sprintf("%v,", itm.maxuses)
@@ -551,6 +585,191 @@ func (item *Item) getStatusDisplayStringArmor() string {
 	}
 
 	return disp
+}
+
+func show(item Item) {
+	// TODO: handle any item display here based upon item type
+	
+	if item.id < 1 {
+		return
+	}
+	
+	if item.typeCode == ITEM_TYPE_WEAPON {
+		showWeapon(item)
+	} else if item.typeCode == ITEM_TYPE_ARMOR {
+		showArmor(item)
+	} else if item.typeCode == ITEM_TYPE_INGREDIENT {
+		showIngredient(item)
+	} else if item.typeCode == ITEM_TYPE_UNCTURE {
+		showUncture(item)	
+	} else if item.typeCode == ITEM_TYPE_EQUIPMENT {
+		showEquipment(item)	
+	} else if item.typeCode == ITEM_TYPE_SPECIAL {
+		showSpecial(item)									
+	}
+	
+}
+
+func showIngredient(ingredient Item){
+	clearConsole()
+
+	fmt.Println(packSpaceString(ingredient.name, 30) + "Value: " + packSpace(ingredient.value, 10) + "  [INGREDIENT]")
+	fmt.Println("-------------")
+
+	row := ""
+	row = packSpaceString(fmt.Sprintf("Uses: %v / %v", ingredient.uses, ingredient.maxuses), 20)
+	row += packSpaceString(fmt.Sprintf("Weight: %v ", ingredient.weight), 20)	
+	fmt.Println(row)
+	fmt.Println("")
+	fmt.Println("")
+	fmt.Println("")
+
+	row = packSpaceStringCenter(makeDialogString(itemDescriptions[ingredient.code]), 72)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+	fmt.Println(row)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+}
+
+func showEquipment(equip Item){
+	clearConsole()
+
+	fmt.Println(packSpaceString(equip.name, 30) + "Value: " + packSpace(equip.value, 10) + "  [EQUIPMENT]")
+	fmt.Println("-------------")
+
+	row := ""
+	row = packSpaceString(fmt.Sprintf("Uses: %v / %v", equip.uses, equip.maxuses), 20)
+	row += packSpaceString(fmt.Sprintf("Weight: %v ", equip.weight), 20)	
+	fmt.Println(row)
+	fmt.Println("")
+	fmt.Println("")
+	fmt.Println("")
+		
+	row = packSpaceStringCenter(makeDialogString(itemDescriptions[equip.code]), 72)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+	fmt.Println(row)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+}
+
+func showUncture(uncture Item){
+	clearConsole()
+
+	fmt.Println(packSpaceString(uncture.name, 30) + "Value: " + packSpace(uncture.value, 10) + "  [UNCTURE]")
+	fmt.Println("-------------")
+
+	row := ""
+	row = packSpaceString(fmt.Sprintf("Uses: %v / %v", uncture.uses, uncture.maxuses), 20)
+	row += packSpaceString(fmt.Sprintf("Weight: %v ", uncture.weight), 20)	
+	fmt.Println(row)
+	fmt.Println("")
+	fmt.Println("")
+	fmt.Println("")
+		
+	row = packSpaceStringCenter(makeDialogString(itemDescriptions[uncture.code]), 72)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+	fmt.Println(row)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+}
+
+func showSpecial(special Item){
+	clearConsole()
+
+	fmt.Println(packSpaceString(special.name, 30) + "Value: " + packSpace(special.value, 10) + "  [SPECIAL]")
+	fmt.Println("-------------")
+
+	row := ""
+	row = packSpaceString(fmt.Sprintf("Uses: %v / %v", special.uses, special.maxuses), 20)
+	row += packSpaceString(fmt.Sprintf("Weight: %v ", special.weight), 20)	
+	fmt.Println(row)
+	fmt.Println("")
+	fmt.Println("")
+	fmt.Println("")
+		
+	row = packSpaceStringCenter(makeDialogString(itemDescriptions[special.code]), 72)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+	fmt.Println(row)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+}
+
+func showWeapon(weapon Item) {
+	clearConsole()
+
+	fmt.Println(packSpaceString(weapon.name, 30) + "Value: " + packSpace(weapon.value, 10) + "  [WEAPON]")
+	fmt.Println("-------------")
+	row := ""
+	row = packSpaceString("Material: "+weapon.material, 30)
+	row += "Quality: " + weapon.quality
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Durability: %v / %v", weapon.durability, weapon.maxDurability), 30)
+	row += packSpaceString(fmt.Sprintf("Weight: %v ", weapon.weight), 20)
+	row += packSpaceString(fmt.Sprintf("Hands: %v ", weapon.hands), 12)
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Attack Turns: %v ", weapon.atkTurns), 30)
+	row += fmt.Sprintf("Attack Range: %v ", weapon.wRange)
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Accuracy: %v ", weapon.accuracy), 30)
+	row += fmt.Sprintf("Defense: %v ", weapon.defense)
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = "" //paddedMod, leatherMod, chainMod
+	txt := "Penetration:\n [vs Padded: %v]    [vs Leather: %v]    [vs Chain: %v]"
+	row = fmt.Sprintf(txt, getSigned(weapon.paddedMod), getSigned(weapon.leatherMod), getSigned(weapon.chainMod))
+	fmt.Println(row)
+	fmt.Println("")
+	fmt.Println("")
+	fmt.Println("")
+	
+	row = packSpaceStringCenter(makeDialogString(itemDescriptions[weapon.code]), 72)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+	fmt.Println(row)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+}
+
+func showArmor(armor Item) {
+	clearConsole()
+
+	fmt.Println(packSpaceString(armor.name, 30) + "Value: " + packSpace(armor.value, 10) + "  [ARMOR]")
+	fmt.Println("-------------")
+	row := packSpaceString("Equips: "+equipStrings[armor.equip], 28)
+	row += "Quality: " + armor.quality
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Shields: %v / %v", armor.durability, armor.maxDurability), 30)
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Weight: %v ", armor.weight), 20)
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Defense: %v ", armor.defense), 30)
+	fmt.Println(row)
+	fmt.Println("")
+
+	row = ""
+	row = packSpaceString(fmt.Sprintf("Resistance: %v ", armor.resistance), 30)
+	fmt.Println(row)
+	fmt.Println("")
+	fmt.Println("")
+	fmt.Println("")
+	
+	row = packSpaceStringCenter(makeDialogString(itemDescriptions[armor.code]), 72)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
+	fmt.Println(row)
+	fmt.Println(packSpaceStringCenter("----------------------------------------------------", 72))
 }
 
 func makeLootItem(itm Item) Item {

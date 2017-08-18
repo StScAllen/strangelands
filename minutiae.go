@@ -95,7 +95,7 @@ func showAttributesMinutiae() {
 		fmt.Println(" 7 	Health: 7 	Carry: 7 stone	")
 		fmt.Println(" 8 	Health: 8 	Carry: 8 stone	")
 		fmt.Println(" 9 	Health: 9 	Carry: 9 stone 	")
-		fmt.Println(" 10 	Health: 12 	Carry: 1 stone	")
+		fmt.Println(" 10 	Health: 12 	Carry: 10 stone	")
 		fmt.Println("")
 		fmt.Println("[ENTER] to continue.")
 		fmt.Scanln(&rsp)

@@ -59,10 +59,10 @@ func getSigned(val int) string {
 
 func getSignedFloat32(val float32) string {
 	if val > 0 {
-		return fmt.Sprintf("+%v", val)
+		return fmt.Sprintf("+%f", val)
 	}
 
-	return fmt.Sprintf("%v", val)
+	return fmt.Sprintf("%f", val)
 }
 
 func getCityBlockDistance(sx, sy, ex, ey int) int {
@@ -269,6 +269,14 @@ func makeDialogString(str string) string {
 	str = "\"" + str + "\""
 
 	return str
+}
+
+func getOnOffString(flag bool) (string) {
+	if flag {
+		return "On"
+	} 
+	
+	return "Off"
 }
 
 func makeDialogBox(actorName, msg string, side int) []string {

@@ -122,6 +122,10 @@ func showMissionComplete() {
 	character.crowns += mission.crownReward
 	character.exp += mission.experienceReward
 	
+	if apprentice.exists() {
+		apprentice.exp += mission.experienceReward
+	}
+	
 	mission = getBlankMission()
 }
 

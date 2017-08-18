@@ -190,7 +190,7 @@ func (keep *Keep) getApprenticeList() ([]Character) {
 	
 	var apprentices = make([]Character, 0, 0)
 	
-	if apprentice.instanceId > 1 {
+	if apprentice.exists() {
 		apprentices = append(apprentices, apprentice)
 	}
 	
@@ -253,7 +253,7 @@ func (keep *Keep) manageApprentices() {
 			ret := keep.selectApprentice()		
 			if ret > -1 {
 				if ret != 99 {	// 99 signifies current companion
-					if apprentice.instanceId > 0 {
+					if apprentice.exists() {
 						keep.addApprenticeToKeep()
 						apprentice = keep.apprentices[ret]
 						if len(keep.apprentices) > 1 {
@@ -289,7 +289,7 @@ func (keep *Keep) selectApprentice() int {
 		clearConsole()
 		fmt.Println("╔ Choose Apprentice ╗")
 		fmt.Println("")		
-		if apprentice.instanceId > 0 {
+		if apprentice.exists() {
 			count++
 			row := fmt.Sprintf("%v. %s", count, apprentice.name)
 			fmt.Println(row)
@@ -313,9 +313,9 @@ func (keep *Keep) selectApprentice() int {
 		fmt.Scanln(&rsp)	
 		
 		if rsp == "1" {
-			if companion && apprentice.instanceId > 0 {
+			if companion && apprentice.exists() {
 				return 99
-			} else if companion && apprentice.instanceId < 1 {
+			} else if companion && apprentice.exists() {
 				result = -1
 			} else if !companion {
 				if len(keep.apprentices) > 0 {
@@ -409,82 +409,243 @@ func (keep *Keep) train() {
 
 }
 
-func (keep *Keep) showStorage() {
-	const ITEMS_PER_PAGE = 20
-	rsp := ""
+func (keep *Keep) getFilteredStorageList(filters []bool) ([]Item){
+	filteredList := make([]Item, 0, 0)
 	
-	range1 := 0
-	range2 := ITEMS_PER_PAGE
-	pages := 0
-	page := 0
+	for k := 0; k < len(keep.storage); k++ {
+		itm := keep.storage[k]
+		
+		if itm.typeCode == ITEM_TYPE_WEAPON && filters[0] {
+			filteredList = append(filteredList, itm)
+		} else if itm.typeCode == ITEM_TYPE_ARMOR && filters[1] {
+			filteredList = append(filteredList, itm)	
+		} else if itm.typeCode == ITEM_TYPE_UNCTURE && filters[2] {
+			filteredList = append(filteredList, itm)	
+		} else if itm.typeCode == ITEM_TYPE_INGREDIENT && filters[3] {
+			filteredList = append(filteredList, itm)		
+		} else if itm.typeCode == ITEM_TYPE_EQUIPMENT && filters[4] {
+			filteredList = append(filteredList, itm)								
+		} else if itm.typeCode == ITEM_TYPE_SPECIAL && filters[5] {
+			filteredList = append(filteredList, itm)										
+		}
+	}
+	
+	return filteredList
+}
+
+func (keep *Keep) getKeepStorageIndex(itm Item) (int) {
+	for k := 0; k < len(keep.storage); k++ {
+		if itm.id == keep.storage[k].id {
+			return k
+		}
+	}
+	return -1	
+}
+
+func getDisplayFilters(filters []bool) (string){
+	
+	dispFilt := ""
+	
+	if filters[0] {
+		dispFilt += "☼ "
+	} else {
+		dispFilt += "  "
+	}
+	
+	if filters[1] {
+		dispFilt += "⌂ "
+	} else {
+		dispFilt += "  "
+	}
+	
+	if filters[2] {
+		dispFilt += "♥ "
+	} else {
+		dispFilt += "  "
+	}	
+	
+	if filters[3] {
+		dispFilt += "♣ "
+	} else {
+		dispFilt += "  "
+	}
+
+	if filters[4] {
+		dispFilt += "♦ "
+	} else {
+		dispFilt += "  "
+	}	
+	
+	if filters[5] {
+		dispFilt += "∞ "
+	} else {
+		dispFilt += "  "
+	}
+		
+	return dispFilt
+}
+
+func setFilters(filters []bool) ([]bool) {
+	
+	rsp := ""
 	
 	for rsp != "x" {
 		clearConsole()
-		fmt.Println("╔ Storage ╗")		
 		
-		pages = 1
-		if len(keep.storage) > ITEMS_PER_PAGE {
-			for j := len(keep.storage); j > ITEMS_PER_PAGE; j -= ITEMS_PER_PAGE {
-				pages++
-			} 
-		}
+		fmt.Println("  ─────────────────  Set Filters  ─────────────────")
+		onOff := getOnOffString(filters[0])
+		itmTxt := packSpaceString("  1.  Weapons", 28)
+		itmTxt += filterIcons[0] +  "  "
+		fmt.Println(itmTxt + "[" + onOff + "]")
 		
-		fmt.Println(fmt.Sprintf("%v of %v used.", len(keep.storage), keep.maxStorage))
-		fmt.Println("")
-		fmt.Println("")
+		onOff = getOnOffString(filters[1])
+		itmTxt = packSpaceString("  2.  Armor", 28)
+		itmTxt += filterIcons[1] +  "  "
+		fmt.Println(itmTxt + "[" + onOff + "]")	
 		
-		range1 = page * ITEMS_PER_PAGE
-		range2 = range1 + ITEMS_PER_PAGE
-
-		if range2 > len(keep.storage) {
-			range2 = len(keep.storage)
-		}
-
-		for k := range1; k < range2; k++ {
-			fmt.Println(fmt.Sprintf("%v. %s ", k, keep.storage[k].name))
-		}
+		onOff = getOnOffString(filters[2])
+		itmTxt = packSpaceString("  3.  Unctures", 28)
+		itmTxt += filterIcons[2] +  "  "
+		fmt.Println(itmTxt + "[" + onOff + "]")	
 		
-		if pages > 1 {
-			fmt.Println("[n. next page]")	
-		} else {
-			fmt.Println("")		
-		}
+		onOff = getOnOffString(filters[3])
+		itmTxt = packSpaceString("  4.  Ingredients", 28)
+		itmTxt += filterIcons[3] +  "  "		
+		fmt.Println(itmTxt + "[" + onOff + "]")			
 		
-		fmt.Println("--------------------")			
-		choices := "(#. Take Item) (x. Exit)"
+		onOff = getOnOffString(filters[4])
+		itmTxt = packSpaceString("  5.  Equipment", 28)
+		itmTxt += filterIcons[4] +  "  "		
+		fmt.Println(itmTxt + "[" + onOff + "]")			
+		
+		onOff = getOnOffString(filters[5])
+		itmTxt = packSpaceString("  6.  Special", 28)
+		itmTxt += filterIcons[5] +  "  "		
+		fmt.Println(itmTxt + "[" + onOff + "]")			
+		
+		fmt.Println("")		
+		choices := "[#. Toggle Item]  [x. Exit]"
 		fmt.Println(choices)
 		fmt.Println("")		
 		fmt.Printf("Choose an option: ")
 
 		fmt.Scanln(&rsp)	
 	
-		if rsp == "x" {
+		if rsp != "x" {
+			num, err := strconv.Atoi(rsp)
 
+			if err == nil && num < 7 && num > 0 {
+				num -= 1  // index is 0 based but options start at 1
+				
+				if filters[num] {
+					filters[num] = false
+				} else {
+					filters[num] = true				
+				}
+			}
+		}
+	}
+	
+	return filters
+}
+
+func (keep *Keep) showStorage() {
+	const ITEMS_PER_PAGE = 18
+	rsp := ""
+	range1 := 0
+	range2 := ITEMS_PER_PAGE
+	pages := 0
+	page := 0
+	
+	filters := make([]bool, 6, 6)
+	for k := 0; k < 6; k++ {
+		filters[k] = true
+	}
+		
+	dispFilters := "☼ ⌂ ♥ ♣ ♦ ∞"
+	
+	for rsp != "x" {
+		
+		filteredList := keep.getFilteredStorageList(filters)
+		dispFilters = getDisplayFilters(filters)
+		
+		clearConsole()
+		fmt.Println("╔═══════════════════════ Storage ═══════════════════════╗")		
+		
+		pages = 1
+		if len(keep.storage) > ITEMS_PER_PAGE {
+			for j := len(filteredList); j > ITEMS_PER_PAGE; j -= ITEMS_PER_PAGE {
+				pages++
+			} 
+		}
+		
+		dispStr := packSpaceStringCenter(fmt.Sprintf("  %v / %v ", len(keep.storage), keep.maxStorage), 24)
+		dispStr += "           Filters: " + dispFilters
+		
+		fmt.Println(dispStr)
+		fmt.Println("  ─────────────────────           ─────────────────────")
+		fmt.Println("")
+		
+		range1 = page * ITEMS_PER_PAGE
+		range2 = range1 + ITEMS_PER_PAGE
+
+		if range2 > len(filteredList) {
+			range2 = len(filteredList)
+		}
+
+		for k := range1; k < range2; k++ {
+			numBit := fmt.Sprintf("   %v.", k)
+			numBit = packSpaceString(numBit, 8)
+			fmt.Println(numBit + filteredList[k].name)
+		}
+		
+		
+		fmt.Println("")	
+		fmt.Println("  ─────────────────────────────────────────────────────")		
+
+		commands := ""	
+		if pages > 1 {
+			commands += "  [n. next]"			    
+		}  
+		commands += "  [f. filters]  [#. Take]  [x. Exit]"
+		commands = packSpaceString(commands, 46)
+
+		fmt.Println(commands)
+		fmt.Println("╚═══════════════════════════════════════════════════════╝")			
+		fmt.Println("")		
+		fmt.Printf("Choose an option: ")
+
+		fmt.Scanln(&rsp)	
+	
+		if rsp == "f" {
+			setFilters(filters)
 		} else if rsp == "n" && pages > 1 {
 			page++
 			if page >= pages {
 				page = 0
 			}			
-		} else {
+		} else if rsp != "x" {
 			num, err := strconv.Atoi(rsp)
 
 			if err == nil {
-				selection := (page * 12) + num
-				storeItem := keep.storage[selection]
+				selection := (page * ITEMS_PER_PAGE) + num
+				storeItem := filteredList[selection]
 				
 				tgt := giveToWho()
 				
 				if tgt == 0 {
 					if character.giveCharacterItem(storeItem) {
-						showPause(fmt.Sprintf("%s given to %s!", storeItem.name, character.name))							
-						keep.storage = append(keep.storage[:selection], keep.storage[selection+1:]...)
+						showPause(fmt.Sprintf("%s given to %s!", storeItem.name, character.name))	
+						idx := keep.getKeepStorageIndex(storeItem)						
+						keep.storage = append(keep.storage[:idx], keep.storage[idx+1:]...)
 					} else {
 						showPause(character.name + " cannot hold this item (over-encumbered).")
 					}
 				} else {
 					if apprentice.giveCharacterItem(storeItem) {
-						showPause(fmt.Sprintf("%s given to %s!", storeItem.name, apprentice.name))							
-						keep.storage = append(keep.storage[:selection], keep.storage[selection+1:]...)						
+						showPause(fmt.Sprintf("%s given to %s!", storeItem.name, apprentice.name))		
+						idx := keep.getKeepStorageIndex(storeItem)					
+						keep.storage = append(keep.storage[:idx], keep.storage[idx+1:]...)						
 					} else {
 						showPause(apprentice.name + " cannot hold this item (over-encumbered).")					
 					}					
@@ -496,8 +657,22 @@ func (keep *Keep) showStorage() {
 	}
 }
 
+func (keep *Keep) endDay() {
+	var die Die
+	
+	for k := 0; k < len(keep.apprentices); k++ {
+		if die.rollxdx(1, 4) <= 2 {
+			if keep.apprentices[k].hp < keep.apprentices[k].maxhp {
+				keep.apprentices[k].hp++
+			}
+		}
+	}
+}
+
 func (keep *Keep) visitKeep() string {
 	rsp := ""
+
+	apprentice.villageIndex = 99
 
 	for rsp != "q" {
 		clearConsole()
@@ -530,7 +705,7 @@ func (keep *Keep) visitKeep() string {
 		} else if rsp == "s" {
 			character.printCharacter(1)
 			character.showStatus()
-			if apprentice.instanceId > 0 {
+			if apprentice.exists() {
 				apprentice.printCharacter(1)
 				apprentice.showStatus()
 			}

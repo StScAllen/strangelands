@@ -329,11 +329,11 @@ func (bg *BattleGrid) getActorInAttackRange(aRange int) int {
 		actorFlag = CHAR_TURN
 	}
 
-	if bg.hasApprentice {
+	if bg.hasApprentice  && apprentice.isMotile() {
 		actorDistance := getCrowDistance(actorX, actorY, bg.appXLoc, bg.appYLoc)
 		if actorDistance <= weaponRange {
-			if actorFlag == -1 {
-				actorFlag = 2
+			if actorFlag == CHAR_TURN {
+				actorFlag = 2		// both char/app are valid targets
 			} else {
 				actorFlag = APP_TURN
 			}
@@ -1085,15 +1085,9 @@ func (bg *BattleGrid) drawGrid() {
 		} else if i == 10 {
 			row += "  " + bg.monster.name + " Health: ["
 			if bg.monster.hp < 1 {
-				row += "DEAD]"
+				row += "DEAD"
 			} else {
-				for hlth := 0; hlth <= bg.monster.maxhp; hlth++ {
-					if hlth > bg.monster.hp {
-						row += "-"
-					} else {
-						row += "♥"
-					}
-				}			
+				row += bg.monster.getHealthString()		
 			}
 
 			row += "]"
@@ -1255,7 +1249,7 @@ func buildBattleGrid(id int) BattleGrid {
 	
 	grid.npcs = make([]NPC, 0, 0)
 	
-	if apprentice.instanceId > 0 && apprentice.hp > 0{
+	if apprentice.exists() && apprentice.hp > 0{
 		grid.hasApprentice = true	
 	} else {
 		grid.hasApprentice = false

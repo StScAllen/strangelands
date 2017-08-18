@@ -474,7 +474,7 @@ func (bg *BattleGrid) getBiggestThreat() (turn int){
 // a balance of 0 indicates an even split.  
 func (bg * BattleGrid) calcPowerBalance() float32 {
 	var balance float32
-	balance = 1.0
+	balance = 0.0
 
 	balance += character.getPowerBalance()
 	if bg.hasApprentice {

@@ -30,9 +30,9 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 		fmt.Println(fmt.Sprintf("Monster rolls %v + %v = [%v]", defRoll, def, defTotal))
 
 		if atkTotal > defTotal {
-			showPause("Character hits!")
+			fmt.Println(character.name + " hits!")
 		} else {
-			showPause("Character misses!")
+			showPause(character.name + " misses!")
 			return
 		}
 
@@ -67,7 +67,7 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 			}
 			fmt.Println(crits)
 		}
-		showPause("Hit on " + bg.monster.body[totalTarget-1])
+		fmt.Println("Hit on " + bg.monster.body[totalTarget-1])
 
 		penetrationBonus := 0
 		diff = atkTotal - defTotal
@@ -101,13 +101,13 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 		defRoll := die.rollxdx(1, 20)
 		defTotal := def + defRoll
 
-		fmt.Println(fmt.Sprintf("Apprentice rolls %v + %v = [%v]", atkRoll, adj, atkTotal))
+		fmt.Println(fmt.Sprintf("%s rolls %v + %v = [%v]", apprentice.name, atkRoll, adj, atkTotal))
 		fmt.Println(fmt.Sprintf("Monster rolls %v + %v = [%v]", defRoll, def, defTotal))
 
 		if atkTotal > defTotal {
-			showPause("Apprentice hits!")
+			fmt.Println(apprentice.name + " hits!")
 		} else {
-			showPause("Apprentice misses!")
+			showPause(apprentice.name + " misses!")
 			return
 		}
 
@@ -142,7 +142,7 @@ func (bg *BattleGrid) doPlayerAttack(turn int, hand int) {
 			}
 			fmt.Println(crits)
 		}
-		showPause("Hit on " + bg.monster.body[totalTarget-1])
+		fmt.Println("Hit on " + bg.monster.body[totalTarget-1])
 
 		penetrationBonus := 0
 		diff = atkTotal - defTotal
@@ -524,7 +524,7 @@ func adventure(mid int) (result int) {
 			currTurns -= 1
 			
 		} else if strings.Contains(rsp, "talk") {
-			showPause("TODO: Talk to NPCs, if they exist, otherwise talk to yourself. Shut up.")
+			showPause("TODO: Talk to NPCs if they exist, otherwise talk to yourself. Shut up.")
 			currTurns -= 1
 			
 		} else if strings.Contains(rsp, "defend") {
@@ -549,7 +549,7 @@ func adventure(mid int) (result int) {
 				fmt.Scanln(&rsp3)
 			} else {
 				if bg.turn == CHAR_TURN {
-					if bg.hasApprentice && apprentice.isAlive() {
+					if bg.hasApprentice && apprentice.isMotile() {
 						bg.turn = APP_TURN
 						bg.currGrid = bg.appGridId
 						currTurns = apprentice.getCharacterMoves()
@@ -576,8 +576,16 @@ func adventure(mid int) (result int) {
 						bg.currGrid = bg.charGridId
 						bg.monster.plan.interrupt = 0 // clear any interrupts
 					} else if rslt == CHARACTER_KILLED {
-						if bg.hasApprentice && apprentice.hp > 0 {
+						if bg.hasApprentice && apprentice.isAlive() {
 							showPause("You have died! Your apprentice assumes your banner!")
+							var loot Loot
+							loot.container = character.name + " (Dead)"
+							loot.crowns = character.crowns
+							loot.locX = bg.charXLoc
+							loot.locY = bg.charYLoc
+							loot.items = character.getListOfPossessions()
+							bg.allGrids[bg.charGridId].loot = append(bg.allGrids[bg.charGridId].loot, loot)
+							
 							character = apprentice
 							bg.hasApprentice = false
 							var blankApprentice Character
@@ -586,8 +594,20 @@ func adventure(mid int) (result int) {
 							rsp = "exit"
 							result = DIED						
 						}
-					}  else if rslt ==  APPRENTICE_KILLED {
+					} else if rslt ==  APPRENTICE_KILLED {
 						// apprentice has died!
+						var loot Loot
+						loot.container = apprentice.name + " (Dead)"
+						loot.crowns = 0
+						loot.locX = bg.appXLoc
+						loot.locY = bg.appYLoc
+						loot.items = apprentice.getListOfPossessions()
+						bg.allGrids[bg.appGridId].loot = append(bg.allGrids[bg.appGridId].loot, loot)
+						
+						bg.hasApprentice = false
+						var blankApprentice Character
+						apprentice = blankApprentice
+						
 						// TODO: show a death notice
 					}
 				}
@@ -606,7 +626,7 @@ func adventure(mid int) (result int) {
 			} else if strings.Contains(rsp2, "-pattern") {
 				bg.drawGridPattern(bg.gridPattern)
 			} else if strings.Contains(rsp2, "-balance") {
-				showPause("Power Balance: " + getSignedFloat32(bg.calcPowerBalance()))
+				showPause(fmt.Sprintf("Power Balance: %s",  getSignedFloat32(bg.calcPowerBalance())))
 			}
 		} else if strings.Contains(rsp, "inventory") {
 			if bg.turn == CHAR_TURN {

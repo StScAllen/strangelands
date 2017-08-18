@@ -36,80 +36,8 @@ func updateShops() {
 	}
 }
 
-func showWeapon(weapon Item) {
-	clearConsole()
-
-	fmt.Println(packSpaceString(weapon.name, 30) + "Value: " + packSpace(weapon.value, 6))
-	fmt.Println("-------------")
-	row := ""
-	row = packSpaceString("Material: "+weapon.material, 30)
-	row += "Quality: " + weapon.quality
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = ""
-	row = packSpaceString(fmt.Sprintf("Durability: %v / %v", weapon.durability, weapon.maxDurability), 30)
-	row += packSpaceString(fmt.Sprintf("Weight: %v ", weapon.weight), 20)
-	row += packSpaceString(fmt.Sprintf("Hands: %v ", weapon.hands), 12)
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = ""
-	row = packSpaceString(fmt.Sprintf("Attack Turns: %v ", weapon.atkTurns), 30)
-	row += fmt.Sprintf("Attack Range: %v ", weapon.wRange)
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = ""
-	row = packSpaceString(fmt.Sprintf("Accuracy: %v ", weapon.accuracy), 30)
-	row += fmt.Sprintf("Defense: %v ", weapon.defense)
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = "" //paddedMod, leatherMod, chainMod
-	txt := "Penetration:\n [vs Padded: %v]    [vs Leather: %v]    [vs Chain: %v]"
-	row = fmt.Sprintf(txt, getSigned(weapon.paddedMod), getSigned(weapon.leatherMod), getSigned(weapon.chainMod))
-	fmt.Println(row)
-	fmt.Println("")
-	fmt.Println("")
-
-}
-
-func showArmor(armor Item) {
-	clearConsole()
-
-	fmt.Println(packSpaceString(armor.name, 30) + "Value: " + packSpace(armor.value, 6))
-	fmt.Println("-------------")
-	row := packSpaceString("Equips: "+equipStrings[armor.equip], 28)
-	row += "Quality: " + armor.quality
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = ""
-	row = packSpaceString(fmt.Sprintf("Shields: %v / %v", armor.durability, armor.maxDurability), 30)
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = ""
-	row = packSpaceString(fmt.Sprintf("Weight: %v ", armor.weight), 20)
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = ""
-	row = packSpaceString(fmt.Sprintf("Defense: %v ", armor.defense), 30)
-	fmt.Println(row)
-	fmt.Println("")
-
-	row = ""
-	row = packSpaceString(fmt.Sprintf("Resistance: %v ", armor.resistance), 30)
-	fmt.Println(row)
-	fmt.Println("")
-	fmt.Println("")
-
-}
-
 func giveToWho() int {
-	if apprentice.instanceId < 1 {
+	if !apprentice.exists() {
 		return 0	// character
 	}
 
@@ -415,18 +343,58 @@ func (village *Village) buyCuriosities() {
 		clearConsole()
 		rsp := ""
 
+		curios := getAllCuriosities()
 		charString := fmt.Sprintf("%v    Encumb: %v : %v", character.crowns, convertPoundsToStone(character.weight), convertPoundsToStone(character.maxweight))
 
 		fmt.Println("Curiosities      Crowns:  " + charString)
 		fmt.Println("-----------------------------------------------------------------")
-		fmt.Println("Nothing available")
+
+		fmt.Println("   Item                    \t\tWgt \tCost")
+
+		for i := 0; i < len(curios); i++ {
+			fmt.Printf("%v. %s \t%v \t%v \n", i, packSpaceString(curios[i].name, 28), curios[i].weight, curios[i].value)
+		}
+
+		fmt.Println("")
+		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n" {
-
+		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" {
+			num, _ := strconv.Atoi(rsp)
+			// showCurio()
+			fmt.Println(fmt.Sprintf("Buy %s?", curios[num].name))
+			fmt.Scanln(&rsp)
+			
+			if rsp == "y" {
+				if character.crowns < curios[num].value {
+					showPause("Not enough crowns!")
+				} else {
+					item := genGeneralItem(curios[num])
+					ret := giveToWho()
+					
+					if ret == 0 {
+						if character.giveCharacterItem(item) {
+							character.crowns -= item.value
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					} else if ret == 1 {
+						if apprentice.giveCharacterItem(item) {
+							character.crowns -= item.value
+						} else {
+							showPause("Character weight exceeded! Purchase not made!")
+						}					
+					}
+				}
+			}
+			
 		} else if rsp == "x" {
 			exitFlag = true
+		}  else if rsp == "i" {
+			character.showInventory()
 		}
 	}
 }

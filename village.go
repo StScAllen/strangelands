@@ -603,6 +603,8 @@ func (village *Village) visitVillage() string {
 	canBattle := true
 	clearConsole()
 
+	apprentice.villageIndex = village.villageIndex
+
 	fmt.Println("+++ Village of " + village.name + " +++")
 	fmt.Println("------------")
 	fmt.Println("1. Shop")
@@ -666,7 +668,7 @@ func (village *Village) visitVillage() string {
 	} else if rsp == "s" {
 		character.printCharacter(1)
 		character.showStatus()
-		if apprentice.instanceId > 0 {
+		if apprentice.exists() {
 			apprentice.printCharacter(1)
 			apprentice.showStatus()
 		}
@@ -790,7 +792,7 @@ func showTravelMenu() string {
 		case "s":
 			character.printCharacter(1)	
 			character.showStatus()	
-			if apprentice.instanceId > 0 {
+			if apprentice.exists() {
 				apprentice.printCharacter(1)
 				apprentice.showStatus()
 			}
@@ -838,6 +840,7 @@ func showTravelMenu() string {
 			showTimePassageScreen(dist)
 			fmt.Println("Arrived in " + destination + ". After ", dist, " days of travel.")
 			fmt.Println("Press any key to continue.")
+			apprentice.villageIndex = character.villageIndex
 			tgt := ""
 			fmt.Scanln(&tgt)
 		} else {
@@ -889,5 +892,10 @@ func (village *Village) goShop() {
 			village.buyCuriosities()
 		}
 	}
+}
+
+func (village *Village) endDay() {
+	// TODO: Do end day stuff for village
+	
 
 }
