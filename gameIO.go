@@ -30,12 +30,15 @@ func getGameSaveBlock() string {
 	gameBlock += fmt.Sprintf("%v,", game.charInstanceId)
 	gameBlock += fmt.Sprintf("%v,", game.darkness)
 	
+	actorCount := len(actors) + len(keep.apprentices) + len(orphanage)
+	gameBlock += fmt.Sprintf("%v,", actorCount)
+	
 	gameBlock += "■"
 
 	return gameBlock
 }
 
-func unpackGameBlock(block string) bool {
+func unpackGameBlock(block string) int {
 	// only 1 line for game block, no need to split lines
 	// just do bits
 	bits := strings.Split(block, ",")
@@ -45,14 +48,14 @@ func unpackGameBlock(block string) bool {
 	} else {
 		log.addError("Cant find game block.")
 		fmt.Println("Game Block not found!")
-		return false
+		return -1
 	}
 
 	ver := bits[1]
 
 	if ver != VERSION {
 		log.addError("Save version is incorrect. Current version is " + VERSION + " Save version is " + ver)
-		return false
+		return -1
 	}
 
 	game.gameDay, _ = strconv.Atoi(bits[2])
@@ -63,10 +66,11 @@ func unpackGameBlock(block string) bool {
 	game.missionInstanceId, _ = strconv.Atoi(bits[7])
 	game.charInstanceId, _ = strconv.Atoi(bits[8])
 	game.darkness, _ = strconv.Atoi(bits[9])
+	actorCount, _ := strconv.Atoi(bits[10])
 	
 	fmt.Println("            ...done!")
 
-	return true
+	return actorCount
 }
 
 func (c *Character) getCharSaveBlock() string {
@@ -105,6 +109,8 @@ func (c *Character) getCharSaveBlock() string {
 
 	saveString += fmt.Sprintf("%v,", c.subLoc)
 	saveString += fmt.Sprintf("%v,", c.gender)
+	saveString += fmt.Sprintf("%v,", c.trainingPoints)
+	saveString += fmt.Sprintf("%v,", c.task)
 
 	saveString += fmt.Sprintf("%v,", len(c.inventory)) // save count of backpack items
 
@@ -122,7 +128,7 @@ func (c *Character) getCharSaveBlock() string {
 		saveString += c.inventory[k].getSaveString()
 	}
 
-	// save wounds!
+	// TODO: save wounds!
 
 	saveString += "■"
 
@@ -181,11 +187,18 @@ func unpackCharacterBlock(block string) (int, Character) {
 	char.skills[4], _ = strconv.Atoi(bits[24]) 
 	char.skills[5], _ = strconv.Atoi(bits[25]) 
 	char.skills[6], _ = strconv.Atoi(bits[26]) 	
+	char.skills[7], _ = strconv.Atoi(bits[27]) 
+	char.skills[8], _ = strconv.Atoi(bits[28]) 
+	char.skills[9], _ = strconv.Atoi(bits[29]) 
+	char.skills[10], _ = strconv.Atoi(bits[30]) 
+	char.skills[11], _ = strconv.Atoi(bits[31]) 
 	
-	char.subLoc, _ = strconv.Atoi(bits[27]) // count of items in backpack
-	char.gender, _ = strconv.Atoi(bits[28]) // count of items in backpack
+	char.subLoc, _ = strconv.Atoi(bits[32]) // count of items in backpack
+	char.gender, _ = strconv.Atoi(bits[33]) // count of items in backpack
+	char.trainingPoints, _ = strconv.Atoi(bits[34]) // count of items in backpack
+	char.task, _ = strconv.Atoi(bits[35]) // count of items in backpack
 
-	inventoryCount, _ := strconv.Atoi(bits[29]) // count of items in backpack
+	inventoryCount, _ := strconv.Atoi(bits[36]) // count of items in backpack
 	
 	// load inventory!
 	char.handSlots[0], _ = restoreSavedItem(lines[1])
@@ -235,7 +248,23 @@ func save() {
 		saveString += villages[k].getSaveString()
 	}
 	
+		
+	// add all additional actors at END (keep apprentices, other important npcs)
+
+	for k := 0; k < len(keep.apprentices); k++ {
+		keep.apprentices[k].villageIndex = 99
+		saveString += keep.apprentices[k].getCharSaveBlock()	
+	}
 	
+	for k := 0; k < len(actors); k++ {
+		saveString += actors[k].getCharSaveBlock()	
+	}	
+	
+	for k := 0; k < len(orphanage); k++ {
+		orphanage[k].villageIndex = 5
+		orphanage[k].subLoc = 99		
+		saveString += orphanage[k].getCharSaveBlock()	
+	}		
 	
 	if err == nil {
 		defer file.Close()
@@ -265,12 +294,15 @@ func loadGame() int {
 
 		if len(charData) > 0 {
 			blocks := strings.Split(charData, "■")
-			fileOK := unpackGameBlock(blocks[0])
+			actorCount := unpackGameBlock(blocks[0])
 
-			if !fileOK {
+			if actorCount < 0 {
 				log.addError("Failed to load save game.")
 				return -1
 			}
+			
+			fmt.Println(fmt.Sprintf("%v total actor blocks", actorCount))
+			fmt.Println(fmt.Sprintf("Found %v total blocks", len(blocks)))
 
 			_, character = unpackCharacterBlock(blocks[1])
 			// current travel apprentice
@@ -280,18 +312,34 @@ func loadGame() int {
 
 			_, mission = unpackMissionBlock(blocks[4])
 			
+			place := 4
 			for k := 0; k < len(villages); k++ {
+				place += 1
 				villIndx := k + 5
 				
 				_, villages[k] = unpackVillageBlock(k, blocks[villIndx])
-				
 			} 
+			
+			orphanage = make([]Character, 0, 0)	// build an empty orphanage
+			
+			for k := 0; k < actorCount; k++ {
+				place += 1
+				_, act := unpackCharacterBlock(blocks[place])
+				if (act.villageIndex == 5 && act.subLoc == 99) {
+					orphanage = append(orphanage, act)
+				} else if (act.villageIndex == 99) {
+					keep.addNewApprenticeToKeep(act)
+					fmt.Println(act.name + " added to keep")
+				} else {
+					actors = append(actors, act)
+				}
+			}
 			
 			// blocks are broken with ■
 			// blocks are character, keep, village, game
 			// lines are broken with ◄
 			// core line, equipment lines
-			// bits are broken with ,
+			// bits are broken with,
 			// individual values
 		}
 

@@ -8,14 +8,29 @@ import "strconv"
 // *** be pragmatic and keep first and last names < 11 characters each ***
 var femaleNames = []string{"Sarah", "Donna", "Kathryn", "Sheila", "Clarissa", "Coral", "Elizabeth", "Ailla", "Elaine", "Halley"}
 var maleNames = []string{"Sam", "Richard", "Mason", "Hunter", "Conner", "Bentley", "Garriot", "Tanner", "Norris", "Robert"}
-var lastNames = []string{"Snow", "Smith", "Unknown", "Peters", "Matthew", "Vague", "Mason", "Haston", "Carpathia", "Lennox"} 
+var lastNames = []string{"Snow", "Smith", "Unknown", "Peters", "Matthew", "Vague", "Mason", "Haston", "Carpathia", "Lennox"}
 
-var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery", "-UNUSED-"}
+var skills = []string{"Puzzles", "Politicking", "Investigation", "Alchemy", "Craft", "Spellcraft", "Chirurgery", "unused", "Blades", "Crossbow", "Polearms", "Blunt"}
 var weaponSkills = []string{"Blades", "Crossbow", "Polearms", "Blunt"}
 
-const NUM_SKILLS = 9
+var experienceReqs = []int{	0, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 		// 60 levels
+							85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 135,
+							140, 145, 150, 155, 160, 165, 170, 175, 180, 185,
+							190, 195, 200, 205, 210, 215, 220, 225, 230, 235,
+							240, 245, 250, 255, 260, 265, 270, 275, 280, 285,
+							290, 295, 300, 305, 310}
+
+const NUM_SKILLS = 12
 const LEFT = 0
 const RIGHT = 1
+
+const STATUS_REST = 0
+const STATUS_COMPANION = 1
+const STATUS_TRAINING = 2
+
+var taskCodes = []string{"RESTING", "COMPANION", "TRAINING"}
+
+// TODO: add status codes for various Keep jobs (grow, tend crops, craft, etc.)
 
 // new char attributes - Perception (view distance, searching)
 //					   - Agility (actions per turn)
@@ -23,6 +38,13 @@ const RIGHT = 1
 // 					   - Intellect
 //					   - Charm
 //					   - Guile
+
+// Experience and leveling
+// Upon attaining enough experience to advance to the  next level the character/apprentice is given
+// 2 enhancement points.  Points can be spent as follows:  1pt +1 Skill  2pt +1 Att
+// Once points are spent the character/apprentice must spend so much time training (they are unavailable)
+// Time spent equals  (new level  * 1 day) * 2 (att)
+// The character trains much faster.
 
 /* type Character2 struct {
 	str, dex, con, intl, wis, cha int
@@ -43,7 +65,7 @@ const RIGHT = 1
 } */
 
 type Character struct {
-	instanceId					  int
+	instanceId                    int
 	agi, str, per, intl, cha, gui int
 	name                          string // max name length for FORMATTING reasons is 23 characters!
 	hp, maxhp                     int
@@ -53,26 +75,29 @@ type Character struct {
 	lvl                           int
 	exp                           int
 	turns                         int
-	turnDefense 				  int  // how many turns were used as defense
-	skills						  [8]int
-	alive						  bool
+	turnDefense                   int // how many turns were used as defense
+	skills                        [12]int
+	alive                         bool
 	handSlots                     [2]Item
 	armorSlots                    [9]Item
 	wounds                        []Wound
 	inventory                     []Item
 	spellbook                     Spellbook
 	villageIndex                  int
-	subLoc						  int 	// better defines where in a village/mission the character can be found (apprentices/npcs)
-	gender						  int  // 1 - boy, 2 - girl
+	subLoc                        int // better defines where in a village/mission the character can be found (apprentices/npcs)
+	gender                        int // 1 - boy, 2 - girl
+	trainingPoints                int
+	trainingTime 				  int
+	task						  int	// a status code for apprentice jobs/training/rest
 }
 
-func getNewBlankCharacter(name string) (Character) {
+func getNewBlankCharacter(name string) Character {
 	var char Character
-	
+
 	game.charInstanceId++
-	
+
 	char.setClearInventory()
-	
+
 	char.name = name
 	char.instanceId = game.charInstanceId
 
@@ -105,40 +130,40 @@ func getNewBlankCharacter(name string) (Character) {
 
 	char.wounds = make([]Wound, 0, 0)
 	char.alive = true
-	
+
 	char.exp = 0
-	
+
 	return char
 }
 
-func (char * Character) getPowerBalance() float32 {
+func (char *Character) getPowerBalance() float32 {
 	var balance float32
 	balance = 0.0
-	
+
 	if char.hp < 1 {
 		return balance
 	}
-	
+
 	balance += (float32)(char.hp * 1.0)
-	
+
 	balance += (float32)(char.getTotalStats() / 6)
-	
+
 	return balance
 }
 
 // can have special items to increase moves
 func (char *Character) getCharacterMoves() int {
 	totalMoves := char.agi
-	
+
 	totalMoves += 3
-	
+
 	// TODO: add equipment, other buffs
-	
+
 	return totalMoves
 }
 
 func (char *Character) giveSoul(amt int) {
-	if (char.soul+amt) <= char.maxsoul {
+	if (char.soul + amt) <= char.maxsoul {
 		char.soul += amt
 	} else {
 		char.soul = char.maxsoul
@@ -161,7 +186,7 @@ func (char *Character) getTotalDefenseAdjustment() int {
 	adj += char.turnDefense
 	adj += char.handSlots[LEFT].defense
 	adj += char.handSlots[RIGHT].defense
-	
+
 	return adj
 }
 
@@ -176,12 +201,12 @@ func (char *Character) getResistanceAt(charBodyIndex int) int {
 }
 
 // check to make sure actor is alive
-func (char *Character) isAlive() (bool) {
+func (char *Character) isAlive() bool {
 	return char.hp > 0
 }
 
 // check to make sure actor exists
-func (char *Character) exists() (bool) {
+func (char *Character) exists() bool {
 	if char.instanceId > 0 {
 		return true
 	}
@@ -190,58 +215,56 @@ func (char *Character) exists() (bool) {
 
 // actor exists & is still living, an actionable actor
 // status effects could impact this later
-func (char *Character) isMotile() (bool) {
+func (char *Character) isMotile() bool {
 	if char.exists() && char.isAlive() {
 		return true
 	}
 	return false
 }
 
-func (char *Character) getHealthString() (string){
-	
+func (char *Character) getHealthString() string {
+
 	healthString := ""
-	
-	for k :=0; k < char.maxhp; k++{
+
+	for k := 0; k < char.maxhp; k++ {
 		if k < char.hp {
 			healthString += "♥"
 		} else {
 			healthString += "-"
 		}
 	}
-	
+
 	return healthString
 }
 
-
-
-func getRandomName(gender int) (string) {
+func getRandomName(gender int) string {
 	var die Die
 	name := ""
-	
-	if gender == 1 {	// boy
+
+	if gender == 1 { // boy
 		roll1 := die.rollxdx(1, len(maleNames)) - 1
-		roll2 := die.rollxdx(1, len(lastNames)) - 1	
-		
+		roll2 := die.rollxdx(1, len(lastNames)) - 1
+
 		name = maleNames[roll1] + " " + lastNames[roll2]
-	} else {	// girl
+	} else { // girl
 		roll1 := die.rollxdx(1, len(femaleNames)) - 1
 		roll2 := die.rollxdx(1, len(lastNames)) - 1
 		name = femaleNames[roll1] + " " + lastNames[roll2]
 	}
-	
+
 	return name
 }
 
 // a slightly sexist random character generator
-func getRandomApprentice(genderbias int) (Character) {
+func getRandomApprentice(genderbias int) Character {
 	var die Die
 	female := false
 	randomApprentice := getNewBlankCharacter("")
-	
-	if genderbias == 0 {	// dont care
+
+	if genderbias == 0 { // dont care
 		if die.rollxdx(1, 4) > 2 {
 			female = true
-		}	
+		}
 	} else {
 		if genderbias == 1 {
 			female = false
@@ -252,21 +275,21 @@ func getRandomApprentice(genderbias int) (Character) {
 	if female {
 		roll1 := die.rollxdx(1, len(femaleNames)) - 1
 		roll2 := die.rollxdx(1, len(lastNames)) - 1
-		
+
 		randomApprentice.name = femaleNames[roll1] + " " + lastNames[roll2]
 		randomApprentice.gender = 2
 	} else {
 		roll1 := die.rollxdx(1, len(maleNames)) - 1
 		roll2 := die.rollxdx(1, len(lastNames)) - 1
-		
-		randomApprentice.name = maleNames[roll1] + " " + lastNames[roll2]	
+
+		randomApprentice.name = maleNames[roll1] + " " + lastNames[roll2]
 		randomApprentice.gender = 1
 	}
-	
+
 	// give them a random skill and attribute pt based on gender (sexist, huh?)
 	if female {
 		roll := die.rollxdx(1, 3)
-	
+
 		if roll == 1 {
 			randomApprentice.intl++
 		} else if roll == 2 {
@@ -274,10 +297,10 @@ func getRandomApprentice(genderbias int) (Character) {
 		} else if roll == 3 {
 			randomApprentice.gui++
 		}
-	
+
 	} else {
-		roll := die.rollxdx(1, 3)	
-	
+		roll := die.rollxdx(1, 3)
+
 		if roll == 1 {
 			randomApprentice.agi++
 		} else if roll == 2 {
@@ -286,13 +309,13 @@ func getRandomApprentice(genderbias int) (Character) {
 			randomApprentice.per++
 		}
 	}
-	
+
 	roll := die.rollxdx(1, 7) - 1
-	
+
 	randomApprentice.skills[roll]++
-	
+
 	// TODO: Add a cool random interesting thing to each character (maybe minus an att, or give them an item, 'er something)
-	
+
 	randomApprentice.hp = randomApprentice.str
 	randomApprentice.maxhp = randomApprentice.hp
 
@@ -301,13 +324,237 @@ func getRandomApprentice(genderbias int) (Character) {
 
 	randomApprentice.maxweight = randomApprentice.str * 10
 	randomApprentice.weight = 0
-	
+
 	return randomApprentice
 }
 
-func (char * Character) train() {
-	fmt.Println(fmt.Sprintf("%s trains!", char.name))
-	showPause("Todo: Training!")
+func (c *Character) trainSkills() {
+	var flag bool = true
+
+	for flag {
+		clearConsole()
+		counter := 0
+		fmt.Println("--- Train Skills ---")
+		fmt.Println("XXX A saying here is something Steve must write!")
+		fmt.Println(packSpaceString("  Skill", 24) + packSpaceString("Curr", 6) + packSpaceString("Cost", 6) + "Training Time")
+		fmt.Println("")
+
+		for k := 0; k < len(skills); k++ {
+			counter++
+			bit := packSpaceString(fmt.Sprintf("%v. %s ", counter, skills[k]), 24)
+			bit2 := packSpaceString(fmt.Sprintf("%v", c.skills[k]), 6)
+			bit3 := packSpaceString(fmt.Sprintf("%v", 1), 6)
+			bit4 := fmt.Sprintf("%v", c.skills[k]+1)
+			val := bit + bit2 + bit3 + bit4
+			fmt.Println(val)
+		}
+
+		fmt.Println("")
+		fmt.Println("m. Minutiae (Help)")
+		fmt.Println("f. Finished")
+		fmt.Println("--------------------")
+		fmt.Printf("Points remaining: %v \n", c.trainingPoints)
+		fmt.Println("Choose an attribute to add a point: ")
+		rsp := ""
+		fmt.Scanln(&rsp)
+
+		if rsp == "f" {
+			flag = false
+		} else if rsp == "m" {
+			showSkillsMinutiae()
+		} else {
+			if c.trainingPoints < 1 {
+				rsp2 := ""
+				fmt.Println("No points remain. Press enter to return.")
+				fmt.Scanln(&rsp2)
+				flag = false;
+			} else {
+
+				switch rsp {
+				case "1":
+					c.skills[0]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[0]
+					c.task = STATUS_TRAINING
+
+				case "2":
+					c.skills[1]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[1]
+					c.task = STATUS_TRAINING
+					
+				case "3":
+					c.skills[2]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[2]
+					c.task = STATUS_TRAINING
+
+				case "4":
+					c.skills[3]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[3]	
+					c.task = STATUS_TRAINING
+									
+				case "5":
+					c.skills[4]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[4]	
+					c.task = STATUS_TRAINING
+									
+				case "6":
+					c.skills[5]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[5]
+					c.task = STATUS_TRAINING
+										
+				case "7":
+					c.skills[6]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[6]
+					c.task = STATUS_TRAINING
+					
+				case "8":
+					c.skills[7]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[7]
+					c.task = STATUS_TRAINING
+										
+				case "9":
+					c.skills[8]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[8]
+					c.task = STATUS_TRAINING
+										
+				case "10":
+					c.skills[9]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[9]
+					c.task = STATUS_TRAINING
+										
+				case "11":
+					c.skills[10]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[10]
+					c.task = STATUS_TRAINING
+										
+				case "12":
+					c.skills[11]++
+					c.trainingPoints -= 1
+					c.trainingTime += c.skills[11]
+					c.task = STATUS_TRAINING				
+				}
+			}
+		}
+	}
+}
+
+func (c *Character) trainAttribute() {
+	var flag bool = true
+
+	for flag {
+		clearConsole()
+		fmt.Println("--- Choose Attribute to Train---")
+		fmt.Println("Its not what you have done, but what you will do.")
+		fmt.Println("  Attribute   Curr     Cost      Training Time")
+		fmt.Printf("1. Perception: %v        %v        %v\n", c.per, 2, c.per*2)
+		fmt.Printf("2. Strength:   %v        %v        %v\n", c.str, 2, c.str*2)
+		fmt.Printf("3. Agility:    %v        %v        %v\n", c.agi, 2, c.agi*2)
+		fmt.Printf("4. Intellect:  %v        %v        %v\n", c.intl, 2, c.intl*2)
+		fmt.Printf("5. Charm:      %v        %v        %v\n", c.cha, 2, c.cha*2)
+		fmt.Printf("6. Guile:      %v        %v        %v\n", c.gui, 2, c.gui*2)
+		fmt.Println("")
+		fmt.Println("7. Minutiae (Help)")
+		fmt.Println("x. Finished")
+		fmt.Println("--------------------")
+		fmt.Printf("Points remaining: %v \n", c.trainingPoints)
+		fmt.Println("Choose an attribute to add a point: ")
+		rsp := ""
+		fmt.Scanln(&rsp)
+
+		if rsp == "x" {
+			flag = false
+		} else if rsp == "7" {
+			showAttributesMinutiae()
+		} else {
+			if c.trainingPoints < 2 {
+				rsp2 := ""
+				fmt.Println("Not enough training points to train attribute. Press enter to return.")
+				fmt.Scanln(&rsp2)
+				flag = false
+			} else {
+
+				switch rsp {
+				case "1":
+					c.per++
+					c.trainingPoints -= 2
+					c.trainingTime += c.per*2
+					c.task = STATUS_TRAINING
+				case "2":
+					c.str++
+					c.trainingPoints -= 2
+					c.trainingTime += c.str*2
+					c.task = STATUS_TRAINING
+
+				case "3":
+					c.agi++
+					c.trainingPoints -= 2
+					c.trainingTime += c.agi*2
+					c.task = STATUS_TRAINING
+
+				case "4":
+					c.intl++
+					c.trainingPoints -= 2
+					c.trainingTime += c.intl*2		
+					c.task = STATUS_TRAINING
+								
+				case "5":
+					c.cha++
+					c.trainingPoints -= 2
+					c.trainingTime += c.cha*2
+					c.task = STATUS_TRAINING
+					
+				case "6":
+					c.gui++
+					c.trainingPoints -= 2
+					c.trainingTime += c.gui*2
+					c.task = STATUS_TRAINING
+										
+				}
+			}
+		}
+	}
+}
+
+func (char *Character) train() {
+	rsp := ""
+
+	for rsp != "x" {
+		clearConsole()
+		fmt.Println("╔ Training ╗")	
+		fmt.Println(fmt.Sprintf("Training: %s    Training Pts Avail: %v", char.name, char.trainingPoints))
+		fmt.Println("")
+		fmt.Println(packSpaceString("Activity ", 24) + "Training Point Cost")
+		fmt.Println(packSpaceString("1. Raise Attribute ", 24) + "2")
+		fmt.Println(packSpaceString("2. Raise Skill ", 24) + "1")	
+		fmt.Println("")
+		fmt.Println("x. Finish/Cancel")
+		fmt.Println("")
+		fmt.Printf("Select an Option:  ")
+
+		fmt.Scanln(&rsp)
+		
+		if rsp == "1" {
+			char.trainAttribute()
+		} else if rsp == "2" {
+			char.trainSkills()
+		} else if rsp != "x" {
+			showPause("Invalid selection!")
+		}
+	}
+	
+	if (char.instanceId == character.instanceId){
+		char.task = STATUS_REST
+	}
 }
 
 // hits - number of hits to assess, charBodyIndex - equip constant
@@ -358,7 +605,6 @@ func (char *Character) recalcCharacterWeight() {
 	char.weight = weight
 }
 
-
 func (char *Character) setClearInventory() {
 
 	char.handSlots[0] = getEmptyItem()
@@ -379,22 +625,42 @@ func (char *Character) removeItemFromCharacter(item Item) {
 
 	if item.equip == EQUIP_HAND {
 		showPause("Removing from hand...")
-		if char.handSlots[LEFT].id == item.id {
-			char.handSlots[LEFT] = getEmptyItem()
-		} else if char.handSlots[RIGHT].id == item.id {
-			char.handSlots[RIGHT] = getEmptyItem()	
-		} else {
-			for k:= 0; k < len(char.inventory); k++ {
-				if char.inventory[k].id == item.id {
-					if len(char.inventory) > 1 {
-						char.inventory = append(char.inventory[:k], char.inventory[k+1:]...)
-					} else {
-						char.inventory = make([]Item, 0, 0)
+		
+		if item.hands == 1 {
+			if char.handSlots[LEFT].id == item.id {
+				char.handSlots[LEFT] = getEmptyItem()
+			} else if char.handSlots[RIGHT].id == item.id {
+				char.handSlots[RIGHT] = getEmptyItem()
+			} else {
+				for k := 0; k < len(char.inventory); k++ {
+					if char.inventory[k].id == item.id {
+						if len(char.inventory) > 1 {
+							char.inventory = append(char.inventory[:k], char.inventory[k+1:]...)
+						} else {
+							char.inventory = make([]Item, 0, 0)
+						}
+						break
 					}
-					break
 				}
-			}
-		}
+			}			
+		} else if item.hands == 2 {
+			if char.handSlots[LEFT].id == item.id {
+				char.handSlots[LEFT] = getEmptyItem()
+				char.handSlots[RIGHT] = getEmptyItem()
+			} else {
+				for k := 0; k < len(char.inventory); k++ {
+					if char.inventory[k].id == item.id {
+						if len(char.inventory) > 1 {
+							char.inventory = append(char.inventory[:k], char.inventory[k+1:]...)
+						} else {
+							char.inventory = make([]Item, 0, 0)
+						}
+						break
+					}
+				}
+			}			
+		}	
+
 	} else if item.equip == EQUIP_NONE {
 		idx := 0
 		for k := 0; k < len(char.inventory); k++ {
@@ -402,15 +668,15 @@ func (char *Character) removeItemFromCharacter(item Item) {
 				idx = k
 				break
 			}
-		}	
-		
+		}
+
 		char.inventory = append(char.inventory[:idx], char.inventory[idx+1:]...)
-		
-	} else {	// armor
+
+	} else { // armor
 		if char.armorSlots[item.equip].id == item.id {
 			char.armorSlots[item.equip] = getEmptyItem()
 		} else {
-			for k:= 0; k < len(char.inventory); k++ {
+			for k := 0; k < len(char.inventory); k++ {
 				if char.inventory[k].id == item.id {
 					if len(char.inventory) > 1 {
 						char.inventory = append(char.inventory[:k], char.inventory[k+1:]...)
@@ -419,8 +685,20 @@ func (char *Character) removeItemFromCharacter(item Item) {
 					}
 					break
 				}
-			}		
+			}
 		}
+	}
+}
+
+func (char *Character) giveCharacterExperience(exp int) {
+	
+	char.exp += exp
+	
+	for experienceReqs[char.lvl] <= char.exp {
+		showPause(char.name + " has gone up a level!")
+		char.exp -= experienceReqs[char.lvl]
+		char.lvl++
+		char.trainingPoints += 2
 	}
 }
 
@@ -444,6 +722,7 @@ func (char *Character) giveCharacterItem(item Item) bool {
 				char.armorSlots[item.equip] = item
 				equipped = true
 			}
+			
 		} else if item.equip == EQUIP_HAND {
 			if item.hands == 1 {
 				if char.handSlots[LEFT].id == -1 {
@@ -480,7 +759,7 @@ func getName() string {
 	name1 := ""
 	name2 := ""
 	rsp := ""
-	
+
 	for flag {
 		fmt.Println("--- Choose a Character Name ---")
 		fmt.Println("A name is nothing more than a tool. Don't forget that.")
@@ -526,7 +805,7 @@ func getGender() int {
 		} else if rsp == "2" {
 			flag = false
 			return 2
-		}		
+		}
 	}
 
 	return -1
@@ -534,14 +813,14 @@ func getGender() int {
 
 func (c *Character) getListOfPossessions() []Item {
 	allPossessions := make([]Item, 0)
-	
+
 	if c.handSlots[0].id > 0 {
 		allPossessions = append(allPossessions, c.handSlots[0])
 	}
 	if c.handSlots[1].id > 0 {
 		allPossessions = append(allPossessions, c.handSlots[1])
 	}
-	
+
 	if c.armorSlots[0].id > 0 {
 		allPossessions = append(allPossessions, c.armorSlots[0])
 	}
@@ -550,13 +829,13 @@ func (c *Character) getListOfPossessions() []Item {
 	}
 	if c.armorSlots[2].id > 0 {
 		allPossessions = append(allPossessions, c.armorSlots[2])
-	}	
+	}
 	if c.armorSlots[3].id > 0 {
 		allPossessions = append(allPossessions, c.armorSlots[3])
 	}
 	if c.armorSlots[4].id > 0 {
 		allPossessions = append(allPossessions, c.armorSlots[4])
-	}	
+	}
 	if c.armorSlots[5].id > 0 {
 		allPossessions = append(allPossessions, c.armorSlots[5])
 	}
@@ -566,37 +845,36 @@ func (c *Character) getListOfPossessions() []Item {
 	if c.armorSlots[7].id > 0 {
 		allPossessions = append(allPossessions, c.armorSlots[7])
 	}
-	
+
 	for k := range c.inventory {
 		if c.inventory[k].id > 0 {
 			allPossessions = append(allPossessions, c.inventory[k])
 		}
-	}	
-	
-	return allPossessions;				
+	}
+
+	return allPossessions
 }
 
+func (c *Character) getAllAvailableItemsForSlot(slot int) []Item {
+	availItems := make([]Item, 0, 0)
 
-func (c *Character) getAllAvailableItemsForSlot(slot int) ([]Item){
-	availItems := make([]Item, 0, 0,)
-	
 	for k := range c.inventory {
 		if c.inventory[k].equip == slot || c.inventory[k].equip == EQUIP_ANY {
 			availItems = append(availItems, c.inventory[k])
 		}
 	}
-	
-	if (slot == EQUIP_HAND) {
+
+	if slot == EQUIP_HAND {
 		if c.handSlots[0].id > 0 {
 			availItems = append(availItems, c.handSlots[0])
 		}
 		if c.handSlots[1].id > 0 {
 			availItems = append(availItems, c.handSlots[1])
-		}		
+		}
 	} else {
 		if c.armorSlots[slot].id > 0 {
 			availItems = append(availItems, c.armorSlots[slot])
-		} 	
+		}
 	}
 
 	return availItems
@@ -609,37 +887,41 @@ func (c *Character) chooseSkills() {
 	for j := 0; j < len(skills); j++ {
 		c.skills[j] = 1
 	}
-	
+
 	for flag {
 		clearConsole()
+		counter := 0
 		fmt.Println("--- Purchase Skills ---")
 		fmt.Println("XXX A saying here is something Steve must write!")
+		fmt.Println(packSpaceString("  Skill", 24) + "  Level")
 		fmt.Println("")
+
 		for k := 0; k < len(skills); k++ {
-			bit := packSpaceString(fmt.Sprintf("%v. %s: ", k+1, skills[k]), 24)	
+			counter++
+			bit := packSpaceString(fmt.Sprintf("%v. %s ", counter, skills[k]), 24)
 			bit2 := fmt.Sprintf("%v", c.skills[k])
 			val := bit + bit2
 			fmt.Println(val)
 		}
 
 		fmt.Println("")
-		fmt.Println("7. Minutiae (Help)")
-		fmt.Println("8. Reset")
-		fmt.Println("9. Finished")
+		fmt.Println("m. Minutiae (Help)")
+		fmt.Println("r. Reset")
+		fmt.Println("f. Finished")
 		fmt.Println("--------------------")
 		fmt.Printf("Points remaining: %v \n", points)
 		fmt.Println("Choose an attribute to add a point: ")
 		rsp := ""
 		fmt.Scanln(&rsp)
 
-		if rsp == "9" {
+		if rsp == "f" {
 			flag = false
-		} else if rsp == "8" {
+		} else if rsp == "r" {
 			for j := 0; j < len(skills); j++ {
 				c.skills[j] = 1
 			}
 			points = 3
-		} else if rsp == "7" {
+		} else if rsp == "m" {
 			showSkillsMinutiae()
 		} else {
 			if points < 1 {
@@ -650,25 +932,40 @@ func (c *Character) chooseSkills() {
 
 				switch rsp {
 				case "1":
-					c.skills[0]++ 
+					c.skills[0]++
 					points -= 1
 				case "2":
-					c.skills[1]++ 
+					c.skills[1]++
 					points -= 1
 				case "3":
-					c.skills[2]++ 
+					c.skills[2]++
 					points -= 1
 				case "4":
-					c.skills[3]++ 
+					c.skills[3]++
 					points -= 1
 				case "5":
-					c.skills[4]++ 
+					c.skills[4]++
 					points -= 1
 				case "6":
-					c.skills[5]++ 
+					c.skills[5]++
 					points -= 1
 				case "7":
-					c.skills[6]++ 
+					c.skills[6]++
+					points -= 1
+				case "8":
+					c.skills[7]++
+					points -= 1
+				case "9":
+					c.skills[8]++
+					points -= 1
+				case "10":
+					c.skills[9]++
+					points -= 1
+				case "11":
+					c.skills[10]++
+					points -= 1
+				case "12":
+					c.skills[11]++
 					points -= 1
 				}
 
@@ -679,7 +976,7 @@ func (c *Character) chooseSkills() {
 
 func (c *Character) purchaseStats() {
 	var flag bool = true
-	var points int = 8
+	var points int = 6
 
 	for flag {
 		clearConsole()
@@ -760,7 +1057,7 @@ func createPlayerCharacter() Character {
 	char.instanceId = 1
 	char.name = getName()
 	char.gender = getGender()
-	
+
 	char.str = 3
 	char.agi = 3
 	char.intl = 3
@@ -789,7 +1086,7 @@ func createPlayerCharacter() Character {
 
 	char.wounds = make([]Wound, 0, 0)
 	char.alive = true
-	
+
 	char.exp = 0
 	char.villageIndex = 0
 
@@ -878,13 +1175,25 @@ func (char *Character) showStatus() {
 	fmt.Scanln(&rsp)
 }
 
+func (char *Character) getStatus(task int) (string){
+	taskDescrip := taskCodes[task]
+	if task == STATUS_TRAINING {
+		taskDescrip += " " + fmt.Sprintf("%v", char.trainingTime)
+	}
+	
+	str := packSpaceString(taskDescrip, 18)
+	str = "* " + str + " *" 
+	return str
+}
+
+
 func (char *Character) printCharacter(pause int) {
 
 	clearConsole()
 
 	fmt.Printf("Name: %s    ", char.name)
 	fmt.Printf("Level: %v    ", char.lvl)
-	fmt.Printf("Exp: %v    ", char.exp)
+	fmt.Printf("Exp: %v  /  %v  ", char.exp, experienceReqs[char.lvl])
 
 	fmt.Println()
 	fmt.Printf("Hp: %v / %v  ", char.hp, char.maxhp)
@@ -893,26 +1202,38 @@ func (char *Character) printCharacter(pause int) {
 	fmt.Println()
 	fmt.Println()
 	fmt.Println(" -Attributes-")
-	fmt.Printf(" Per: %v \n", char.per)
-	fmt.Printf(" Str: %v \n", char.str)
-	fmt.Printf(" Agi: %v \n", char.agi)
+
+	tStr := packSpaceString(fmt.Sprintf(" Per: %v", char.per), 15) + "*************** "
+	fmt.Println( tStr)
+	tStr = packSpaceString(fmt.Sprintf(" Str: %v ", char.str), 15) + char.getStatus(char.task)
+	fmt.Println(tStr)
+	tStr = packSpaceString(fmt.Sprintf(" Agi: %v ", char.agi), 15) + "*************** "		
+	fmt.Println(tStr)	
+
 	fmt.Printf(" Int: %v \n", char.intl)
 	fmt.Printf(" Cha: %v \n", char.cha)
 	fmt.Printf(" Gui: %v \n", char.gui)
-	fmt.Println() 
+	fmt.Println()
 	fmt.Println(" -Skills-")
 	pack1 := packSpaceString(fmt.Sprintf(" %s: %v", skills[0], char.skills[0]), 28)
-	pack2 := packSpaceString(fmt.Sprintf("%s: %v", skills[1], char.skills[1]), 28)	
+	pack2 := packSpaceString(fmt.Sprintf("%s: %v", skills[1], char.skills[1]), 28)
 	fmt.Println(pack1 + pack2)
 	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[2], char.skills[2]), 28)
-	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[3], char.skills[3]), 28)	
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[3], char.skills[3]), 28)
 	fmt.Println(pack1 + pack2)
 	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[4], char.skills[4]), 28)
-	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[5], char.skills[5]), 28)	
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[5], char.skills[5]), 28)
 	fmt.Println(pack1 + pack2)
-	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[6], char.skills[6]), 28)	
-	fmt.Println(pack1)
-	
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[6], char.skills[6]), 28)
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[7], char.skills[7]), 28)
+	fmt.Println(pack1 + pack2)
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[8], char.skills[8]), 28)
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[9], char.skills[9]), 28)
+	fmt.Println(pack1 + pack2)
+	pack1 = packSpaceString(fmt.Sprintf(" %s: %v", skills[10], char.skills[10]), 28)
+	pack2 = packSpaceString(fmt.Sprintf("%s: %v", skills[11], char.skills[11]), 28)
+	fmt.Println(pack1 + pack2)
+
 	fmt.Println()
 
 	fmt.Printf("\nCrowns: %v", char.crowns)
@@ -925,29 +1246,29 @@ func (char *Character) printCharacter(pause int) {
 }
 
 func (char *Character) chooseItemForSlot(slot string) {
-	sl,_ := strconv.Atoi(slot)
-	
-	if (sl >= 3){
+	sl, _ := strconv.Atoi(slot)
+
+	if sl >= 3 {
 		sl -= 3
-	} else if (sl == 0){
+	} else if sl == 0 {
 		sl = 7
 	} else {
 		sl = EQUIP_HAND
 	}
-	
+
 	itemsAvail := char.getAllAvailableItemsForSlot(sl)
-	
+
 	if len(itemsAvail) < 1 {
 		showPause("Character does not possess any items that can be equipped to this slot.")
 		return
 	}
-	
+
 	cont := true
-	
+
 	for cont {
 		clearConsole()
 
-		itmCount := 0;
+		itmCount := 0
 		fmt.Println("Available Items for Slot")
 		fmt.Println("--------------------------")
 
@@ -955,24 +1276,24 @@ func (char *Character) chooseItemForSlot(slot string) {
 			row := ""
 			row = packSpaceString(fmt.Sprintf("%v. %s", itmCount, itemsAvail[itmCount].name), 24)
 			itmCount++
-			
+
 			if itmCount < len(itemsAvail) {
 				row += packSpaceString(fmt.Sprintf("%v. %s", itmCount, itemsAvail[itmCount].name), 24)
-				itmCount++			
+				itmCount++
 			}
-			
+
 			fmt.Println(row)
 		}
-		
-		fmt.Println("")		
-		fmt.Println("n. nothing")		
-		fmt.Println("e. Exit")		
-		fmt.Println("--------------------------")	
+
+		fmt.Println("")
+		fmt.Println("n. nothing")
+		fmt.Println("e. Exit")
+		fmt.Println("--------------------------")
 		fmt.Println("Choose item number to equip: ")
-		
+
 		rsp := ""
 		fmt.Scanln(&rsp)
-		
+
 		if rsp == "e" {
 			cont = false
 		} else if rsp == "n" {
@@ -981,78 +1302,125 @@ func (char *Character) chooseItemForSlot(slot string) {
 				oldItem := char.handSlots[LEFT]
 				char.removeItemFromCharacter(oldItem)
 				char.handSlots[LEFT] = item
-				if (oldItem.id > 0){
+				if oldItem.id > 0 {
 					char.inventory = append(char.inventory, oldItem)
-				}					
+				}
 			} else if slot == "2" {
 				oldItem := char.handSlots[RIGHT]
 				char.removeItemFromCharacter(oldItem)
 				char.handSlots[RIGHT] = item
-				if (oldItem.id > 0){
+				if oldItem.id > 0 {
 					char.inventory = append(char.inventory, oldItem)
-				}					
+				}
 			} else {
-				if (item.equip < 9) {
+				if item.equip < 9 {
 					oldItem := char.armorSlots[sl]
 					if char.armorSlots[sl].id > 0 {
 						char.removeItemFromCharacter(oldItem)
 						char.armorSlots[sl] = item
-						if (oldItem.id > 0){
+						if oldItem.id > 0 {
 							char.inventory = append(char.inventory, oldItem)
 						}
 					}
 				}
 			}
-			cont = false			
+			cont = false
 		} else {
-			indx,exr := strconv.Atoi(rsp)
-		
+			indx, exr := strconv.Atoi(rsp)
+
 			if exr == nil {
 				if indx < len(itemsAvail) {
 					item := itemsAvail[indx]
-					if slot == "1" {
-						oldItem := char.handSlots[LEFT]
-						char.removeItemFromCharacter(oldItem)
-						char.removeItemFromCharacter(item)
-						char.handSlots[LEFT] = item
-						if (oldItem.id > 0){
-							char.inventory = append(char.inventory, oldItem)
+					if slot == "1" {						
+						if item.hands == 1 {
+							oldItem := char.handSlots[LEFT]
+	
+							char.removeItemFromCharacter(oldItem)
+							char.removeItemFromCharacter(item)
+	
+							char.handSlots[LEFT] = item			
+	
+							if oldItem.id > 0 {
+								char.inventory = append(char.inventory, oldItem)
+							}							
+						} else if item.hands == 2 {
+							oldItem := char.handSlots[LEFT]
+							oldItem2 := char.handSlots[RIGHT]
+	
+							char.removeItemFromCharacter(oldItem)
+							char.removeItemFromCharacter(oldItem)
+
+							char.removeItemFromCharacter(item)
+	
+							char.handSlots[LEFT] = item			
+							char.handSlots[RIGHT] = item			
+	
+							if oldItem.id > 0 {
+								char.inventory = append(char.inventory, oldItem)
+							}	
+							if oldItem2.id > 0 {
+								char.inventory = append(char.inventory, oldItem2)
+							}														
 						}					
+
 					} else if slot == "2" {
-						oldItem := char.handSlots[RIGHT]
-						char.removeItemFromCharacter(oldItem)
-						char.removeItemFromCharacter(item)					
-						char.handSlots[RIGHT] = item
-						if (oldItem.id > 0){
-							char.inventory = append(char.inventory, oldItem)
-						}					
+						if item.hands == 1 {
+							oldItem := char.handSlots[RIGHT]
+	
+							char.removeItemFromCharacter(oldItem)
+							char.removeItemFromCharacter(item)
+	
+							char.handSlots[RIGHT] = item			
+	
+							if oldItem.id > 0 {
+								char.inventory = append(char.inventory, oldItem)
+							}							
+						} else if item.hands == 2 {
+							oldItem := char.handSlots[LEFT]
+							oldItem2 := char.handSlots[RIGHT]
+	
+							char.removeItemFromCharacter(oldItem)
+							char.removeItemFromCharacter(oldItem)
+
+							char.removeItemFromCharacter(item)
+	
+							char.handSlots[LEFT] = item			
+							char.handSlots[RIGHT] = item			
+	
+							if oldItem.id > 0 {
+								char.inventory = append(char.inventory, oldItem)
+							}	
+							if oldItem2.id > 0 {
+								char.inventory = append(char.inventory, oldItem2)
+							}														
+						}	
 					} else {
-						if (item.equip < 9) {
+						if item.equip < 9 {
 							oldItem := char.armorSlots[sl]
 							if char.armorSlots[sl].id > 0 {
 								char.removeItemFromCharacter(oldItem)
-								char.removeItemFromCharacter(item)							
+								char.removeItemFromCharacter(item)
 								char.armorSlots[sl] = item
-								if (oldItem.id > 0){
+								if oldItem.id > 0 {
 									char.inventory = append(char.inventory, oldItem)
 								}
 							}
 						}
 					}
-					
+
 					cont = false
 				}
 			}
 		}
-	}	
+	}
 }
 
 func (char *Character) equipScreen() {
 	cont := true
-	
+
 	for cont {
 		clearConsole()
-		
+
 		fmt.Println("Equip Screen")
 		fmt.Println("")
 		fmt.Println("1. Left Hand")
@@ -1066,27 +1434,27 @@ func (char *Character) equipScreen() {
 		fmt.Println("8. Feet")
 		fmt.Println("9. Ring")
 		fmt.Println("0. Cloak")
-		fmt.Println("")		
-		fmt.Println("e. Exit")		
+		fmt.Println("")
+		fmt.Println("e. Exit")
 		fmt.Println("")
 		fmt.Println("Choose a slot number to equip: ")
-		
+
 		rsp := ""
 		fmt.Scanln(&rsp)
-		
+
 		if rsp == "e" {
 			cont = false
-		} else if rsp == "1" || rsp == "2" || rsp == "3" || rsp == "4" || rsp == "5" || rsp == "6" || rsp == "7" || rsp == "8" || rsp == "9" || rsp == "0"{
-			char.chooseItemForSlot(rsp)	
+		} else if rsp == "1" || rsp == "2" || rsp == "3" || rsp == "4" || rsp == "5" || rsp == "6" || rsp == "7" || rsp == "8" || rsp == "9" || rsp == "0" {
+			char.chooseItemForSlot(rsp)
 		}
 	}
 }
 
 func tradeItems(direction int) {
-		
+
 	allPossessions := make([]Item, 0)
 	charString := ""
-	
+
 	if direction == 0 {
 		allPossessions = character.getListOfPossessions()
 		charString = apprentice.name
@@ -1094,7 +1462,7 @@ func tradeItems(direction int) {
 		allPossessions = apprentice.getListOfPossessions()
 		charString = character.name
 	}
-	
+
 	exitFlag := false
 
 	for !exitFlag {
@@ -1103,7 +1471,7 @@ func tradeItems(direction int) {
 
 		fmt.Println("What item do you wish to give  " + charString + "?")
 		fmt.Println("-----------------------------------------------------------------")
-		
+
 		if len(allPossessions) < 1 {
 			fmt.Println("Nothing available")
 		} else {
@@ -1114,44 +1482,44 @@ func tradeItems(direction int) {
 				counter++
 			}
 		}
-		
-		fmt.Println("")		
-		fmt.Println("e. Exit")		
-		fmt.Println("--------------------------")	
-		
+
+		fmt.Println("")
+		fmt.Println("e. Exit")
+		fmt.Println("--------------------------")
+
 		fmt.Scanln(&rsp)
 
 		if len(rsp) > 0 && rsp != "e" {
 			num, err := strconv.Atoi(rsp)
-			
+
 			if err == nil {
 				if num < len(allPossessions) {
 					item := allPossessions[num]
-					
+
 					if direction == 0 {
-						giveOK := apprentice.giveCharacterItem(item)	
+						giveOK := apprentice.giveCharacterItem(item)
 
 						if giveOK {
 							character.removeItemFromCharacter(item)
 							allPossessions = character.getListOfPossessions()
-							showPause(fmt.Sprintf("%s given to %s!", item.name, charString))							
-						}						
-					
+							showPause(fmt.Sprintf("%s given to %s!", item.name, charString))
+						}
+
 					} else if direction == 1 {
-						giveOK := character.giveCharacterItem(item)	
+						giveOK := character.giveCharacterItem(item)
 
 						if giveOK {
 							apprentice.removeItemFromCharacter(item)
 							allPossessions = apprentice.getListOfPossessions()
-							showPause(fmt.Sprintf("%s given to %s!", item.name, charString))							
-						}			
-					}					
+							showPause(fmt.Sprintf("%s given to %s!", item.name, charString))
+						}
+					}
 				}
 			}
-			
+
 		} else if rsp == "e" {
 			exitFlag = true
-		} 
+		}
 	}
 }
 
@@ -1160,32 +1528,32 @@ func (char *Character) storeItems() {
 		showPause("Keep storage is maxed out. Build larger storage facilities or clean the dump up! Ya fucking pack rat.")
 		return
 	}
-	
+
 	const ITEMS_PER_PAGE = 16
-	
+
 	cont := true
 	rsp := ""
-	
+
 	range1 := 0
 	range2 := ITEMS_PER_PAGE
 	pages := 0
 	page := 0
-	
+
 	for cont {
 		clearConsole()
-		
+
 		items := char.getListOfPossessions()
-		
+
 		pages = 1
 		if len(items) > ITEMS_PER_PAGE {
 			for j := len(items); j > ITEMS_PER_PAGE; j -= ITEMS_PER_PAGE {
 				pages++
-			} 
+			}
 		}
-		
+
 		fmt.Println("-- Keep Storage: " + fmt.Sprintf("%v of %v used.", len(keep.storage), keep.maxStorage))
 		fmt.Println("")
-		
+
 		fmt.Println(fmt.Sprintf("-- Character Inventory --  [Page %v : %v]", page+1, pages))
 
 		range1 = page * ITEMS_PER_PAGE
@@ -1198,77 +1566,76 @@ func (char *Character) storeItems() {
 		for k := range1; k < range2; k++ {
 			fmt.Println(fmt.Sprintf("%v. %s ", k, items[k].name))
 		}
-		
-		fmt.Println("")	
+
+		fmt.Println("")
 		if pages > 1 {
-			fmt.Println("[n. next page]")	
+			fmt.Println("[n. next page]")
 		} else {
-			fmt.Println("")		
+			fmt.Println("")
 		}
-		
-		fmt.Println("--------------------")	
+
+		fmt.Println("--------------------")
 		choices := "(#. Store Item) (a. Store All) (u. Store Unequiped) (x. Exit)"
 		fmt.Println(choices)
-		fmt.Println("")		
+		fmt.Println("")
 		fmt.Printf("Choose an option: ")
 
-		fmt.Scanln(&rsp)	
-	
+		fmt.Scanln(&rsp)
+
 		if rsp == "x" {
 			cont = false
 		} else if rsp == "a" {
-			
+
 		} else if rsp == "u" {
 
 		} else if rsp == "n" && pages > 1 {
 			page++
 			if page >= pages {
 				page = 0
-			}			
+			}
 		} else {
 			num, err := strconv.Atoi(rsp)
 
 			if err == nil {
 				selection := (page * 12) + num
 				storeItem := items[selection]
-				
+
 				char.removeItemFromCharacter(storeItem)
 				keep.storage = append(keep.storage, storeItem)
-				
+
 				showPause(storeItem.name + " stored in Keep!")
-				
+
 			} else {
 				showPause("Invalid selection.")
 			}
 		}
-	}		
+	}
 }
 
-func (char *Character) getFilteredInventoryList(filters []bool) ([]Item){
+func (char *Character) getFilteredInventoryList(filters []bool) []Item {
 	filteredList := make([]Item, 0, 0)
 	allList := char.getListOfPossessions()
-	
+
 	for k := 0; k < len(allList); k++ {
 		itm := allList[k]
-		
+
 		if itm.typeCode == ITEM_TYPE_WEAPON && filters[0] {
 			filteredList = append(filteredList, itm)
 		} else if itm.typeCode == ITEM_TYPE_ARMOR && filters[1] {
-			filteredList = append(filteredList, itm)	
+			filteredList = append(filteredList, itm)
 		} else if itm.typeCode == ITEM_TYPE_UNCTURE && filters[2] {
-			filteredList = append(filteredList, itm)	
+			filteredList = append(filteredList, itm)
 		} else if itm.typeCode == ITEM_TYPE_INGREDIENT && filters[3] {
-			filteredList = append(filteredList, itm)		
+			filteredList = append(filteredList, itm)
 		} else if itm.typeCode == ITEM_TYPE_EQUIPMENT && filters[4] {
-			filteredList = append(filteredList, itm)								
+			filteredList = append(filteredList, itm)
 		} else if itm.typeCode == ITEM_TYPE_SPECIAL && filters[5] {
-			filteredList = append(filteredList, itm)										
+			filteredList = append(filteredList, itm)
 		}
 	}
-	
+
 	return filteredList
 }
-
 
 func (char *Character) showInventoryFilteredList() {
 	const ITEMS_PER_PAGE = 18
@@ -1277,36 +1644,36 @@ func (char *Character) showInventoryFilteredList() {
 	range2 := ITEMS_PER_PAGE
 	pages := 0
 	page := 0
-	
+
 	filters := make([]bool, 6, 6)
 	for k := 0; k < 6; k++ {
 		filters[k] = true
 	}
-		
+
 	dispFilters := "☼ ⌂ ♥ ♣ ♦ ∞"
-	
+
 	for rsp != "x" {
-		
+
 		filteredList := char.getFilteredInventoryList(filters)
 		dispFilters = getDisplayFilters(filters)
-		
+
 		clearConsole()
-		fmt.Println("╔═══════════════════════ Inventory ═══════════════════════╗")		
-		
+		fmt.Println("╔═══════════════════════ Inventory ═══════════════════════╗")
+
 		pages = 1
 		if len(keep.storage) > ITEMS_PER_PAGE {
 			for j := len(filteredList); j > ITEMS_PER_PAGE; j -= ITEMS_PER_PAGE {
 				pages++
-			} 
+			}
 		}
-		
+
 		dispStr := packSpaceStringCenter(fmt.Sprintf("  %v :: %v ", char.weight, char.maxweight), 24)
 		dispStr += "            Filters: " + dispFilters
-		
+
 		fmt.Println(dispStr)
 		fmt.Println("  ─────────────────────             ─────────────────────")
 		fmt.Println("")
-		
+
 		range1 = page * ITEMS_PER_PAGE
 		range2 = range1 + ITEMS_PER_PAGE
 
@@ -1319,32 +1686,31 @@ func (char *Character) showInventoryFilteredList() {
 			numBit = packSpaceString(numBit, 8)
 			fmt.Println(numBit + filteredList[k].name)
 		}
-		
-		
-		fmt.Println("")	
-		fmt.Println("  ─────────────────────────────────────────────────────")		
 
-		commands := ""	
+		fmt.Println("")
+		fmt.Println("  ─────────────────────────────────────────────────────")
+
+		commands := ""
 		if pages > 1 {
-			commands += "  [n. next]"			    
-		}  
+			commands += "  [n. next]"
+		}
 		commands += "  [f. filters]  [#. View]  [x. Exit]"
 		commands = packSpaceString(commands, 46)
 
 		fmt.Println(commands)
-		fmt.Println("╚═══════════════════════════════════════════════════════╝")			
-		fmt.Println("")		
+		fmt.Println("╚═══════════════════════════════════════════════════════╝")
+		fmt.Println("")
 		fmt.Printf("Choose an option: ")
 
-		fmt.Scanln(&rsp)	
-	
+		fmt.Scanln(&rsp)
+
 		if rsp == "f" {
 			setFilters(filters)
 		} else if rsp == "n" && pages > 1 {
 			page++
 			if page >= pages {
 				page = 0
-			}			
+			}
 		} else if rsp != "x" {
 			num, err := strconv.Atoi(rsp)
 
@@ -1353,11 +1719,11 @@ func (char *Character) showInventoryFilteredList() {
 				storeItem := filteredList[selection]
 				show(storeItem)
 				showPause("Press Enter to continue.")
-				// TODO: View the item		
+				// TODO: View the item
 			} else {
 				showPause("Invalid selection.")
 			}
-		}				
+		}
 	}
 }
 
@@ -1365,30 +1731,30 @@ func (char *Character) showInventory() {
 
 	rsp, _ := char.showInventoryChar(true)
 	id := char.instanceId
-	
+
 	for rsp != "x" {
 		if rsp == "n" {
 			if id == character.instanceId && apprentice.exists() {
 				rsp, id = apprentice.showInventoryChar(true)
 			} else {
 				rsp, id = character.showInventoryChar(true)
-			} 	
+			}
 		} else {
 			rsp = "x"
-		}	
+		}
 	}
 }
 
-func (char *Character) showInventoryChar(canTransfer bool) (string, int)  {
+func (char *Character) showInventoryChar(canTransfer bool) (string, int) {
 	cont := true
-	
+
 	for cont {
 		clearConsole()
 
 		seg1 := ""
 		seg2 := ""
 
-		weightStr := fmt.Sprintf("Encumb: %v / %v  (stone)", char.weight, char.maxweight);
+		weightStr := fmt.Sprintf("Encumb: %v / %v  (stone)", char.weight, char.maxweight)
 		fmt.Println(packSpaceString(char.name, 22) + "  " + weightStr)
 
 		fmt.Println("")
@@ -1432,48 +1798,48 @@ func (char *Character) showInventoryChar(canTransfer bool) (string, int)  {
 
 		fmt.Println("")
 		choices := "(e. equip) (r. remove) "
-		
+
 		if canTransfer && char.instanceId == character.instanceId && apprentice.exists() {
 			choices += "(g. give) (n. apprentice) "
 		} else if canTransfer && apprentice.exists() && apprentice.instanceId == char.instanceId {
-			choices += "(g. give) (n. character) "			
+			choices += "(g. give) (n. character) "
 		}
-		
+
 		if char.villageIndex == 99 {
 			choices += "(s. store) "
 		}
-		
+
 		choices += "(l. list) "
-		
+
 		choices += "(x. exit)"
-		
+
 		fmt.Println(choices)
 		fmt.Println("")
 		fmt.Printf("Choose an option: ")
 		rsp := ""
-		fmt.Scanln(&rsp)	
-		
+		fmt.Scanln(&rsp)
+
 		if rsp == "e" {
 			char.equipScreen()
 		} else if rsp == "l" {
-			char.showInventoryFilteredList()	
+			char.showInventoryFilteredList()
 		} else if rsp == "x" {
 			cont = false
 		} else if canTransfer && rsp == "n" {
-			cont = false	
+			cont = false
 			return rsp, char.instanceId
 		} else if canTransfer && rsp == "g" {
 			if apprentice.exists() {
 				if char.instanceId == character.instanceId {
-					tradeItems(0)	// character to apprentice
+					tradeItems(0) // character to apprentice
 				} else {
-					tradeItems(1)	// apprentice to character				
-				}		
+					tradeItems(1) // apprentice to character
+				}
 			} else {
 				showPause("No apprentice to trade with.")
 			}
 		} else if char.villageIndex == 99 && rsp == "s" {
-			char.storeItems()	// if in keep, we can store inventory items
+			char.storeItems() // if in keep, we can store inventory items
 		}
 	}
 

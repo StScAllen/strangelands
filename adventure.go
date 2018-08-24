@@ -288,6 +288,9 @@ func (bg *BattleGrid) showFoundLoot(idx int) string {
 							} else {
 								bg.getEntityGrid(bg.currGrid).loot[idx].items = make([]Item, 0, 0)
 							}
+						} else {
+							showPause("Unable to take item(s), character would be overencumbered.")
+							break
 						}
 					}
 				} else {
@@ -299,6 +302,9 @@ func (bg *BattleGrid) showFoundLoot(idx int) string {
 							} else {
 								bg.getEntityGrid(bg.currGrid).loot[idx].items = make([]Item, 0, 0)
 							}						
+						} else {
+							showPause("Unable to take item(s), character would be overencumbered.")
+							break
 						}
 					}
 				}

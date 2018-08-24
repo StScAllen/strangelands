@@ -8,10 +8,11 @@ var keep Keep
 
 var game Game
 var villages []Village
+var actors []Character	// important npcs to track.
 
 var log Log
 
-const VERSION = ".14a"
+const VERSION = ".17a"
 
 const DEBUG_ON = true
 
@@ -32,7 +33,7 @@ func init() {
 	game.gameDay = 1
 	game.itemInstanceId = 1
 	game.charInstanceId = 2
-	game.darkness = 0
+	game.darkness = 5
 	log = openLog()
 	dieInit()
 }
@@ -56,6 +57,7 @@ func endDay(restQuality int, showDetails bool) {
 	details := ""
 	
 	details += "The consuming darkness marks an end to your day's labors...\n"
+	game.darkness++
 
 	if character.hp == character.maxhp {
 		details += "... You are healthy.\n"
@@ -97,7 +99,7 @@ func endDay(restQuality int, showDetails bool) {
 	// small chance a mission will be added to a random villages bulletin board.
 	maybeAddMission()
 	
-	keep.endDay()  // do keep maintenance
+	details += keep.endDay()  // do keep maintenance
 	
 	// update villages
 	for k := 0; k < len(villages); k++ {
@@ -173,6 +175,8 @@ func main() {
 		updateShops()
 		mission = getBlankMission()
 		buildOrphanage()
+		actors = make([]Character, 0, 0)	// build empty actors holder
+
 		save()
 
 	} else if rsp == "2" {
@@ -183,9 +187,6 @@ func main() {
 			showPause("Game File is missing or corrupted!")
 			return
 		}
-		// TEMP!!! REMOVE!!!
-		buildOrphanage()
-		//////////////////////////////
 		character.printCharacter(1)
 		if apprentice.exists() {
 			apprentice.printCharacter(1)

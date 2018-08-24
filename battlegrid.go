@@ -734,6 +734,11 @@ func (grid *BattleGrid) directionValid(locX int, locY int, cardinal int, gridId 
 func (grid *BattleGrid) isTileOpen(tx, ty, gridId, turn int) bool {
 	var tgrid Grid = grid.getEntityGrid(gridId)
 
+	if tgrid.id == -1 {
+		log.addError("Unable to find grid for id: " + gridId)
+		return false;
+	}
+
 	if gridId == grid.charGridId && tx == grid.charXLoc && ty == grid.charYLoc {
 		return false
 	} else if grid.hasApprentice && gridId == grid.appGridId && tx == grid.appXLoc && ty == grid.appYLoc {

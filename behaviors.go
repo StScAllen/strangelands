@@ -43,7 +43,7 @@ func (bg *BattleGrid) getDirectAttackBehavior(target int) (int, []Tile, []AIStep
 }
 
 /* 
-	*  For this behavior, the monster is going to ,move toward the character until it is close enough to attack.
+	*  For this behavior, the monster is going to move toward the character until it is close enough to attack.
 */
 func (bg *BattleGrid) getMoveAttackBehavior(target int) (int, []Tile, []AIStep) {
 
@@ -284,7 +284,7 @@ func (bg *BattleGrid) getPatrolBehavior() (int, []Tile, []AIStep) {
 	var tiles []Tile
 	
 	tiles = make([]Tile, 0, 0)
-	log.addAi("(+) Adding a patroling behavior")
+	log.addAi("(+) Adding a patrolling behavior")
 
 	monsterMoves := bg.monster.getMonsterMoves()
 
@@ -404,7 +404,7 @@ func (bg *BattleGrid) getCowerBehavior() (int, []Tile, []AIStep) {
 			}			
 		} else {
 			// character is mostly to the north of monster			
-			if bg.canPathAndMoveHere(pathx, pathy-steps, monsterMoves) {
+			if bg.canPathAndMoveHere(pathx, pathy+steps, monsterMoves) {
 				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx-steps, pathy, bg.monsterGridId)			
 			} else if bg.canPathAndMoveHere(pathx+1, pathy+(steps-1), monsterMoves) {
 				count, tiles = bg.findPath(bg.monsterXLoc, bg.monsterYLoc, pathx+1, pathy+(steps-1), bg.monsterGridId)				

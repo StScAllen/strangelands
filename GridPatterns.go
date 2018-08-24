@@ -44,7 +44,7 @@ func getAvailableDirections(pattern [8][8]int, x, y int) []int {
 		dirs = append(dirs, 3)
 	}
 
-	if x < 7 && pattern[y][x+1] == -1 { // check add WEST
+	if x < 7 && pattern[y][x+1] == -1 { // check add EAST
 		dirs = append(dirs, 1)
 	}
 

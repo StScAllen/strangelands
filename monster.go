@@ -243,7 +243,7 @@ func createMonster(id int) Monster {
 
 		monster.targets = HUMAN_TARGETS
 		monster.body = HUMAN_STRING
-		monster.resistance = []int{14, 14, 14, 14, 14, 14, 14, 14, 14, 14}
+		monster.resistance = []int{11, 11, 11, 11, 11, 11, 11, 11, 11, 11}
 		monster.attacks = []MonsterAttack{WEAPON, WEAPON}
 		monster.powerBalance = 14.0
 		monster.invisible = false

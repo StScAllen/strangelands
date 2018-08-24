@@ -181,8 +181,11 @@ func unpackKeepBlock(block string) (int, Keep) {
 
 func (keep *Keep) addApprenticeToKeep() {
 	keep.apprentices = append(keep.apprentices, apprentice)
+	apprentice.villageIndex = 99
 }
 func (keep *Keep) addNewApprenticeToKeep(app Character) {
+	app.villageIndex = 99
+	app.subLoc = 0
 	keep.apprentices = append(keep.apprentices, app)
 }
 
@@ -291,13 +294,15 @@ func (keep *Keep) selectApprentice() int {
 		fmt.Println("")		
 		if apprentice.exists() {
 			count++
-			row := fmt.Sprintf("%v. %s", count, apprentice.name)
+			status := taskCodes[apprentice.task]
+			row := packSpaceString(fmt.Sprintf("%v. %s  ", count, apprentice.name), 45) + status
 			fmt.Println(row)
 			companion = true
 		}
 		for k := 0; k < len(keep.apprentices); k++ {
 			count++
-			row := fmt.Sprintf("%v. %s", count, keep.apprentices[k].name)
+			status := taskCodes[keep.apprentices[k].task]
+			row := packSpaceString(fmt.Sprintf("%v. %s  ", count, keep.apprentices[k].name), 45) + status			
 			fmt.Println(row)
 		}
 		
@@ -312,60 +317,151 @@ func (keep *Keep) selectApprentice() int {
 
 		fmt.Scanln(&rsp)	
 		
+		idx := 0
+		
 		if rsp == "1" {
 			if companion && apprentice.exists() {
-				return 99
-			} else if companion && apprentice.exists() {
+				if apprentice.trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return 99				
+				}
+			} else if companion && !apprentice.exists() {
 				result = -1
 			} else if !companion {
 				if len(keep.apprentices) > 0 {
-					return 0
+					if keep.apprentices[0].trainingTime > 0 {
+						showPause("Character is in training and not currently available.")
+					} else {
+						return 0						
+					}
 				} else {
 					result = -1					
 				}
+			} else {
+				showPause("Not a valid option.")				
 			}
-			showPause("Not a valid option.")
 		} else if rsp == "2" {
+			if companion {
+				idx = 0
+			} else {
+				idx = 1
+			}
 			if len(keep.apprentices) > 1 {
-				return 1	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")	
 		} else if rsp == "3" {
+			if companion {
+				idx = 1
+			} else {
+				idx = 2
+			}
 			if len(keep.apprentices) > 2 {
-				return 2	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")	
 		} else if rsp == "4" {
+			if companion {
+				idx = 2
+			} else {
+				idx = 3
+			}			
 			if len(keep.apprentices) > 3 {
-				return 3	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")
 		} else if rsp == "5" {
+			if companion {
+				idx = 3
+			} else {
+				idx = 4
+			}			
 			if len(keep.apprentices) > 4 {
-				return 4	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")
 
 		} else if rsp == "6" {
+			if companion {
+				idx = 4
+			} else {
+				idx = 5
+			}			
 			if len(keep.apprentices) > 5 {
-				return 5	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")	
 		} else if rsp == "7" {
+			if companion {
+				idx = 5
+			} else {
+				idx = 6
+			}			
 			if len(keep.apprentices) > 6 {
-				return 6	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")	
 		} else if rsp == "8" {
+			if companion {
+				idx = 6
+			} else {
+				idx = 7
+			}			
 			if len(keep.apprentices) > 7 {
-				return 7	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")	
 		} else if rsp == "9" {
+			if companion {
+				idx = 7
+			} else {
+				idx = 8
+			}			
 			if len(keep.apprentices) > 8 {
-				return 8	
+				if keep.apprentices[idx].trainingTime > 0 {
+					showPause("Character is in training and not currently available.")
+				} else {
+					return idx					
+				}
+			} else {
+				showPause("Not a valid option.")		
 			}
-			showPause("Not a valid option.")	
 		}
 	}
 	
@@ -378,7 +474,7 @@ func (keep *Keep) train() {
 	for rsp != "x" {
 		clearConsole()
 		fmt.Println("╔ Training ╗")	
-		fmt.Println("1. Train Character")
+		fmt.Println(fmt.Sprintf("1. Train Character  [%v pts avail]", character.trainingPoints))
 		fmt.Println("2. Train Apprentice")
 		fmt.Println("")
 		fmt.Println("x. Exit")
@@ -389,19 +485,26 @@ func (keep *Keep) train() {
 		
 		if rsp == "1" {
 			character.train()
+			character.trainingTime = 0
 		} else if rsp == "2" {
 			appCode := keep.selectApprentice()
 			
 			if appCode == 99 {
-				keep.addApprenticeToKeep()
-				var blankApp Character
-				blankApp.instanceId = 0
-				blankApp.name = ""
-				apprentice = blankApp
 				apprentice.train()
+				
+				if apprentice.trainingTime > 0 {
+					keep.addApprenticeToKeep()
+					var blankApp Character
+					blankApp.instanceId = 0
+					blankApp.name = ""
+	
+					apprentice = blankApp					
+				}				
+
 			} else if appCode > -1 {
 				keep.apprentices[appCode].train()
 			}
+			
 		} else if rsp != "x" {
 			showPause("Invalid selection!")
 		}
@@ -657,8 +760,9 @@ func (keep *Keep) showStorage() {
 	}
 }
 
-func (keep *Keep) endDay() {
+func (keep *Keep) endDay() (string) {
 	var die Die
+	updates := ""
 	
 	for k := 0; k < len(keep.apprentices); k++ {
 		if die.rollxdx(1, 4) <= 2 {
@@ -666,7 +770,19 @@ func (keep *Keep) endDay() {
 				keep.apprentices[k].hp++
 			}
 		}
+		if keep.apprentices[k].trainingTime > 0 {
+			keep.apprentices[k].trainingTime -= 1
+			
+			if keep.apprentices[k].trainingTime == 0 {
+				keep.apprentices[k].task = STATUS_REST
+				updates += keep.apprentices[k].name + " has completed training. \n"
+			}			
+		} else if keep.apprentices[k].task == STATUS_TRAINING && keep.apprentices[k].trainingTime == 0 {
+			keep.apprentices[k].task = STATUS_REST
+		}
 	}
+	
+	return updates
 }
 
 func (keep *Keep) visitKeep() string {
@@ -678,6 +794,7 @@ func (keep *Keep) visitKeep() string {
 		clearConsole()
 		fmt.Println("╔ Keep ╗")
 		fmt.Println(makeDialogString(keepDescriptions[keep.descriptionId]))
+		fmt.Println("")
 		fmt.Printf("Day: %v \n", game.gameDay)
 		fmt.Printf("Acres: %v / %v \n", keep.usedacres, keep.acres)
 		fmt.Println("------------")
@@ -727,7 +844,7 @@ func (keep *Keep) visitKeep() string {
 		} else if rsp == "3" {	
 			keep.showStorage() 		
 		} else if rsp == "4" {	
-			keep.train()
+			keep.train()			
 		} 
 	}
 

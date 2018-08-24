@@ -120,10 +120,10 @@ func showMissionComplete() {
 	fmt.Scanln(&rsp)
 	
 	character.crowns += mission.crownReward
-	character.exp += mission.experienceReward
+	character.giveCharacterExperience(mission.experienceReward)
 	
 	if apprentice.exists() {
-		apprentice.exp += mission.experienceReward
+		apprentice.giveCharacterExperience(mission.experienceReward)
 	}
 	
 	mission = getBlankMission()

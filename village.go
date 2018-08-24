@@ -228,6 +228,8 @@ func buildOrphanage() {
 	
 	for k := 0; k < die.rollxdx(10, 12) + 1; k++ {
 		appr := getRandomApprentice(0)
+		appr.villageIndex = 5
+		appr.subLoc = 99 // orphanage
 		orphanage = append(orphanage, appr)
 	}
 }
@@ -589,7 +591,10 @@ func doMissionPhase() {
 				showPause(fmt.Sprintf("%v pips %s!", total, verb))
 			} else {
 				showPause(fmt.Sprintf("Phase Complete! (%v experience earned)", mission.phases[mission.currentPhase - 1].rewardExperience))			
-				character.exp += mission.phases[mission.currentPhase - 1].rewardExperience
+				character.giveCharacterExperience(mission.phases[mission.currentPhase - 1].rewardExperience)
+				if apprentice.exists() {
+					apprentice.giveCharacterExperience(mission.phases[mission.currentPhase - 1].rewardExperience)
+				}
 				mission.currentPhase++
 			}
 		}
@@ -684,6 +689,12 @@ func (village *Village) visitVillage() string {
 	} else if strings.Contains(rsp, "give") && strings.Contains(rsp2, "-money"){
 		showPause("Money received!")
 		character.crowns += 200
+	} else if strings.Contains(rsp, "give") && strings.Contains(rsp2, "-exp"){
+		showPause("Giving character 5xp!")
+		character.giveCharacterExperience(5)
+		if apprentice.exists() {
+			apprentice.giveCharacterExperience(5)
+		}	
 	} 
 
 	return rsp
