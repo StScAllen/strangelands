@@ -231,7 +231,14 @@ func (bg *BattleGrid) showFoundLoot(idx int) string {
 	for loop {
 		clearConsole()
 
-		loot = bg.getEntityGrid(bg.currGrid).loot[idx]
+		id := -1
+		if bg.turn == CHAR_TURN {
+			id = bg.charGridId
+		} else if bg.turn == APP_TURN {
+			id = bg.appGridId
+		}
+
+		loot = bg.getEntityGrid(id).loot[idx]
 
 		fmt.Println("╔═════════ Found ══════════╗")
 		fmt.Println("║" + packSpaceString(loot.container, 26) + "║")
@@ -345,6 +352,23 @@ func (bg *BattleGrid) showFoundLoot(idx int) string {
 					showPause("Character cannot take this item because they will be over encumbered.")
 				}
 			}
+		} else if rsp == "t3" && len(loot.items) > 2 {
+			k := 2
+			if bg.turn == CHAR_TURN {
+				addOK := character.giveCharacterItem(loot.items[k])
+				if addOK {
+					bg.getEntityGrid(bg.currGrid).loot[idx].items = append(bg.getEntityGrid(bg.currGrid).loot[idx].items[:k], bg.getEntityGrid(bg.currGrid).loot[idx].items[k+1:]...)
+				} else {
+					showPause("Character cannot take this item because they will be over encumbered.")
+				}
+			} else {
+				addOK := apprentice.giveCharacterItem(loot.items[k])
+				if addOK {
+					bg.getEntityGrid(bg.currGrid).loot[idx].items = append(bg.getEntityGrid(bg.currGrid).loot[idx].items[:k], bg.getEntityGrid(bg.currGrid).loot[idx].items[k+1:]...)
+				} else {
+					showPause("Character cannot take this item because they will be over encumbered.")
+				}
+			}			
 		}
 	}
 
@@ -441,6 +465,20 @@ func adventure(mid int) (result int) {
 	rsp2 := ""
 	rsp3 := ""
 
+	game.battleGrid = &bg
+	game.disposition = 1
+
+	var mapCardinalDirections = map[string]bool{
+		"N" : true,
+		"NE" : true,
+		"NW" : true,
+		"E" : true,
+		"W" : true,
+		"S" : true,
+		"SE" : true,
+		"SW" : true,
+	}
+
 	currTurns := 0
 	maxTurns := 0
 	// mission start setup
@@ -469,6 +507,14 @@ func adventure(mid int) (result int) {
 			continue;
 		}
 		
+		sRsp :=  strings.ToUpper(strings.TrimSpace(rsp))
+		if len(sRsp) <= 2 {
+			if mapCardinalDirections[sRsp] {
+				rsp = "move"
+				rsp2 = sRsp
+			}
+		}
+		
 		if strings.Contains(rsp, "move") && len(rsp2) > 0 {
 			if currTurns < 1 {
 				fmt.Println("No turns remain. End your turn.")
@@ -493,6 +539,7 @@ func adventure(mid int) (result int) {
 								bg.charXLoc = selectedGate.g1x
 								bg.charYLoc = selectedGate.g1y
 							}
+							bg.currGrid = bg.charGridId
 						}
 
 					} else {
@@ -516,6 +563,7 @@ func adventure(mid int) (result int) {
 								bg.appXLoc = selectedGate.g1x
 								bg.appYLoc = selectedGate.g1y
 							}
+							bg.currGrid = bg.appGridId
 						}
 					} else {
 						fmt.Println("Path is blocked in this direction!")
@@ -533,6 +581,11 @@ func adventure(mid int) (result int) {
 			showPause("TODO: Talk to NPCs if they exist, otherwise talk to yourself. Shut up.")
 			currTurns -= 1
 			
+		} else if strings.Contains(rsp, "%pal") {
+			bg.printAllLoots()
+			
+		} else if strings.Contains(rsp, "%free") {
+			currTurns = 99
 		} else if strings.Contains(rsp, "defend") {
 			if currTurns < 1 {
 				fmt.Println("No turns remain. You need at least one turn available to defend. End your turn.")

@@ -88,14 +88,14 @@ func (village *Village) buyWeaponScreen() {
 		}
 
 		fmt.Println("")
-		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("[x. Back]   [n. More]   [s. Sell]   [i. inventory]")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		rsp := ""
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n" && rsp != "i" {
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" && rsp != "i" && rsp != "s"  {
 			num, _ := strconv.Atoi(rsp)
 			showWeapon(shopWeapons[num])
 			fmt.Println(fmt.Sprintf("Buy %s? ", shopWeapons[num].name))
@@ -133,6 +133,8 @@ func (village *Village) buyWeaponScreen() {
 			exitFlag = true
 		} else if rsp == "i" {
 			character.showInventory()
+		} else if rsp == "s" {
+			village.sellItems(ITEM_TYPE_WEAPON)			
 		}
 	}
 
@@ -159,14 +161,14 @@ func (village *Village) buyArmorScreen() {
 		}
 
 		fmt.Println("")
-		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("[x. Back]   [n. More]   [s. sell]   [i. inventory]")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		rsp := ""
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n" && rsp != "i" {
+		if len(rsp) > 0 && rsp != "x" && rsp != "n" && rsp != "i" && rsp != "s"  {
 			num, _ := strconv.Atoi(rsp)
 			showArmor(shopArmor[num])
 			fmt.Println(fmt.Sprintf("Buy %s?", shopArmor[num].name))
@@ -203,6 +205,8 @@ func (village *Village) buyArmorScreen() {
 			exitFlag = true
 		}  else if rsp == "i" {
 			character.showInventory()
+		} else if rsp == "s" {
+			village.sellItems(ITEM_TYPE_ARMOR)					
 		}
 	}
 
@@ -230,13 +234,13 @@ func (village *Village) buyProvisions() {
 		}
 
 		fmt.Println("")
-		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("[x. Back]   [n. More]   [s. sell]   [i. inventory]")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" {
+		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" && rsp != "s" {
 			num, _ := strconv.Atoi(rsp)
 			// showProvision()
 			fmt.Println(fmt.Sprintf("Buy %s?", provisions[num].name))
@@ -269,6 +273,8 @@ func (village *Village) buyProvisions() {
 			exitFlag = true
 		}  else if rsp == "i" {
 			character.showInventory()
+		} else if rsp == "s" {
+			village.sellItems(ITEM_TYPE_EQUIPMENT)					
 		}
 	}
 }
@@ -293,13 +299,13 @@ func (village *Village) buyApothecary() {
 		}
 
 		fmt.Println("")
-		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("[x. Back]   [n. More]   [s. sell]   [i. inventory]")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" {
+		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" && rsp != "s"{
 			num, _ := strconv.Atoi(rsp)
 			// showIngredient()
 			fmt.Println(fmt.Sprintf("Buy %s?", ingredients[num].name))
@@ -332,6 +338,8 @@ func (village *Village) buyApothecary() {
 			exitFlag = true
 		}  else if rsp == "i" {
 			character.showInventory()
+		} else if rsp == "s" {
+			village.sellItems(ITEM_TYPE_INGREDIENT)					
 		}
 	}
 }
@@ -356,13 +364,13 @@ func (village *Village) buyCuriosities() {
 		}
 
 		fmt.Println("")
-		fmt.Println("[x. Back]   [n. More]   [i. inventory]")
+		fmt.Println("[x. Back]   [n. More]   [s. sell]   [i. inventory]")
 		fmt.Println("")
 		fmt.Println("Select an Option:  ")
 
 		fmt.Scanln(&rsp)
 
-		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" {
+		if len(rsp) > 0 && rsp != "x" && rsp != "n"  && rsp != "i" && rsp != "s"{
 			num, _ := strconv.Atoi(rsp)
 			// showCurio()
 			fmt.Println(fmt.Sprintf("Buy %s?", curios[num].name))
@@ -395,7 +403,38 @@ func (village *Village) buyCuriosities() {
 			exitFlag = true
 		}  else if rsp == "i" {
 			character.showInventory()
+		} else if rsp == "s" {
+			village.sellItems(ITEM_TYPE_SPECIAL)					
 		}
+	}
+}
+
+func (village *Village) sellItems(itmType int) {
+	if !apprentice.exists() {
+		character.sellItems(itmType)
+	}
+
+	exitFlag := false
+
+	for !exitFlag {
+		clearConsole()
+		fmt.Println(fmt.Sprintf("1. %s ", character.name))
+		fmt.Println(fmt.Sprintf("2. %s (Apprentice)", apprentice.name))
+		fmt.Println("")	
+		fmt.Println("[x. Exit]")
+		fmt.Println("")
+		fmt.Println("Which inventory do you wish to sell from? ")	
+
+		rsp := ""
+		fmt.Scanln(&rsp)
+		
+		if rsp == "1" {
+			character.sellItems(itmType)
+		} else if rsp == "2" {
+			apprentice.sellItems(itmType)
+		} else if rsp == "x" {	
+			exitFlag = true		
+		} 
 	}
 }
 

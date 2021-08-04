@@ -102,7 +102,7 @@ func showAttributesMinutiae() {
 
 		clearConsole()
 		fmt.Println("--- Minutiae: Attributes ---")
-		fmt.Println("Quick of feet, lithe, agile? Thats for circus folk.")
+		fmt.Println("Quick of feet, lithe, agile? Thats for circus folk and cutthroats.")
 		fmt.Println("")
 		fmt.Println("")
 		fmt.Println("=Agility=")
@@ -155,7 +155,7 @@ func showAttributesMinutiae() {
 		fmt.Println("")
 		fmt.Println("=Charm=")
 		fmt.Println("Charm primarily impacts how many apprentices you can have, it also provides ")
-		fmt.Println("a cap to politics and is a factor in determing soul.")
+		fmt.Println("a cap to politics and is a factor in determing soul. It also impacts shop prices.")
 		fmt.Println("")
 		fmt.Println("Score	Modifiers")
 		fmt.Println(" 1 	Apprentices: 0		Max Political Level: 1		Soul: 0")

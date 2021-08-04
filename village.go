@@ -410,11 +410,15 @@ func doBattle(random bool) (string){
 	
 	if result == DIED {
 		showPause("Character died! Game over Man, game over!")
+		game.disposition = 2
 		return "q"
 	} else if random == false && result == FINISHED_MISSION {
 		showMissionComplete()
+		game.disposition = 0
+
 	} else if random && result == FINISHED_MISSION {
 		showPause("You defeat the bandits and continue your journey...")
+		game.disposition = 0
 	}
 	
 	return ""

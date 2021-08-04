@@ -12,7 +12,7 @@ var actors []Character	// important npcs to track.
 
 var log Log
 
-const VERSION = ".17a"
+const VERSION = ".18a"
 
 const DEBUG_ON = true
 
@@ -27,6 +27,8 @@ type Game struct {
 	missionInstanceId	int
 	charInstanceId 		int
 	darkness			int		// value of total darkness, impacts encounters, missions, etc.
+	disposition			int    // 0 in village, 1 in battlegrid, 2 intro/exit menus
+	battleGrid 			*BattleGrid
 }
 
 func init() {

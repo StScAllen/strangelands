@@ -80,8 +80,8 @@ type BattleGrid struct {
 	charXLoc, charYLoc                   int // character locs
 	appXLoc, appYLoc                     int // apprentice locs
 	monsterXLoc, monsterYLoc             int // monster1 locs
-	charGridId, monsterGridId, appGridId int
-	currGrid                             int
+	charGridId, monsterGridId, appGridId int // respective grid id each entity is on	
+	currGrid                             int // currentView grid id
 	time                                 int
 	weather                              int
 	turn                                 int // char=0, app=1, monst=2
@@ -735,7 +735,7 @@ func (grid *BattleGrid) isTileOpen(tx, ty, gridId, turn int) bool {
 	var tgrid Grid = grid.getEntityGrid(gridId)
 
 	if tgrid.id == -1 {
-		log.addError("Unable to find grid for id: " + gridId)
+		log.addError(fmt.Sprintf("Unable to find grid for id: %v", gridId))
 		return false;
 	}
 
@@ -1237,6 +1237,90 @@ func (grid *BattleGrid) placeNPCs() {
 	for k:= 0; k < len(grid.npcs); k++ {
 		grid.placeNPC(k)
 	}
+}
+
+func (grid *BattleGrid) dropItem(itm Item) {
+	
+	grid.printAllLoots()
+	rsp := ""
+
+	currGrid := grid.allGrids[grid.currGrid]
+	iLoot := -99
+ 
+	 x,y := -1, -1
+ 
+	 //var currGrid Grid
+ 
+	if grid.turn == CHAR_TURN {
+		id := grid.charGridId
+		currGrid = grid.getEntityGrid(id)
+		iLoot = currGrid.getLootAtLoc(grid.charXLoc, grid.charYLoc)
+		x,y = grid.charXLoc, grid.charYLoc
+
+		fmt.Println(fmt.Sprintf("Char AT: %v : %v   (%s)  (%s)", x, y, currGrid.gridName,  grid.allGrids[grid.currGrid].gridName))
+		fmt.Scanln(&rsp)
+
+	} else if grid.turn == APP_TURN {
+		id := grid.appGridId
+		currGrid = grid.getEntityGrid(id)
+		iLoot = currGrid.getLootAtLoc(grid.appXLoc, grid.appYLoc)
+		x,y = grid.appXLoc, grid.appYLoc
+	}
+	fmt.Println(fmt.Sprintf("%v. %s ", iLoot, itm.name))
+	fmt.Scanln(&rsp)
+		
+	if iLoot > -99 {
+
+		if iLoot == -1 {
+			fmt.Println(fmt.Sprintf("Dropped Loot at: %v : %v ", x, y))
+			fmt.Scanln(&rsp)
+			nloot := createEmptyLoot()
+			nloot.container = "Pile"
+			nloot.empty = false
+			nloot.seen = true
+			nloot.locX = x
+			nloot.locY = y
+			nloot.items = append(nloot.items, itm)
+			currGrid.loot = append(currGrid.loot, nloot)
+			currGrid.gridName = "a" + currGrid.gridName
+		} else {
+			nloot := currGrid.loot[iLoot]
+			
+			if len(nloot.items) > 2 {
+				showPause("Unable to drop item: max number of items exist in this " + nloot.container)
+				if grid.turn == CHAR_TURN {
+					character.giveCharacterItem(itm)
+				} else {
+					apprentice.giveCharacterItem(itm)
+				}
+				
+				return
+			}
+			
+			nloot.items = append(nloot.items, itm)
+			nloot.empty = false
+			currGrid.loot[iLoot] = nloot
+		}
+		
+		grid.allGrids[grid.currGrid] = currGrid
+
+		grid.printAllLoots()
+	}
+}
+
+func (grid *BattleGrid) printAllLoots(){
+	clearConsole()
+	for k:=0; k < len(grid.allGrids); k++ {
+		cGrid := grid.allGrids[k];
+		for j:=0; j < len(cGrid.loot); j++ {
+			fmt.Println(fmt.Sprintf("(%v) Loot at: %v : %v ", k, cGrid.loot[j].locX, cGrid.loot[j].locY))
+			for r:=0; r<len(cGrid.loot[j].items); r++{
+				fmt.Println(fmt.Sprintf(" -   (%s)", cGrid.loot[j].items[r].name))
+			}
+		}
+	}
+	rsp:=""
+	fmt.Scanln(&rsp)
 }
 
 func buildBattleGrid(id int) BattleGrid {

@@ -29,7 +29,8 @@ func getGameSaveBlock() string {
 	gameBlock += fmt.Sprintf("%v,", game.missionInstanceId)
 	gameBlock += fmt.Sprintf("%v,", game.charInstanceId)
 	gameBlock += fmt.Sprintf("%v,", game.darkness)
-	
+	gameBlock += fmt.Sprintf("%v,", game.disposition)
+
 	actorCount := len(actors) + len(keep.apprentices) + len(orphanage)
 	gameBlock += fmt.Sprintf("%v,", actorCount)
 	
@@ -66,7 +67,9 @@ func unpackGameBlock(block string) int {
 	game.missionInstanceId, _ = strconv.Atoi(bits[7])
 	game.charInstanceId, _ = strconv.Atoi(bits[8])
 	game.darkness, _ = strconv.Atoi(bits[9])
-	actorCount, _ := strconv.Atoi(bits[10])
+	game.disposition, _ = strconv.Atoi(bits[10])
+
+	actorCount, _ := strconv.Atoi(bits[11])
 	
 	fmt.Println("            ...done!")
 

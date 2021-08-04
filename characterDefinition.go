@@ -811,6 +811,71 @@ func getGender() int {
 	return -1
 }
 
+func (c *Character) isWearing(itm Item) bool {
+	if c.handSlots[0].id > 0 {
+		if itm.id == c.handSlots[0].id{
+			return true
+		} 
+	}
+	if c.handSlots[1].id > 0 {
+		if itm.id == c.handSlots[1].id{
+			return true
+		} 	
+	}
+
+	if c.armorSlots[0].id > 0 {
+		if itm.id == c.armorSlots[0].id{
+			return true
+		} 	
+	}
+	if c.armorSlots[1].id > 0 {
+		if itm.id == c.armorSlots[1].id{
+			return true
+		} 	
+	}
+	
+	if c.armorSlots[2].id > 0 {
+		if itm.id == c.armorSlots[2].id{
+			return true
+		} 	
+	}
+	if c.armorSlots[3].id > 0 {
+		if itm.id == c.armorSlots[3].id{
+			return true
+		} 	
+	}	
+	if c.armorSlots[4].id > 0 {
+		if itm.id == c.armorSlots[4].id{
+			return true
+		} 	
+	}
+	if c.armorSlots[5].id > 0 {
+		if itm.id == c.armorSlots[5].id{
+			return true
+		} 	
+	}
+	if c.armorSlots[6].id > 0 {
+		if itm.id == c.armorSlots[6].id{
+			return true
+		} 	
+	}
+	if c.armorSlots[7].id > 0 {
+		if itm.id == c.armorSlots[7].id{
+			return true
+		} 	
+	}		
+		
+	for k := range c.inventory {
+		if c.inventory[k].id > 0 {
+			if itm.id == c.inventory[k].id {
+				return true	
+			}
+		}
+	}
+	
+	return false
+}
+
 func (c *Character) getListOfPossessions() []Item {
 	allPossessions := make([]Item, 0)
 
@@ -1523,6 +1588,104 @@ func tradeItems(direction int) {
 	}
 }
 
+func (char *Character) dropItems() {
+	exitFlag := false
+
+	for !exitFlag {
+		
+		clearConsole()
+	
+		fmt.Println("Drop which item?")
+		fmt.Println("--------------------------")
+	
+		for k := range char.inventory {
+			fmt.Println(fmt.Sprintf("%v. %s ", k, char.inventory[k].name))
+		}
+		
+		fmt.Println("")
+		fmt.Println("[x. Exit]")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
+	
+		rsp := ""
+		fmt.Scanln(&rsp)
+		
+		if len(rsp) > 0 && rsp != "x" {
+			num, _ := strconv.Atoi(rsp)
+			item := char.inventory[num]
+			char.removeItemFromCharacter(item)
+			if game.disposition == 1 {
+				game.battleGrid.dropItem(item)
+			}	
+		} else if rsp == "x" {	
+			exitFlag = true
+		}
+	}
+}
+
+func (char *Character) sellItems(typ int) {
+	
+	exitFlag := false
+	rsp := ""
+	for !exitFlag {
+		applicableItems := make([]Item, 0, 0)
+		allItems := char.getListOfPossessions()
+
+		for k := range allItems {
+			if allItems[k].typeCode == typ {
+				applicableItems = append(applicableItems, allItems[k])
+			}
+		}
+		
+		clearConsole()
+		fmt.Println(fmt.Sprintf("Sell Items      Crowns:  %v", character.crowns))
+		fmt.Println("-----------------------------------------------------------------")
+
+		fmt.Println("   Item                                 \tWgt \tCost")
+
+		if len(applicableItems) < 1 {
+			fmt.Println("")
+			fmt.Println("  (No Items of this category to sell.)")	
+		}
+
+		for i := 0; i < len(applicableItems); i++ {
+			s:= ""
+			if char.isWearing(applicableItems[i]) {
+				s = "  (Worn)"
+			}
+			fmt.Printf("%v. %s %s       \t%v \t%v \n", i, packSpaceString(applicableItems[i].name, 24), s, applicableItems[i].weight, getItemSellPrice(applicableItems[i]))
+		}
+
+		fmt.Println("")
+		fmt.Println("[x. Back]   [n. More]")
+		fmt.Println("")
+		fmt.Println("Select an Option:  ")
+
+		fmt.Scanln(&rsp)
+		
+		if len(rsp) > 0 && rsp != "x" {
+			idx, _ := strconv.Atoi(rsp)			
+			
+			fmt.Println(fmt.Sprintf("Sell %s for %v?", applicableItems[idx].name, getItemSellPrice(applicableItems[idx])))
+			fmt.Scanln(&rsp)
+			
+			if rsp == "y" {
+				character.crowns += getItemSellPrice(applicableItems[idx])
+				char.removeItemFromCharacter(applicableItems[idx])
+				char.recalcCharacterWeight()
+				
+				showPause(applicableItems[idx].name + " sold!")			
+			}
+			
+		} else if rsp == "x" {	
+			exitFlag = true		
+		} 
+	}	
+	
+	
+}
+
+
 func (char *Character) storeItems() {
 	if len(keep.storage) >= keep.maxStorage {
 		showPause("Keep storage is maxed out. Build larger storage facilities or clean the dump up! Ya fucking pack rat.")
@@ -1804,8 +1967,12 @@ func (char *Character) showInventoryChar(canTransfer bool) (string, int) {
 		} else if canTransfer && apprentice.exists() && apprentice.instanceId == char.instanceId {
 			choices += "(g. give) (n. character) "
 		}
+		
+		if game.disposition == 1 { // in battlegrid
+			choices += "(d. drop) "
+		}
 
-		if char.villageIndex == 99 {
+		if char.villageIndex == 99 {	// in keep
 			choices += "(s. store) "
 		}
 
@@ -1840,6 +2007,8 @@ func (char *Character) showInventoryChar(canTransfer bool) (string, int) {
 			}
 		} else if char.villageIndex == 99 && rsp == "s" {
 			char.storeItems() // if in keep, we can store inventory items
+		} else if game.disposition == 1 && rsp == "d" {
+			char.dropItems() 			
 		}
 	}
 

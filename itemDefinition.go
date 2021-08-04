@@ -9,7 +9,7 @@ import "strconv"
 var qualities = []string{"Crude", "Stand", "Crafts", "Master"}
 var materials = []string{"Oak", "Bone", "Stone", "Iron", "Steel", "Silver"}
 var equipStrings = []string{"Head", "Neck", "Arms", "Chest", "Leg", "Feet", "Ring", "Cloak", "Hand", "Any", "None"}
-var containers = []string{"Chest", "Bag", "Satchel", "Skeleton", "Debris", "Corpse", "Barrel", "Crate"}
+var containers = []string{"Chest", "Bag", "Satchel", "Skeleton", "Debris", "Corpse", "Barrel", "Crate", "Pile"}
 var filterIcons = []string{"☼", "⌂", "♥", "♣", "♦", "∞"}
 var typeCodeStrings = []string{"NONE", "WEAPON", "ARMOR", "UNCTURE", "INGREDIENT", "EQUIPMENT", "UNUSED", "UNUSED", "UNUSED", "SPECIAL"}
 
@@ -402,6 +402,35 @@ func getAllCuriosities() ([]Item) {
 	return allProvisions
 }
 
+func getItemSellPrice(itm Item) (int) {
+	sellValue := itm.value
+	
+	//TODO: apply village reputation modifier
+	
+	switch character.cha {
+		case 1:
+			sellValue -= 2
+		case 2:
+			sellValue -= 1
+		case 5:
+			sellValue += 1
+		case 6:
+			sellValue += 1
+		case 7:
+			sellValue += 2
+		case 8:
+			sellValue += 2
+		case 9:
+			sellValue += 3		
+		case 20:
+			sellValue += 4		
+		default:
+			sellValue *= 1		
+	}
+	
+	return sellValue
+}
+
 func getRandomWeapon(weight int) Item {
 	var die Die
 
@@ -776,6 +805,15 @@ func makeLootItem(itm Item) Item {
 	itm.id = game.itemInstanceId
 	game.itemInstanceId++
 	return itm
+}
+
+func createEmptyLoot() Loot {
+	var loot Loot
+	
+	loot.crowns = 0
+	loot.seen = false
+	
+	return loot	
 }
 
 func createRandomLoot() Loot {
